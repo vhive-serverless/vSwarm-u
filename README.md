@@ -1,5 +1,7 @@
 # Microarchitectural Research
 
+[![Build kernel](https://github.com/ease-lab/vGem5/actions/workflows/build_kernel.yml/badge.svg?branch=main)](https://github.com/ease-lab/vGem5/actions/workflows/build_kernel.yml)
+
 ## Preliminary
 
 In order to simulate containerized functions using gem5 several general steps need to be done before your first experiments.
