@@ -1,0 +1,23 @@
+#!/bin/bash -
+
+CPU=`cat /proc/cpuinfo | grep vendor_id | head -n 1 | cut -d ' ' -f2-`
+echo "Got CPU type: $CPU"
+
+if [ "$CPU" != "M5 Simulator" ];
+then
+    echo "Not in gem5. Not loading script"
+    exit 0
+fi
+
+# Try to read in the script from the host system
+/sbin/m5 readfile > /tmp/script
+chmod 755 /tmp/script
+if [ -s /tmp/script ]
+then
+    # If there is a script, execute the script and then exit the simulation
+    su root -c '/tmp/script' # gives script full privileges as root user in multi-user mode
+    sync
+    sleep 10
+    /sbin/m5 exit
+fi
+echo "No script found"
