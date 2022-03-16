@@ -26,14 +26,15 @@ on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
-  push:
-    branches: [main]
-    paths:
-      - "scripts/build_kernel.sh"
-  pull_request:
-    branches: [main]
-    paths:
-      - "scripts/build_kernel.sh"
+#   push:
+#     branches: [main]
+# #     paths:
+# #       - "scripts/build_kernel.sh"
+
+#   pull_request:
+# #     branches: [main]
+# #     paths:
+# #       - "scripts/build_kernel.sh"
 
 env:
   KERNEL_DIR: linux
@@ -57,11 +58,9 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y gcc make git exuberant-ctags bc libssl-dev
 
-#       - name: Clone Kernel repo from kernel.org
-#         run: |
-#           git clone -v https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git ${{ env.KERNEL_DIR }}
-      - name: thest
-        run: mkdir ${{ env.KERNEL_DIR }}
+      - name: Clone Kernel repo from kernel.org
+        run: |
+          git clone -v https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git ${{ env.KERNEL_DIR }}
 
       - name: Checkout version v5.x
         working-directory: ${{ env.KERNEL_DIR }}
@@ -70,5 +69,5 @@ jobs:
       - name: Configure and build
         working-directory: ${{ env.KERNEL_DIR }}
         run: |
-          cp ../configs/linux-${KVERSION}.config .config
+          cp ../configs/linux-${{ env.KVERSION }}.config .config
           make -j $(nproc)
