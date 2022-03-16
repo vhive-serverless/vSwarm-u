@@ -57,16 +57,18 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y gcc make git exuberant-ctags bc libssl-dev
 
-      - name: Clone Kernel repo from kernel.org
-        run: |
-          git clone https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git $KERNEL_DIR
+#       - name: Clone Kernel repo from kernel.org
+#         run: |
+#           git clone -v https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git ${{ env.KERNEL_DIR }}
+      - name: thest
+        run: mkdir ${{ env.KERNEL_DIR }}
 
       - name: Checkout version v5.x
-        working-directory: $KERNEL_DIR
-        run: git checkout v${KVERSION}
+        working-directory: ${{ env.KERNEL_DIR }}
+        run: git checkout v${{ env.KVERSION }}
 
       - name: Configure and build
-        working-directory: $KERNEL_DIR
+        working-directory: ${{ env.KERNEL_DIR }}
         run: |
           cp ../configs/linux-${KVERSION}.config .config
           make -j $(nproc)
