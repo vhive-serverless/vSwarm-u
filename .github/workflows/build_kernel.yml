@@ -53,7 +53,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y git fakeroot build-essential ncurses-dev xz-utils libssl-dev bc flex libelf-dev bison
+          sudo apt-get install -y git git-lfs fakeroot build-essential ncurses-dev xz-utils libssl-dev bc flex libelf-dev bison
 
       - name: Check out code
         uses: actions/checkout@v2
