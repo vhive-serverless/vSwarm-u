@@ -22,34 +22,51 @@
 
 name: Build Linux Kernel
 
-# Controls when the workflow will run
 on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
-
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+  push:
+    branches: [main]
+    paths:
+      - "scripts/build_kernel.sh"
+  pull_request:
+    branches: [main]
+    paths:
+      - "scripts/build_kernel.sh"
+
+env:
+  KERNEL_DIR: linux
+  KVERSION: 5.4.84
+
 jobs:
-  # This workflow contains a single job called "build"
-  build:
-    # The type of runner that the job will run on
-    runs-on: ubuntu-latest
+  build-x86-64:
+    name: Build kernel for x86
+    runs-on: ubuntu-20.04
+    strategy:
+      fail-fast: false
 
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v2
+      - name: Check out code
+        uses: actions/checkout@v2
+        with:
+          lfs: "true"
 
-      # Runs a single command using the runners shell
-      - name: Run a one-line script
-        run: echo Hello, world!
-
-      # Runs a set of commands using the runners shell
-      - name: Run a multi-line script
+      - name: Install dependencies
         run: |
-          echo Add other actions to build,
-          echo test, and deploy your project.
+          sudo apt-get update
+          sudo apt-get install -y gcc make git exuberant-ctags bc libssl-dev
+
+      - name: Clone Kernel repo from kernel.org
+        run: |
+          git clone https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git $KERNEL_DIR
+
+      - name: Checkout version v5.x
+        working-directory: $KERNEL_DIR
+        run: git checkout v${KVERSION}
+
+      - name: Configure and build
+        working-directory: $KERNEL_DIR
+        run: |
+          cp ../configs/linux-${KVERSION}.config .config
+          make -j $(nproc)
