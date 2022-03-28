@@ -17,7 +17,7 @@ By having gem5 compiled, a kernel binary and a disk image you have already every
 ## Build gem5 resources
 To run simulation models with gem5 first all resources need to be build. Follow [this](https://www.gem5.org/documentation/learning_gem5/part1/building/) build steps. For convenience we put all the steps together in the the `build_gem5.sh` script. Just execute the following command and wait..
 ```bash
-./scripts/build_gem5.sh
+./setup/build_gem5.sh
 ```
 This script will install all pre requirements, pull the gem5 repo and build all components of gem5. Depending on our machine and the number of cores you use to build this can take minutes to hours.
 

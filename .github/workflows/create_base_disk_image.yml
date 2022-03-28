@@ -20,7 +20,10 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-name: Build Linux Kernel
+name: Create base disk image
+
+env:
+  WORKDIR: setup/
 
 on:
   # Allows you to run this workflow manually from the Actions tab
@@ -29,19 +32,16 @@ on:
   push:
     branches: [main, ci-pipelines]
     paths:
-      - "setup/build_kernel.sh"
+      - "${{ env.WORKDIR }}/create_disk_image.sh"
 
   pull_request:
     branches: [main, ci-pipelines]
     paths:
-      - "setup/build_kernel.sh"
-
-env:
-  WORKDIR: setup/
+      - "${{ env.WORKDIR }}/create_disk_image.sh"
 
 jobs:
   build-x86-64:
-    name: Build kernel for x86
+    name: Build disk image for x86
     runs-on: ubuntu-20.04
     strategy:
       fail-fast: true
@@ -50,8 +50,8 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v2
 
-      - name: Run build script for the Linux kernel
+      - name: Run script to create base image
         working-directory: ${{ env.WORKDIR }}
         shell: bash
         run: |
-          ./build_kernel.sh
+          ./create_disk_image.sh

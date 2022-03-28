@@ -1,6 +1,8 @@
+#!/bin/bash
+
 # MIT License
 #
-# Copyright (c) 2022 David Schall and EASE Lab
+# Copyright (c) 2022 David Schall and EASE lab
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -19,39 +21,39 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+# Install dependencies
 
-name: Build Linux Kernel
+set -e -x
 
-on:
-  # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+ROOT="$( cd $DIR && cd .. && pwd)"
 
-  push:
-    branches: [main, ci-pipelines]
-    paths:
-      - "setup/build_kernel.sh"
 
-  pull_request:
-    branches: [main, ci-pipelines]
-    paths:
-      - "setup/build_kernel.sh"
+### Build kernel for gem5 supporting running docker images
+KVERSION=v5.4.84
+OUTDIR=${1:-$ROOT/workload/}
 
-env:
-  WORKDIR: setup/
+## Install dependencies
+sudo apt-get install -y \
+    git build-essential ncurses-dev xz-utils libssl-dev bc \
+    flex libelf-dev bison
 
-jobs:
-  build-x86-64:
-    name: Build kernel for x86
-    runs-on: ubuntu-20.04
-    strategy:
-      fail-fast: true
+# Get sources
+git clone https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git linux
+pushd linux
+git checkout ${KVERSION}
 
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v2
+# Apply the configuration
+cp ${ROOT}/configs/linux-configs/${KVERSION}.config .config
 
-      - name: Run build script for the Linux kernel
-        working-directory: ${{ env.WORKDIR }}
-        shell: bash
-        run: |
-          ./build_kernel.sh
+## build kernel
+make -j $(nproc)
+
+## place in ouput folder
+mkdir -p $OUTDIR
+cp vmlinux $OUTDIR
+popd
+
+## Clean up the linux sources
+# rm -rf ../linux
+

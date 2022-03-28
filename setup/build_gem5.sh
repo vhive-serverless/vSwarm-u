@@ -1,6 +1,8 @@
+#!/bin/bash
+
 # MIT License
 #
-# Copyright (c) 2022 David Schall and EASE Lab
+# Copyright (c) 2022 David Schall and EASE lab
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -19,39 +21,48 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+# Install dependencies
 
-name: Build Linux Kernel
+set -e -x
 
-on:
-  # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+ROOT="$( cd $DIR && cd .. && pwd)"
 
-  push:
-    branches: [main, ci-pipelines]
-    paths:
-      - "setup/build_kernel.sh"
 
-  pull_request:
-    branches: [main, ci-pipelines]
-    paths:
-      - "setup/build_kernel.sh"
+ARCH=X86
+GEM5_DIR=${1:-$ROOT/gem5/}
 
-env:
-  WORKDIR: setup/
+# Setup on Ubuntu 20.04
+sudo apt update
+sudo apt install -y build-essential git m4 scons zlib1g zlib1g-dev \
+    libprotobuf-dev protobuf-compiler libprotoc-dev libgoogle-perftools-dev \
+    python3-dev python3-six python-is-python3 libboost-all-dev pkg-config
 
-jobs:
-  build-x86-64:
-    name: Build kernel for x86
-    runs-on: ubuntu-20.04
-    strategy:
-      fail-fast: true
 
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v2
+git clone https://gem5.googlesource.com/public/gem5 $GEM5_DIR
 
-      - name: Run build script for the Linux kernel
-        working-directory: ${{ env.WORKDIR }}
-        shell: bash
-        run: |
-          ./build_kernel.sh
+pushd $GEM5_DIR
+
+## Build gem5
+scons build/$ARCH/gem5.opt -j $(nproc) --install-hooks
+popd
+
+###
+## Build the terminal
+pushd $GEM5_DIR/util/term
+make
+popd
+
+## the path for x86 is slightly different
+if [ $ARCH == X86 ]; then ARCH=x86; fi
+
+## Build m5 tools
+pushd $GEM5_DIR/util/m5
+scons build/$ARCH/out/m5
+popd
+
+# Export absolute path
+export GEM5_DIR=$GEM5_DIR
+
+sudo sh -c  "echo 'export GEM5_DIR=${GEM5_DIR}' >> /etc/profile"
+sh -c  "echo 'export GEM5_DIR=${GEM5_DIR}' >> $HOME/.bashrc"

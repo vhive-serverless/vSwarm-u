@@ -20,7 +20,11 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-name: Build Linux Kernel
+name: Build Gem5
+
+
+env:
+  WORKDIR: setup/
 
 on:
   # Allows you to run this workflow manually from the Actions tab
@@ -29,19 +33,17 @@ on:
   push:
     branches: [main, ci-pipelines]
     paths:
-      - "setup/build_kernel.sh"
+      - "${{ env.WORKDIR }}/build_gem5.sh"
 
   pull_request:
     branches: [main, ci-pipelines]
     paths:
-      - "setup/build_kernel.sh"
+      - "${{ env.WORKDIR }}/build_gem5.sh"
 
-env:
-  WORKDIR: setup/
 
 jobs:
   build-x86-64:
-    name: Build kernel for x86
+    name: Build Gem5 for x86
     runs-on: ubuntu-20.04
     strategy:
       fail-fast: true
@@ -50,8 +52,8 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v2
 
-      - name: Run build script for the Linux kernel
+      - name: Run Gem5 build script
         working-directory: ${{ env.WORKDIR }}
         shell: bash
         run: |
-          ./build_kernel.sh
+          ./build_gem5.sh
