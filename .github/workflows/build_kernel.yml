@@ -20,56 +20,37 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-name: Build Linux Kernel
+name: Build Linux Kernel script
 
 on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
   push:
-    branches: [main]
-# #     paths:
-# #       - "scripts/build_kernel.sh"
+    branches: [main, ci-pipelines]
+    paths:
+      - "setup/build_kernel.sh"
 
-#   pull_request:
-# #     branches: [main]
-# #     paths:
-# #       - "scripts/build_kernel.sh"
+  pull_request:
+    branches: [main, ci-pipelines]
+    paths:
+      - "setup/build_kernel.sh"
 
 env:
-  KERNEL_DIR: linux
-  KVERSION: 5.4.84
+  WORKDIR: setup/
 
 jobs:
   build-x86-64:
     name: Build kernel for x86
-#     runs-on: ubuntu-20.04
-    runs-on: test-runner
+    runs-on: ubuntu-20.04
     strategy:
-      fail-fast: false
+      fail-fast: true
 
     steps:
-    
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y git git-lfs fakeroot build-essential ncurses-dev xz-utils libssl-dev bc flex libelf-dev bison
-
       - name: Check out code
         uses: actions/checkout@v2
-        with:
-          lfs: "true"
-                                  
-      - name: Clone Kernel repo from kernel.org
-        run: |
-          git clone -v https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git ${{ env.KERNEL_DIR }}
 
-      - name: Checkout version v5.x
-        working-directory: ${{ env.KERNEL_DIR }}
-        run: git checkout v${{ env.KVERSION }}
-
-      - name: Configure and build
-        working-directory: ${{ env.KERNEL_DIR }}
+      - name: Run build script for the Linux kernel
+        working-directory: ${{ env.WORKDIR }}
         run: |
-          cp ../configs/linux-${{ env.KVERSION }}.config .config
-          make -j $(nproc)
+          build_kernel.sh

@@ -3,7 +3,9 @@
 
 ### Build kernel for gem5 supporting running docker images
 KVERSION=5.4.84
+TARGET_DIR=../workload/
 
+git build-essential ncurses-dev xz-utils libssl-dev bc flex libelf-dev bison
 sudo apt-get install -y libncurses5-dev \
                         gcc make git exuberant-ctags bc libssl-dev
 
@@ -17,7 +19,10 @@ cp ../configs/linux-${KVERSION}.config .config
 
 ## build kernel
 make -j $(nproc)
-cp vmlinux ../workload/
+
+## place in ouput folder
+mkdir -p $TARGET_DIR
+cp vmlinux $TARGET_DIR
 popd
 
 ## Clean up the linux sources

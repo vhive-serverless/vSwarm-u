@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ARCH=X86
-GEM5_DIR=gem5/
+GEM5_DIR=$HOME/gem5/
 
 # Setup on Ubuntu 20.04
 sudo apt update
@@ -15,7 +15,7 @@ git clone https://gem5.googlesource.com/public/gem5 $GEM5_DIR
 pushd $GEM5_DIR
 
 ## Build gem5
-scons build/$ARCH/gem5.opt -j $(nproc)
+scons build/$ARCH/gem5.opt -j $(nproc) --install-hooks
 popd
 
 ###
