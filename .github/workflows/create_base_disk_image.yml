@@ -32,12 +32,12 @@ on:
   push:
     branches: [main, ci-pipelines]
     paths:
-      - "${{ env.WORKDIR }}/create_disk_image.sh"
+      - "setup/create_disk_image.sh"
 
   pull_request:
     branches: [main, ci-pipelines]
     paths:
-      - "${{ env.WORKDIR }}/create_disk_image.sh"
+      - "setup/create_disk_image.sh"
 
 jobs:
   build-x86-64:

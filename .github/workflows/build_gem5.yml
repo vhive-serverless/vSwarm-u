@@ -33,12 +33,12 @@ on:
   push:
     branches: [main, ci-pipelines]
     paths:
-      - "${{ env.WORKDIR }}/build_gem5.sh"
+      - "setup/build_gem5.sh"
 
   pull_request:
     branches: [main, ci-pipelines]
     paths:
-      - "${{ env.WORKDIR }}/build_gem5.sh"
+      - "setup/build_gem5.sh"
 
 
 jobs:
