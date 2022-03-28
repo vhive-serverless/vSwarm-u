@@ -25,8 +25,21 @@
 
 set -e -x
 
-sudo apt-get install -y qemu-kvm libvirt-daemon-system libvirt-clients bridge-utils
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+ROOT="$( cd $DIR && cd .. && pwd)"
 
+## User specific inputs
+OUTDIR=${1:-../workload/}
+
+INSTALL_ISO=ubuntu-20.04.3-live-server-amd64.iso
+DISK_IMG=base-disk-image.img
+DISK_SIZE=4G
+RAM=8G
+CPUS=4
+
+
+## Install dependencies
+sudo apt-get install -y qemu-kvm libvirt-daemon-system libvirt-clients bridge-utils
 
 if [ $(uname -i) != "x86_64" ] ;
 then
@@ -35,25 +48,22 @@ then
 fi
 
 
-INSTALL_ISO=ubuntu-20.04.3-live-server-amd64.iso
-DISK_IMG=disk-image4.img
-DISK_SIZE=4G
-RAM=8G
-CPUS=4
-
 ## Get and mount Ubuntu 20.04
 wget https://releases.ubuntu.com/20.04.3/$INSTALL_ISO
 echo "f8e3086f3cea0fb3fefb29937ab5ed9d19e767079633960ccb50e76153effc98 *${INSTALL_ISO}" | shasum -a 256 --check
 mkdir -p iso
-sudo mount -r $INSTALL_ISO  iso
+sudo mount -r $INSTALL_ISO iso
 
+## Serve all files for the setup over a http server.
+mkdir -p tmp/
+cp -r ${ROOT}/configs/disk-image-configs/* tmp/
 
-## Serve the autoconfig per http server.
-cp configs/autoinstall.yaml configs/user-data
-touch configs/meta-data
-touch configs/vendor-data
+## Rename the autoconfig to user-data
+mv tmp/autoinstall.yaml tmp/user-data
+touch tmp/meta-data
+touch tmp/vendor-data
 
-python -m http.server -d configs 3003 &
+python -m http.server -d tmp 3003 &
 SERVER_PID=$!
 
 
@@ -66,7 +76,7 @@ qemu-img create disk.img $DISK_SIZE
 # Then it will listen to port 3003 to retive the autoconfig files.
 # If such provided the install process will automatically done for you.
 sudo qemu-system-x86_64 \
-    -nographic -vnc :1 \
+    -nographic \
     -cpu host -enable-kvm \
     -smp ${CPUS} \
     -m ${RAM} \
@@ -83,13 +93,11 @@ echo "Ubuntu installed on disk image"
 kill "$SERVER_PID"
 
 sudo umount iso
-rm -r iso *.iso \
-    configs/user-data \
-    configs/meta-data \
-    configs/vendor-data
+rm -r iso *.iso tmp
 
 
 # Move the final ready to use disk image to the workload folder
-mv disk.img workload/$DISK_IMG
+mkdir -p $OUTDIR
+mv disk.img $OUTDIR/$DISK_IMG
 
 

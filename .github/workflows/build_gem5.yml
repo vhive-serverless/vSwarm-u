@@ -40,6 +40,7 @@ on:
     paths:
       - "${{ env.WORKDIR }}/build_gem5.sh"
 
+
 jobs:
   build-x86-64:
     name: Build Gem5 for x86

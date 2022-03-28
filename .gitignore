@@ -32,6 +32,9 @@
 *.app
 
 
-gem5-configs/__pycache__/*
-gem5
-workload
+**/gem5-configs/__pycache__/*
+**/gem5
+**/workload
+
+**/tmp
+**/iso

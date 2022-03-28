@@ -12,8 +12,8 @@ apt full-upgrade -y
 sudo apt-get -y install \
     gcc \
     g++ \
-    make \
-    git-lfs
+    make
+
 
 ##### GEM5 specific setup #####
 ## Prepare gem5 utility tool

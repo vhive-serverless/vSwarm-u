@@ -1,8 +1,6 @@
-#!/bin/bash
-
 # MIT License
 #
-# Copyright (c) 2022 David Schall and EASE lab
+# Copyright (c) 2022 David Schall and EASE Lab
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -21,39 +19,39 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-# Install dependencies
 
-set -e -x
+name: Create base disk image
 
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-ROOT="$( cd $DIR && cd .. && pwd)"
+env:
+  WORKDIR: setup/
 
+on:
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
 
-### Build kernel for gem5 supporting running docker images
-KVERSION=v5.4.84
-OUTDIR=${1:-$ROOT/workload/}
+  push:
+    branches: [main, ci-pipelines]
+    paths:
+      - "${{ env.WORKDIR }}/create_disk_image.sh"
 
-## Install dependencies
-sudo apt-get install -y \
-    git build-essential ncurses-dev xz-utils libssl-dev bc \
-    flex libelf-dev bison
+  pull_request:
+    branches: [main, ci-pipelines]
+    paths:
+      - "${{ env.WORKDIR }}/create_disk_image.sh"
 
-# Get sources
-git clone https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git linux
-pushd linux
-git checkout ${KVERSION}
+jobs:
+  build-x86-64:
+    name: Build disk image for x86
+    runs-on: ubuntu-20.04
+    strategy:
+      fail-fast: true
 
-# Apply the configuration
-cp ${ROOT}/configs/linux-configs/${KVERSION}.config .config
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
 
-## build kernel
-make -j $(nproc)
-
-## place in ouput folder
-mkdir -p $OUTDIR
-cp vmlinux $OUTDIR
-popd
-
-## Clean up the linux sources
-# rm -rf ../linux
-
+      - name: Run script to create base image
+        working-directory: ${{ env.WORKDIR }}
+        shell: bash
+        run: |
+          ./create_disk_image.sh

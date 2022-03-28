@@ -30,7 +30,7 @@ ROOT="$( cd $DIR && cd .. && pwd)"
 
 
 ARCH=X86
-GEM5_DIR=${1:-../gem5/}
+GEM5_DIR=${1:-$ROOT/gem5/}
 
 # Setup on Ubuntu 20.04
 sudo apt update
@@ -62,7 +62,6 @@ scons build/$ARCH/out/m5
 popd
 
 # Export absolute path
-GEM5_DIR="$( cd $GEM5_DIR && pwd)"
 export GEM5_DIR=$GEM5_DIR
 
 sudo sh -c  "echo 'export GEM5_DIR=${GEM5_DIR}' >> /etc/profile"
