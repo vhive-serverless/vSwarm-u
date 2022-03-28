@@ -52,5 +52,6 @@ jobs:
 
       - name: Run build script for the Linux kernel
         working-directory: ${{ env.WORKDIR }}
+        shell: bash
         run: |
-          build_kernel.sh
+          ./build_kernel.sh
