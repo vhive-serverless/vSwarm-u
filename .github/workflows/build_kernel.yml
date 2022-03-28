@@ -20,7 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-name: Build Linux Kernel script
+name: Build Linux Kernel
 
 on:
   # Allows you to run this workflow manually from the Actions tab
