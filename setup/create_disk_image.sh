@@ -40,7 +40,7 @@ CPUS=4
 
 ## Install dependencies
 sudo apt-get update
-sudo apt-get install -y qemu-kvm libvirt-daemon-system libvirt-clients bridge-utils
+sudo apt-get install -y qemu-kvm libvirt-daemon-system libvirt-clients bridge-utils wget
 
 if [ $(uname -i) != "x86_64" ] ;
 then

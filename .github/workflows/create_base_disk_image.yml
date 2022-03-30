@@ -42,7 +42,7 @@ on:
 jobs:
   build-x86-64:
     name: Build disk image for x86
-    runs-on: gem5-build
+    runs-on: [gem5-build,ubuntu-20.04]
     strategy:
       fail-fast: true
 
