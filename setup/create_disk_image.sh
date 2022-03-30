@@ -64,7 +64,7 @@ mv tmp/autoinstall.yaml tmp/user-data
 touch tmp/meta-data
 touch tmp/vendor-data
 
-python -m http.server -d tmp 3003 &
+python3 -m http.server -d tmp 3003 &
 SERVER_PID=$!
 
 
@@ -87,6 +87,10 @@ sudo qemu-system-x86_64 \
     -kernel iso/casper/vmlinuz \
     -initrd iso/casper/initrd \
     -append 'autoinstall ds=nocloud-net;s=http://_gateway:3003/'
+
+## To get the full output of the install process add
+## 'earlyprintk=ttyS0 console=ttyS0 lpj=7999923' to the
+## kernel commands (-append flag)
 
 echo "Ubuntu installed on disk image"
 
