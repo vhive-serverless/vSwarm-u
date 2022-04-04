@@ -67,6 +67,7 @@ jobs:
 
       - name: Run the actual test of the emulator.
         working-directory: ${{ env.TEST_DIR }}
+        timeout-minutes: 5
         run: |
           make -f ${{ env.MAKEFILE }} run
 
