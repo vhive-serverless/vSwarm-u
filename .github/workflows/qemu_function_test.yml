@@ -52,7 +52,7 @@ jobs:
 
     env:
       IMAGE_NAME: vhiveease/${{ matrix.function }}
-      WORKING_DIR: ${{ env.WORKING_DIR }}
+#       WORKING_DIR: ${{ env.WORKING_DIR }}
 
 
     steps:
