@@ -35,9 +35,6 @@ on:
     # paths:
     #   - "setup/build_kernel.sh"
 
-env:
-  MAKEFILE: test/Makefile
-  WORKING_DIR: wkdir/
 
 #   WORKLOAD_DIR: /tmp/workload/
 
@@ -53,6 +50,8 @@ jobs:
 
     env:
       IMAGE_NAME: vhiveease/${{ matrix.function }}
+      MAKEFILE: test/Makefile
+      WORKING_DIR: wkdir/
 #       WORKING_DIR: ${{ env.WORKING_DIR }}
 
 
@@ -61,18 +60,16 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Create the working directory to run the test.
-        working-directory: ${{ env.TEST_DIR }}
         run: |
           make -f ${{ env.MAKEFILE }} build
 
       - name: Run the actual test of the emulator.
-        working-directory: ${{ env.TEST_DIR }}
         timeout-minutes: 5
         run: |
           make -f ${{ env.MAKEFILE }} run
 
       - name: Check the results file.
-        working-directory: ${{ env.TEST_DIR }}/${{ env.WORKING_DIR }}
+        working-directory: ${{ env.WORKING_DIR }}
         run: |
           if grep -q "SUCCESS" results.log ; then
             echo "==================\n Test successful\n=================="
@@ -81,6 +78,6 @@ jobs:
           fi
 
       - name: Clean everything.
-        working-directory: ${{ env.TEST_DIR }}
+        if: ${{ always() }}
         run: |
           make -f ${{ env.MAKEFILE }} clean
