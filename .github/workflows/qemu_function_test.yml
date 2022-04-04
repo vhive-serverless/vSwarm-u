@@ -51,8 +51,8 @@ jobs:
         function: [aes-go]
 
     env:
-      IMAGE_NAME=vhiveease/${{ matrix.function }}
-      WORKING_DIR=${{ env.WORKING_DIR }}
+      IMAGE_NAME: vhiveease/${{ matrix.function }}
+      WORKING_DIR: ${{ env.WORKING_DIR }}
 
 
     steps:
@@ -70,13 +70,15 @@ jobs:
       - name: Check the result
         working-directory: ${{ env.WORKING_DIR }}
         shell: bash
-        run: |
-          if grep -q "SUCCESS" results.log ; then
-		        echo "==================\n Test successful\n==================";
-          else
-            echo "==================\n Test failed\n==================";
-            exit 1;
-          fi
+	run: |
+		if grep -q "SUCCESS" results.log ; then echo "Success"; else echo "Fail"; fi
+
+# 		if grep -q "SUCCESS" results.log ; then 
+# 	  	echo "==================\n Test successful\n=================="
+#           else
+#             echo "==================\n Test failed\n==================";
+#             exit 1;
+#           fi
 
 
 
