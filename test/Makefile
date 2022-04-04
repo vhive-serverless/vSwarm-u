@@ -75,6 +75,8 @@ test: build
 
 build: $(WORKING_DIR) $(DISK_IMAGE_FILE) $(RUN_SCRIPT)
 
+install_dependencies:
+	python3 -m pip install --user uploadserver
 
 
 ## Do the actual emulation run

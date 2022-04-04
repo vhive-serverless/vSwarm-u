@@ -36,8 +36,9 @@ on:
     #   - "setup/build_kernel.sh"
 
 env:
-  TEST_DIR: test/
-  WORKING_DIR: tmp/
+  MAKEFILE: test/Makefile
+  WORKING_DIR: wkdir/
+
 #   WORKLOAD_DIR: /tmp/workload/
 
 jobs:
@@ -61,17 +62,24 @@ jobs:
 
       - name: Create the working directory to run the test.
         working-directory: ${{ env.TEST_DIR }}
-        run: make build
+        run: |
+          make -f ${{ env.MAKEFILE }} build
 
       - name: Run the actual test of the emulator.
         working-directory: ${{ env.TEST_DIR }}
-        run: make run
+        run: |
+          make -f ${{ env.MAKEFILE }} run
 
       - name: Check the results file.
-        working-directory: ${{ env.WORKING_DIR }}
+        working-directory: ${{ env.TEST_DIR }}/${{ env.WORKING_DIR }}
         run: |
           if grep -q "SUCCESS" results.log ; then
             echo "==================\n Test successful\n=================="
           else
             echo "==================\n Test failed\n==================";
           fi
+
+      - name: Clean everything.
+        working-directory: ${{ env.TEST_DIR }}
+        run: |
+          make -f ${{ env.MAKEFILE }} clean
