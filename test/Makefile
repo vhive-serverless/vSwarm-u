@@ -40,24 +40,28 @@ CPUS        := 2
 
 
 # CLOUD_IMAGE_URL      := $(CLOUD_IMAGE_BASE_URL)/$(CLOUD_IMAGE_FILE)
-DISK_IMAGE_FILE      := $(WORKING_DIR)/disk.img
+
 
 
 CONFIGS_DIR          := $(ROOT)/test/*
 
 
+
+## Base Image
+KERNEL := $(WORKLOAD_DIR)/vmlinux
+BASE_IMAGE := $(WORKLOAD_DIR)/base-disk-image.img
+
 RUN_SCRIPT_TEMPLATE := $(ROOT)/test/run_test.template.sh
 
 
-
+DISK_IMAGE_FILE      := $(WORKING_DIR)/disk.img
 RUN_SCRIPT			:= $(WORKING_DIR)/run.sh
 RESULTS			:= $(WORKING_DIR)/results.log
-
-KERNEL := $(WORKLOAD_DIR)/vmlinux
-# BASE_IMAGE := $(WORKLOAD_DIR)/base-disk-image.img
-BASE_IMAGE := /users/dschall/vSwarm-u/setup/build_dir/gem5-disk-image.img2
-
 SERVE := $(WORKING_DIR)/server.pid
+
+
+
+
 
 
 
