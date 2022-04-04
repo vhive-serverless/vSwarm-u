@@ -70,8 +70,8 @@ jobs:
       - name: Check the result
         working-directory: ${{ env.WORKING_DIR }}
         shell: bash
-	run: |
-		if grep -q "SUCCESS" results.log ; then echo "Success"; else echo "Fail"; fi
+				run: |
+					if grep -q "SUCCESS" results.log ; then echo "Success"; else echo "Fail"; fi
 
 # 		if grep -q "SUCCESS" results.log ; then 
 # 	  	echo "==================\n Test successful\n=================="
