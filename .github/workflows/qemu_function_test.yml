@@ -67,18 +67,11 @@ jobs:
         working-directory: ${{ env.TEST_DIR }}
         run: make run
 
-      - name: Check the result
+      - name: Check the results file.
         working-directory: ${{ env.WORKING_DIR }}
-        shell: bash
-				run: |
-					if grep -q "SUCCESS" results.log ; then echo "Success"; else echo "Fail"; fi
-
-# 		if grep -q "SUCCESS" results.log ; then 
-# 	  	echo "==================\n Test successful\n=================="
-#           else
-#             echo "==================\n Test failed\n==================";
-#             exit 1;
-#           fi
-
-
-
+        run: |
+          if grep -q "SUCCESS" results.log ; then
+            echo "==================\n Test successful\n=================="
+          else
+            echo "==================\n Test failed\n==================";
+          fi
