@@ -58,6 +58,7 @@ DISK_IMAGE_FILE      := $(WORKING_DIR)/disk.img
 RUN_SCRIPT			:= $(WORKING_DIR)/run.sh
 RESULTS			:= $(WORKING_DIR)/results.log
 SERVE := $(WORKING_DIR)/server.pid
+SERVER_LOG := $(WORKING_DIR)/server.log
 
 
 
@@ -130,14 +131,24 @@ $(DISK_IMAGE_FILE): | $(WORKING_DIR) $(WORKLOAD_DIR)
 # File server
 $(SERVE):
 #	python3 -m http.server -d $(WORKING_DIR) 3003 &
+	PID=$$(lsof -t -i :3003); \
+	if [ $$PID > 0 ]; then kill -9 $$PID; fi
+
 	python3 -m uploadserver -d $(WORKING_DIR) 3003 &  \
-	echo "$$!" > $@;
+	echo "$$!" > $@ ;
+	sleep 2
 	@echo "Run server: $$(cat $@ )"
 
 serve_start: $(SERVE)
 
 serve_stop: $(SERVE)
-	kill `cat $<` && rm $<
+	kill `cat $<` && rm $< 2> /dev/null
+	PID=$$(lsof -t -i :3003); \
+	if [ $$PID > 0 ]; then kill -9 $$PID; fi
+#	kill `cat $<` && rm $<
+#	if $$(pidof python3); then \
+#		kill $$(pidof python3); \
+#	fi
 
 
 clean: serve_stop
