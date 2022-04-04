@@ -38,7 +38,7 @@ on:
 env:
   TEST_DIR: test/
   WORKING_DIR: tmp/
-  WORKLOAD_DIR: workload/
+#   WORKLOAD_DIR: /tmp/workload/
 
 jobs:
   emulator-function-test:
