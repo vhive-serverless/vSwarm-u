@@ -7,7 +7,7 @@
 In order to simulate containerized functions using gem5 several general steps need to be done before your first experiments.
 Due to time limits and long compile time we already preinstalled all required base components on to the GCP image you go from us.
 
-In order to setup those base by your own later on, we created a separate hands on [here](setup.md) where you can find all instructions to do so.
+In order to setup those base by your own later on, we created a separate hands on [here](setup/README.md) where you can find all instructions to do so.
 
 ## Customize the simulator
 At this point You are are ready to customize the base components onto your own needs and start your microarchitectual research.

@@ -1,4 +1,4 @@
-> [Gem5 Tutorial](README.md) ▸ **Setup**
+> [Main](../README.md) ▸ **Setup**
 # Setup Gem5 for Full-System simulation
 
 In oder to run full system simulations gem5 requires three essential components.

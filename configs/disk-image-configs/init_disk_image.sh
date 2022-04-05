@@ -1,5 +1,6 @@
 #!/bin/bash
 
+set -e
 
 # Allow root to login with ssh
 echo 'ubuntu ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/ubuntu
@@ -8,11 +9,11 @@ systemctl restart sshd
 
 # Do a full upgrade
 apt update
-apt full-upgrade -y
-sudo apt-get -y install \
-    gcc \
-    g++ \
-    make
+# apt full-upgrade -y
+# sudo apt-get -y install \
+#     gcc \
+#     g++ \
+#     make
 
 
 ##### GEM5 specific setup #####

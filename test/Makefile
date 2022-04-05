@@ -28,7 +28,7 @@ ROOT 		:= $(abspath $(dir $(mkfile_path))/../)
 
 ## User specific inputs
 IMAGE_NAME  		?=vhiveease/aes-go
-BASE_TEMPLATES_DIR 	?=$(ROOT)/workload/
+RESOURCES 			?=$(ROOT)/resources/
 WORKING_DIR 		?=wkdir/
 
 ## Machine parameter
@@ -36,30 +36,49 @@ MEMORY 	:= 2G
 CPUS    := 2
 
 
-## Base Image
-KERNEL 				:= $(BASE_TEMPLATES_DIR)/vmlinux
-BASE_IMAGE 			:= $(BASE_TEMPLATES_DIR)/base-disk-image.img
+## Required resources
+RESRC_KERNEL 		:= $(RESOURCES)/vmlinux
+RESRC_BASE_IMAGE 	:= $(RESOURCES)/base-disk-image.img
+RESRC_CLIENT	 	:= $(RESOURCES)/test-client
 RUN_SCRIPT_TEMPLATE := $(ROOT)/test/run_test.template.sh
 
-DISK_IMAGE_FILE 	:= $(WORKING_DIR)/disk.img
+
+KERNEL 				:= $(WORKING_DIR)/kernel
+DISK_IMAGE 			:= $(WORKING_DIR)/disk.img
 RUN_SCRIPT			:= $(WORKING_DIR)/run.sh
+TEST_CLIENT			:= $(WORKING_DIR)/test-client
 RESULTS				:= $(WORKING_DIR)/results.log
 SERVE 				:= $(WORKING_DIR)/server.pid
 
-
-
-build: $(WORKING_DIR) $(DISK_IMAGE_FILE) $(RUN_SCRIPT)
-
-install_dependencies:
-	apt-get update \
-  	&& apt-get install -y \
+## Dependencies -------------------------------------------------
+## Check and install all dependencies necessary to perform function
+##
+dep_install:
+	sudo apt-get update \
+  	&& sudo apt-get install -y \
         python3-pip \
         curl lsof \
         qemu-kvm bridge-utils
 	python3 -m pip install --user uploadserver
 
+dep_check_qemu:
+	$(call check_file, $(RESRC_KERNEL))
+	$(call check_file, $(RESRC_BASE_IMAGE))
+	$(call check_file, $(RESRC_CLIENT))
+	$(call check_dep, qemu-kvm)
+	$(call check_dep, lsof)
+	$(call check_py_dep, uploadserver)
 
-## Do the actual emulation run
+
+test:
+	$(call check_file, README.md)
+	$(call check_dir, README.mdd)
+	$(call check_dep, python3)
+	$(call check_py_dep, uploadserver)
+
+
+## Run Emulator -------------------------------------------------
+# Do the actual emulation run
 # The command will boot an instance.
 # Then it will listen to port 3003 to retive a run script
 # This run script will be the one we provided.
@@ -69,7 +88,7 @@ run: build serve_start
 		-cpu host -enable-kvm \
 		-smp ${CPUS} \
 		-m ${MEMORY} \
-		-drive file=$(DISK_IMAGE_FILE),format=raw \
+		-drive file=$(DISK_IMAGE),format=raw \
 		-kernel $(KERNEL) \
 		-append 'console=ttyS0 root=/dev/hda2'
 
@@ -77,31 +96,35 @@ run: build serve_start
 
 ## Test the results file
 check: $(RESULTS)
+	@cat $<;
 	@if grep -q "SUCCESS" $< ; then \
-		echo "==================\n Test successful\n=================="; \
+		printf "${GREEN}==================\n Test successful\n==================${NC}\n"; \
 	else \
-		echo "==================\n Test failed\n=================="; \
-		# cat $<; \
+		printf "${RED}==================\n Test failed\n==================${NC}\n"; \
 		exit 1; \
 	fi
 
 
 
+## Build the test setup ----------------------------
+build: $(WORKING_DIR) $(DISK_IMAGE) $(KERNEL) $(RUN_SCRIPT) $(TEST_CLIENT)
+
 $(WORKING_DIR):
 	@echo "Create folder: $(WORKING_DIR)"
 	mkdir -p $@
 
-
 $(RUN_SCRIPT): $(WORKING_DIR)
 	sed 's|<__IMAGE_NAME__>|$(IMAGE_NAME)|g' $(RUN_SCRIPT_TEMPLATE) > $@
 
+$(KERNEL): $(RESRC_KERNEL)
+	cp $< $@
 
+$(TEST_CLIENT): $(RESRC_CLIENT)
+	cp $< $@
 
-##
 # Create the disk image from the base image
-$(DISK_IMAGE_FILE): | $(WORKING_DIR) $(BASE_TEMPLATES_DIR)
-	@echo "Build test disk image"
-	cp $(BASE_IMAGE) $@
+$(DISK_IMAGE): $(RESRC_BASE_IMAGE)
+	cp $< $@
 
 
 ####
@@ -127,3 +150,47 @@ serve_stop: $(SERVE)
 clean: serve_stop
 	@echo "Clean up"
 	sudo rm -rf $(WORKING_DIR)
+
+
+
+RED=\033[0;31m
+GREEN=\033[0;32m
+NC=\033[0m # No Color
+
+
+define check_dep
+	@if [ $$(dpkg-query -W -f='$${Status}' $1 2>/dev/null | grep -c "ok installed") -ne 0 ]; \
+	then printf "$1 ${GREEN}installed ok${NC}\n"; \
+	else printf "$1 ${RED}not installed${NC}\n"; fi
+endef
+#	# @if [[ $$(python -c "import $1" &> /dev/null) -eq 0]];
+define check_py_dep
+	@if [ $$(eval pip list | grep -c $1) -ne 0 ] ; \
+	then printf "$1 ${GREEN}installed ok${NC}\n"; \
+	else printf "$1 ${RED}not installed${NC}\n"; fi
+endef
+
+
+
+define check_file
+	@if [ -f $1 ]; \
+	then printf "$1 ${GREEN}exists${NC}\n"; \
+	else printf "$1 ${RED}missing${NC}\n"; fi
+endef
+
+# define check_file
+# 	printf "$1: ${GREEN}exists${NC}";
+# 	$(call print_result, $$(test -f $1))
+# endef
+
+define check_dir
+	@if [ -d $1 ]; \
+	then printf "$1 ${GREEN}exists${NC}\n"; \
+	else printf "$1 ${RED}missing${NC}\n"; fi
+endef
+
+define print_result
+	if [ $1 ]; \
+	then printf " ${GREEN}ok${NC}\n"; \
+	else printf " ${RED}fail${NC}\n"; fi
+endef

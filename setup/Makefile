@@ -31,8 +31,7 @@ ROOT 		:= $(abspath $(dir $(mkfile_path))/../)
 ## User specific inputs
 IMAGE_NAME  := gem5-disk-image
 BUILD_DIR   ?= wkdir/
-
-BASE_TEMPLATES_DIR 	?=$(ROOT)/workload/
+RESOURCES 	?=$(ROOT)/resources/
 
 DISK_SIZE   := 8G
 MEMORY      := 8G
@@ -61,10 +60,11 @@ KERNEL 				:= $(BUILD_DIR)/vmlinux
 INITRD 				:= $(BUILD_DIR)/initrd
 SERVE 				:= $(BUILD_DIR)/server.pid
 
-BASE_DISK_IMAGE		:=$(BASE_TEMPLATES_DIR)/base-disk-image.img
-
+# Resource files
+RESRC_BASE_IMAGE 	:= $(RESOURCES)/base-disk-image.img
 
 build: | $(BUILD_DIR) $(INITRD) $(DISK_IMAGE_FILE) $(INSTALL_CONFIG)
+
 
 ## Do the actual installation
 # The command will boot from the iso file.
@@ -84,8 +84,9 @@ install: build $(SERVE)
 		-append 'autoinstall ds=nocloud-net;s=http://_gateway:3003/'
 
 
+## Save the created files to the resource directory
 save: $(DISK_IMAGE_FILE) install
-	cp $(DISK_IMAGE_FILE) $(BASE_DISK_IMAGE)
+	cp $(DISK_IMAGE_FILE) $(RESRC_BASE_IMAGE)
 
 
 $(RUN_SCRIPT): $(BUILD_DIR)
