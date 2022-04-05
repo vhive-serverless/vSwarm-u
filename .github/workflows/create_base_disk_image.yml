@@ -24,6 +24,8 @@ name: Create base disk image
 
 env:
   WORKDIR: setup/
+  MAKEFILE: setup/Makefile
+  BUILD_DIR: wkdir/
 
 on:
   # Allows you to run this workflow manually from the Actions tab
@@ -50,8 +52,22 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v2
 
-      - name: Run script to create base image
-        working-directory: ${{ env.WORKDIR }}
+      - name: Download the iso file
         shell: bash
         run: |
-          ./create_disk_image.sh
+          make -f ${{ env.MAKEFILE }} download
+
+      - name: Install ubuntu on the disk
+        shell: bash
+        run: |
+          make -f ${{ env.MAKEFILE }} install
+
+      # - name: Save the image as base image
+      #   shell: bash
+      #   run: |
+      #     make -f ${{ env.MAKEFILE }} save
+
+      - name: Clean everything
+        if: ${{ always() }}
+        run: |
+          make -f ${{ env.MAKEFILE }} clean

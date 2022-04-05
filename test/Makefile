@@ -22,61 +22,40 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
-ROOT := $(abspath $(dir $(mkfile_path))/../)
+ROOT 		:= $(abspath $(dir $(mkfile_path))/../)
 
 
 ## User specific inputs
+IMAGE_NAME  		?=vhiveease/aes-go
+BASE_TEMPLATES_DIR 	?=$(ROOT)/workload/
+WORKING_DIR 		?=wkdir/
 
-IMAGE_NAME  ?=vhiveease/aes-go
-WORKLOAD_DIR ?=$(ROOT)/workload/
-WORKING_DIR ?=tmp_test/
-
-
-MEMORY      := 2G
-CPUS        := 2
-
-
-
-# CLOUD_IMAGE_URL      := $(CLOUD_IMAGE_BASE_URL)/$(CLOUD_IMAGE_FILE)
-
-
-
-CONFIGS_DIR          := $(ROOT)/test/*
-
+## Machine parameter
+MEMORY 	:= 2G
+CPUS    := 2
 
 
 ## Base Image
-KERNEL := $(WORKLOAD_DIR)/vmlinux
-BASE_IMAGE := $(WORKLOAD_DIR)/base-disk-image.img
-
+KERNEL 				:= $(BASE_TEMPLATES_DIR)/vmlinux
+BASE_IMAGE 			:= $(BASE_TEMPLATES_DIR)/base-disk-image.img
 RUN_SCRIPT_TEMPLATE := $(ROOT)/test/run_test.template.sh
 
-
-DISK_IMAGE_FILE      := $(WORKING_DIR)/disk.img
+DISK_IMAGE_FILE 	:= $(WORKING_DIR)/disk.img
 RUN_SCRIPT			:= $(WORKING_DIR)/run.sh
-RESULTS			:= $(WORKING_DIR)/results.log
-SERVE := $(WORKING_DIR)/server.pid
-SERVER_LOG := $(WORKING_DIR)/server.log
+RESULTS				:= $(WORKING_DIR)/results.log
+SERVE 				:= $(WORKING_DIR)/server.pid
 
 
-
-
-
-
-
-
-test: build
-
-
-# sudo qemu-system-x86_64     -nographic     -cpu host -enable-kvm     -smp 4     -m 4G     -device e1000,n
-
-# build: | $(WORKING_DIR) $(SEED_IMAGE_FILE) $(DISK_IMAGE_FILE)
 
 build: $(WORKING_DIR) $(DISK_IMAGE_FILE) $(RUN_SCRIPT)
 
 install_dependencies:
+	apt-get update \
+  	&& apt-get install -y \
+        python3-pip \
+        curl lsof \
+        qemu-kvm bridge-utils
 	python3 -m pip install --user uploadserver
 
 
@@ -96,9 +75,8 @@ run: build serve_start
 
 
 
+## Test the results file
 check: $(RESULTS)
-#&& [ ! $(grep -q "FAIL" $<) ]
-
 	@if grep -q "SUCCESS" $< ; then \
 		echo "==================\n Test successful\n=================="; \
 	else \
@@ -121,16 +99,14 @@ $(RUN_SCRIPT): $(WORKING_DIR)
 
 ##
 # Create the disk image from the base image
-$(DISK_IMAGE_FILE): | $(WORKING_DIR) $(WORKLOAD_DIR)
+$(DISK_IMAGE_FILE): | $(WORKING_DIR) $(BASE_TEMPLATES_DIR)
 	@echo "Build test disk image"
 	cp $(BASE_IMAGE) $@
-
 
 
 ####
 # File server
 $(SERVE):
-#	python3 -m http.server -d $(WORKING_DIR) 3003 &
 	PID=$$(lsof -t -i :3003); \
 	if [ $$PID > 0 ]; then kill -9 $$PID; fi
 
@@ -145,16 +121,9 @@ serve_stop: $(SERVE)
 	kill `cat $<` && rm $< 2> /dev/null
 	PID=$$(lsof -t -i :3003); \
 	if [ $$PID > 0 ]; then kill -9 $$PID; fi
-#	kill `cat $<` && rm $<
-#	if $$(pidof python3); then \
-#		kill $$(pidof python3); \
-#	fi
+
 
 
 clean: serve_stop
 	@echo "Clean up"
 	sudo rm -rf $(WORKING_DIR)
-# 	virsh destroy $(INSTANCE_NAME) 2> /dev/null || true
-# 	virsh undefine $(INSTANCE_NAME) 2> /dev/null || true
-
-

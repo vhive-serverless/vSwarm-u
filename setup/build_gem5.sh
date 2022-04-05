@@ -23,7 +23,7 @@
 # SOFTWARE.
 # Install dependencies
 
-set -e -x
+set -e
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 ROOT="$( cd $DIR && cd .. && pwd)"
@@ -31,6 +31,20 @@ ROOT="$( cd $DIR && cd .. && pwd)"
 
 ARCH=X86
 GEM5_DIR=${1:-$ROOT/gem5/}
+
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+NC='\033[0m' # No Color
+
+printf "
+=============================
+${GREEN}  Build gem5 ${NC}
+---
+Architecture: $ARCH
+Output: $GEM5_DIR
+=============================\n\n"
+
+
 
 # Setup on Ubuntu 20.04
 sudo apt update

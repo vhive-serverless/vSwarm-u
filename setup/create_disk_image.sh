@@ -37,6 +37,15 @@ DISK_SIZE=4G
 RAM=8G
 CPUS=4
 
+printf "
+=============================
+\033[0;32m Build base disk image for gem5 \033[0m
+---
+INSTALL_ISO: $INSTALL_ISO
+Disk size: $DISK_SIZE
+Output: $OUTDIR/$DISK_IMG
+=============================\n\n"
+
 
 ## Install dependencies
 sudo apt-get update
@@ -50,8 +59,14 @@ fi
 
 
 ## Get and mount Ubuntu 20.04
-wget https://releases.ubuntu.com/20.04.3/$INSTALL_ISO
-echo "f8e3086f3cea0fb3fefb29937ab5ed9d19e767079633960ccb50e76153effc98 *${INSTALL_ISO}" | shasum -a 256 --check
+if [ -f "$INSTALL_ISO" ]; then
+    echo "$INSTALL_ISO exists."
+else
+    echo "$INSTALL_ISO does not exist. Download it..."
+    wget https://releases.ubuntu.com/20.04.3/$INSTALL_ISO
+    echo "f8e3086f3cea0fb3fefb29937ab5ed9d19e767079633960ccb50e76153effc98 *${INSTALL_ISO}" | shasum -a 256 --check
+fi
+
 mkdir -p iso
 sudo mount -r $INSTALL_ISO iso
 

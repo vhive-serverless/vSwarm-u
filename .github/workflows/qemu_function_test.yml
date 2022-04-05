@@ -36,8 +36,6 @@ on:
     #   - "setup/build_kernel.sh"
 
 
-#   WORKLOAD_DIR: /tmp/workload/
-
 jobs:
   emulator-function-test:
     name: Test function on emulator
@@ -46,13 +44,12 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        function: [aes-go]
+        function: [aes-go, aes-nodejs, aes-python]
 
     env:
       IMAGE_NAME: vhiveease/${{ matrix.function }}
       MAKEFILE: test/Makefile
       WORKING_DIR: wkdir/
-#       WORKING_DIR: ${{ env.WORKING_DIR }}
 
 
     steps:
@@ -72,9 +69,9 @@ jobs:
         working-directory: ${{ env.WORKING_DIR }}
         run: |
           if grep -q "SUCCESS" results.log ; then
-            echo "==================\n Test successful\n=================="
+            echo "================== Test successful =================="
           else
-            echo "==================\n Test failed\n==================";
+            echo "==================   Test failed   =================="
           fi
 
       - name: Clean everything.

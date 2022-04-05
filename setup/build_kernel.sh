@@ -23,7 +23,7 @@
 # SOFTWARE.
 # Install dependencies
 
-set -e -x
+set -e
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 ROOT="$( cd $DIR && cd .. && pwd)"
@@ -32,6 +32,14 @@ ROOT="$( cd $DIR && cd .. && pwd)"
 ### Build kernel for gem5 supporting running docker images
 KVERSION=v5.4.84
 OUTDIR=${1:-$ROOT/workload/}
+
+printf "
+=============================
+\033[0;32m Build Linux kernel for gem5 \033[0m
+---
+KVERSION: $KVERSION
+OUTDIR: $OUTDIR
+=============================\n\n"
 
 ## Install dependencies
 sudo apt-get install -y \
