@@ -51,6 +51,9 @@ Output: $OUTDIR/$DISK_IMG
 sudo apt-get update
 sudo apt-get install -y qemu-kvm libvirt-daemon-system libvirt-clients bridge-utils wget
 
+## Install dependencies
+sudo apt-get install -y qemu-kvm libvirt-daemon-system libvirt-clients bridge-utils
+
 if [ $(uname -i) != "x86_64" ] ;
 then
  echo "Target platform is not x86"
@@ -80,6 +83,7 @@ touch tmp/meta-data
 touch tmp/vendor-data
 
 python3 -m http.server -d tmp 3003 &
+
 SERVER_PID=$!
 
 
