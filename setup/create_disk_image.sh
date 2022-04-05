@@ -37,6 +37,19 @@ DISK_SIZE=4G
 RAM=8G
 CPUS=4
 
+printf "
+=============================
+\033[0;32m Build base disk image for gem5 \033[0m
+---
+INSTALL_ISO: $INSTALL_ISO
+Disk size: $DISK_SIZE
+Output: $OUTDIR/$DISK_IMG
+=============================\n\n"
+
+
+## Install dependencies
+sudo apt-get update
+sudo apt-get install -y qemu-kvm libvirt-daemon-system libvirt-clients bridge-utils wget
 
 ## Install dependencies
 sudo apt-get install -y qemu-kvm libvirt-daemon-system libvirt-clients bridge-utils
@@ -49,8 +62,14 @@ fi
 
 
 ## Get and mount Ubuntu 20.04
-wget https://releases.ubuntu.com/20.04.3/$INSTALL_ISO
-echo "f8e3086f3cea0fb3fefb29937ab5ed9d19e767079633960ccb50e76153effc98 *${INSTALL_ISO}" | shasum -a 256 --check
+if [ -f "$INSTALL_ISO" ]; then
+    echo "$INSTALL_ISO exists."
+else
+    echo "$INSTALL_ISO does not exist. Download it..."
+    wget https://releases.ubuntu.com/20.04.3/$INSTALL_ISO
+    echo "f8e3086f3cea0fb3fefb29937ab5ed9d19e767079633960ccb50e76153effc98 *${INSTALL_ISO}" | shasum -a 256 --check
+fi
+
 mkdir -p iso
 sudo mount -r $INSTALL_ISO iso
 
@@ -63,7 +82,8 @@ mv tmp/autoinstall.yaml tmp/user-data
 touch tmp/meta-data
 touch tmp/vendor-data
 
-python -m http.server -d tmp 3003 &
+python3 -m http.server -d tmp 3003 &
+
 SERVER_PID=$!
 
 
@@ -86,6 +106,10 @@ sudo qemu-system-x86_64 \
     -kernel iso/casper/vmlinuz \
     -initrd iso/casper/initrd \
     -append 'autoinstall ds=nocloud-net;s=http://_gateway:3003/'
+
+## To get the full output of the install process add
+## 'earlyprintk=ttyS0 console=ttyS0 lpj=7999923' to the
+## kernel commands (-append flag)
 
 echo "Ubuntu installed on disk image"
 
