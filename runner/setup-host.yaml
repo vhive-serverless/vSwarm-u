@@ -1,0 +1,179 @@
+# MIT License
+#
+# Copyright (c) 2022 David Schall and EASE lab
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+
+# Execute this playbook using
+#   ansible-playbook -u YOUR_SSH_USERNAME -i REMOTE_HOSTNAME, setup-host.yaml
+
+---
+- name: Setup vSwarm-u runner host
+  hosts: all
+  vars:
+    RESOURCES: /resources/
+  tasks:
+
+    - name: Remove any old Docker installations
+      become: yes
+      apt:
+        state: absent
+        purge: yes
+        autoremove: yes
+        name:
+          - docker
+          - docker-engine
+          - docker.io
+          - containerd
+
+    - name: Remove Docker directories
+      become: yes
+      file:
+        state: absent
+        path: "{{ item }}"
+      loop:
+        - /var/lib/docker
+        - /var/lib/containerd
+
+    - name: Install GPG
+      become: yes
+      apt:
+        state: latest
+        update_cache: yes
+        name:
+          - gpg
+          - dirmngr
+          - gpg-agent
+
+    - name: Add custom repository keys
+      become: yes
+      ansible.builtin.apt_key:
+        url: "{{ item }}"
+      loop:
+        - https://download.docker.com/linux/ubuntu/gpg
+
+    - name: Add custom repositories
+      become: yes
+      ansible.builtin.apt_repository:
+        repo: "{{ item }}"
+        update_cache: no
+      loop:
+        - ppa:git-core/ppa
+        - deb [arch=amd64] https://download.docker.com/linux/ubuntu bionic stable
+
+    - name: Upgrade packages
+      become: yes
+      apt:
+        update_cache: yes
+        upgrade: safe
+
+    - name: Install required packages
+      become: yes
+      apt:
+        state: latest
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - git-lfs
+          - mosh
+
+    - name: Add user "{{ ansible_user }}" to group docker
+      become: yes
+      ansible.builtin.user:
+        name: "{{ ansible_user }}"
+        groups: docker
+        append: yes
+
+    - name: Reset SSH connection to activate changes
+      meta: reset_connection
+
+    - name: Download predicates word-list
+      become: yes
+      get_url:
+        url: https://raw.githubusercontent.com/glitchdotcom/friendly-words/master/words/predicates.txt
+        dest: /usr/share/dict/predicates
+
+    - name: Download objects word-list
+      become: yes
+      get_url:
+        url: https://raw.githubusercontent.com/glitchdotcom/friendly-words/master/words/objects.txt
+        dest: /usr/share/dict/objects
+
+
+    - name: Create Working directory
+      become: yes
+      ansible.builtin.file:
+        path: /wkdir/
+        state: directory
+        mode: '0777'
+
+    - name: Create The RESOURCES directory
+      become: yes
+      ansible.builtin.file:
+        path: "{{ RESOURCES }}"
+        state: directory
+        mode: '0777'
+
+    - name: Export the RESOURCE path
+      become: yes
+      lineinfile:
+        path: "/etc/environment"
+        line: 'RESOURCES={{ RESOURCES }}'
+        insertafter: 'EOF'
+        state: present
+
+    # - name: Source the bashrc file
+    #   shell: source {{ lookup('env', 'HOME') }}/.bashrc
+
+    - name: print env
+      # shell: echo {{ lookup('env', 'RESOURCES') }}
+      shell: env
+
+    - name: print env
+      shell: cat /etc/environment
+
+
+    ## Clone vSwarm-u
+    - name: Clone a github repository
+      shell: git clone https://{{ lookup('env', 'GH_ACCESS_TOKEN') }}@github.com/ease-lab/vSwarm-u.git /wkdir/vSwarm-u
+
+
+    - name: Copy setup script to the remote host
+      ansible.builtin.copy:
+        src: ./scripts/setup_host.sh
+        dest: /wkdir/vSwarm-u/runner/scripts/setup_host.sh
+        force: yes
+
+    ## Put all remaining installation into the setup script.
+    ## This makes it easier to do the setup manually
+    - name: Run the Host setup script
+      shell: "/wkdir/vSwarm-u/runner/scripts/setup_host.sh"
+
+
+    # - name: Add cron entry to reboot at midnight
+    #   become: yes
+    #   become_method: sudo
+    #   ansible.builtin.cron:
+    #     user: root
+    #     name: "reboot"
+    #     minute: "0"
+    #     hour: "0"
+    #     job: "/sbin/shutdown --reboot now"
