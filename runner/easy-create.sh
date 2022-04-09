@@ -1,6 +1,8 @@
+#!/bin/bash
+
 # MIT License
 #
-# Copyright (c) 2022 David Schall and EASE Lab
+# Copyright (c) 2022 David Schall and EASE lab
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -20,48 +22,26 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-name: Build Gem5
+set -e -x
 
-env:
-  WORKDIR: setup/
-  MAKEFILE: setup/kernel.Makefile
+PWD="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-on:
-  # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
+REMOTE=hp150.utah.cloudlab.us
+COUNT=2
+AS_USER=dschall
+PRIVATE_KEY=${4:-}
 
-  push:
-    branches: [main, ci-pipelines]
-    paths:
-      - "setup/build_gem5.sh"
-
-  pull_request:
-    branches: [main, ci-pipelines]
-    paths:
-      - "setup/build_gem5.sh"
+# sudo apt update -qq
+# sudo apt install software-properties-common
+# sudo add-apt-repository --yes --update ppa:ansible/ansible
+# sudo apt install -q ansible
 
 
-jobs:
-  build-x86-64:
-    name: Build Gem5 for x86
-    # Building the kernel works also on the github runners.
-    # However, they only offer building on one core therefor it take a while
-    # Using self hosted is faster
-    # runs-on: ubuntu-20.04
-    runs-on: [gem5-build,ubuntu-20.04]
-    strategy:
-      fail-fast: true
+GH_ACCESS_TOKEN=${GH_ACCESS_TOKEN} ansible-playbook -vvv --private-key ~/.ssh/id_cloudlab -u $AS_USER -i ${REMOTE}, ${PWD}/setup-host.yaml
 
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v2
+# # ansible-playbook --private-key ~/.ssh/id_cloudlab -u $AS_USER -i ${REMOTE}, ${PWD}/delete-runners.yaml
 
-      - name: Install dependencies
-        shell: bash
-        run: |
-          make -f {{ env.MAKEFILE }} dep_install
-
-      - name: Build gem5
-        shell: bash
-        run: |
-          make -f {{ env.MAKEFILE }} all
+# for i in $(seq ${COUNT}); do
+#     GH_ACCESS_TOKEN=${GH_ACCESS_TOKEN} ansible-playbook --private-key ~/.ssh/id_cloudlab -u $AS_USER -i ${REMOTE}, ${PWD}/create-runner.yaml
+#     # ansible-playbook --private-key ~/.ssh/id_cloudlab -u dschall -i pc01.cloudlab.umass.edu, create-runner.yaml
+# done

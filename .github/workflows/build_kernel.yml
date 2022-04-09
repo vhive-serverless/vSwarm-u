@@ -38,6 +38,7 @@ on:
 
 env:
   WORKDIR: setup/
+  MAKEFILE: setup/kernel.Makefile
 
 jobs:
   build-x86-64:
@@ -55,13 +56,12 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Install dependencies
-        working-directory: ${{ env.WORKDIR }}
         shell: bash
         run: |
-          make -f kernel.Makefile dep_install
+          make -f {{ env.MAKEFILE }} dep_install
 
       - name: Configure and build the Linux kernel
         shell: bash
         run: |
-          make -f kernel.Makefile build
+          make -f {{ env.MAKEFILE }} build
 

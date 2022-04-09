@@ -24,7 +24,7 @@ name: Create base disk image
 
 env:
   WORKDIR: setup/
-  MAKEFILE: setup/Makefile
+  MAKEFILE: setup/disk.Makefile
   BUILD_DIR: wkdir/
 
 on:
