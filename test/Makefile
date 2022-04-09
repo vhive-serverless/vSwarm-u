@@ -40,7 +40,7 @@ CPUS    := 2
 RESRC_KERNEL 		:= $(RESOURCES)/vmlinux
 RESRC_BASE_IMAGE 	:= $(RESOURCES)/base-disk-image.img
 RESRC_CLIENT	 	:= $(RESOURCES)/test-client
-RUN_SCRIPT_TEMPLATE := $(ROOT)/test/run_test.template.sh
+RUN_SCRIPT_TEMPLATE := $(ROOT)/test/run_emu_test.template.sh
 
 
 KERNEL 				:= $(WORKING_DIR)/kernel
@@ -82,7 +82,7 @@ test:
 # The command will boot an instance.
 # Then it will listen to port 3003 to retive a run script
 # This run script will be the one we provided.
-run: build serve_start
+run_emulator: build serve_start
 	sudo qemu-system-x86_64 \
 		-nographic \
 		-cpu host -enable-kvm \
@@ -92,6 +92,7 @@ run: build serve_start
 		-kernel $(KERNEL) \
 		-append 'console=ttyS0 root=/dev/hda2'
 
+run: run_emulator
 
 
 ## Test the results file
@@ -146,8 +147,11 @@ serve_stop: $(SERVE)
 	if [ $$PID > 0 ]; then kill -9 $$PID; fi
 
 
+kill_qemu:
+	$(eval PIDS := $(shell pidof qemu-system-x86_64))
+	for p in $(PIDS); do echo $$p; sudo kill $$p; done
 
-clean: serve_stop
+clean: serve_stop kill_qemu
 	@echo "Clean up"
 	sudo rm -rf $(WORKING_DIR)
 

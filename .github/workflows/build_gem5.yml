@@ -56,8 +56,14 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v2
 
-      - name: Run Gem5 build script
+      - name: Install dependencies
         working-directory: ${{ env.WORKDIR }}
         shell: bash
         run: |
-          ./build_gem5.sh
+          make -f gem5.Makefile dep_install
+
+      - name: Build gem5
+        working-directory: ${{ env.WORKDIR }}
+        shell: bash
+        run: |
+          make -f gem5.Makefile all

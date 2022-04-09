@@ -54,8 +54,14 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v2
 
-      - name: Run build script for the Linux kernel
+      - name: Install dependencies
         working-directory: ${{ env.WORKDIR }}
         shell: bash
         run: |
-          ./build_kernel.sh
+          make -f kernel.Makefile dep_install
+
+      - name: Configure and build the Linux kernel
+        shell: bash
+        run: |
+          make -f kernel.Makefile build
+

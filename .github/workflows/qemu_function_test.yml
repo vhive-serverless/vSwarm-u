@@ -47,9 +47,9 @@ jobs:
         function: [aes-go, aes-nodejs, aes-python]
 
     env:
-      IMAGE_NAME: vhiveease/${{ matrix.function }}
+      FUNCTION: ${{ matrix.function }}
       MAKEFILE: test/Makefile
-      WORKING_DIR: wkdir/
+      WORKING_DIR: wkdir/${{ matrix.function }}/
 
 
     steps:
