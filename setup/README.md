@@ -90,3 +90,6 @@ The gem5 init service is a neat way to automatically start execution a workload 
 [Create disk image for gem5](http://www.lowepower.com/jason/setting-up-gem5-full-system.html)
 [About the m5 binary](https://www.gem5.org/documentation/general_docs/m5ops/)
 [How to build a kernel in general](https://kernelnewbies.org/KernelBuild)
+
+[Ubuntu auto install](https://ubuntu.com/server/docs/install/autoinstall-quickstart)
+[Cloud-init data sources](https://cloudinit.readthedocs.io/en/latest/topics/datasources/nocloud.html#datasource-nocloud)

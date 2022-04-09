@@ -34,7 +34,9 @@
 
 **/gem5-configs/__pycache__/*
 **/gem5
+**/linux
 **/workload
 
 **/tmp
 **/iso
+**/mnt
