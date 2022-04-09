@@ -1,6 +1,8 @@
+#!/bin/bash
+
 # MIT License
 #
-# Copyright (c) 2022 David Schall and EASE Lab
+# Copyright (c) 2022 David Schall and EASE lab
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -19,49 +21,29 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+# Install dependencies
 
-name: Build Gem5
+set -e -x
 
-env:
-  WORKDIR: setup/
-  MAKEFILE: setup/kernel.Makefile
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+ROOT="$( cd $DIR && cd ../.. && pwd)"
 
-on:
-  # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
+ORG=ease-lab
+REPO=vSwarm-u
+OS=ubuntu-focal
 
-  push:
-    branches: [main, ci-pipelines]
-    paths:
-      - "setup/build_gem5.sh"
+ACCESS_TOKEN=${GH_ACCESS_TOKEN}
+RESOURCES_DIR=${RESOURCES:-$ROOT/resources/}
 
-  pull_request:
-    branches: [main, ci-pipelines]
-    paths:
-      - "setup/build_gem5.sh"
-
-
-jobs:
-  build-x86-64:
-    name: Build Gem5 for x86
-    # Building the kernel works also on the github runners.
-    # However, they only offer building on one core therefor it take a while
-    # Using self hosted is faster
-    # runs-on: ubuntu-20.04
-    runs-on: [gem5-build,ubuntu-20.04]
-    strategy:
-      fail-fast: true
-
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v2
-
-      - name: Install dependencies
-        shell: bash
-        run: |
-          make -f {{ env.MAKEFILE }} dep_install
-
-      - name: Build gem5
-        shell: bash
-        run: |
-          make -f {{ env.MAKEFILE }} all
+sudo docker run --name github-build-runner \
+  -d --restart=always \
+  --privileged --cap-add=ALL \
+  -e REPO_URL="https://github.com/${ORG}/${REPO}" \
+  -e RUNNER_NAME="gem5-build-runner" \
+  -e ACCESS_TOKEN=${GH_ACCESS_TOKEN} \
+  -e RUNNER_WORKDIR=_work-${REPO} \
+  -e RUNNER_GROUP="default" \
+  -e LABELS="gem5-build,${OS_LABEL}" \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  -v /tmp/_work-${REPO}:/tmp/_work-${REPO} \
+  myoung34/github-runner:$OS

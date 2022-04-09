@@ -63,6 +63,23 @@ SERVE 				:= $(BUILD_DIR)/server.pid
 # Resource files
 RESRC_BASE_IMAGE 	:= $(RESOURCES)/base-disk-image.img
 
+## Dependencies -------------------------------------------------
+## Check and install all dependencies necessary to perform function
+##
+dep_install:
+	sudo apt-get update \
+  	&& sudo apt-get install -y \
+        python3-pip \
+        curl lsof \
+        qemu-kvm bridge-utils
+	python3 -m pip install --user uploadserver
+
+dep_check_qemu:
+	$(call check_dep, qemu-kvm)
+	$(call check_dep, lsof)
+	$(call check_py_dep, uploadserver)
+
+
 build: | $(BUILD_DIR) $(INITRD) $(DISK_IMAGE_FILE) $(INSTALL_CONFIG)
 
 
