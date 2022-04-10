@@ -22,9 +22,9 @@
 
 name: Build Gem5
 
-
 env:
   WORKDIR: setup/
+  MAKEFILE: setup/kernel.Makefile
 
 on:
   # Allows you to run this workflow manually from the Actions tab
@@ -57,13 +57,11 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Install dependencies
-        working-directory: ${{ env.WORKDIR }}
         shell: bash
         run: |
-          make -f gem5.Makefile dep_install
+          make -f {{ env.MAKEFILE }} dep_install
 
       - name: Build gem5
-        working-directory: ${{ env.WORKDIR }}
         shell: bash
         run: |
-          make -f gem5.Makefile all
+          make -f {{ env.MAKEFILE }} all

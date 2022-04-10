@@ -23,7 +23,7 @@
 # SOFTWARE.
 # Install dependencies
 
-set -e -x
+set -e
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 ROOT="$( cd $DIR && cd ../.. && pwd)"
@@ -62,34 +62,36 @@ sudo apt-get install -y \
 sudo add-apt-repository \
     "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
     $(lsb_release -cs) \
-    stable"
+    stable" \
 && sudo apt-get update \
 && sudo apt-get install -y docker-ce docker-ce-cli containerd.io
 
 
 # Install golang
 wget --continue --quiet https://golang.org/dl/go1.16.4.linux-amd64.tar.gz
-tar -C /usr/local -xzf go1.16.4.linux-amd64.tar.gz
+sudo tar -C /usr/local -xzf go1.16.4.linux-amd64.tar.gz
 export PATH=$PATH:/usr/local/go/bin
-sh -c  "echo 'export PATH=\$PATH:/usr/local/go/bin' >> /etc/profile"
+sudo sh -c  "echo 'export PATH=\$PATH:/usr/local/go/bin' >> /etc/profile"
 
 
 ## Now prepare the base setup to run the functions.
+
 echo "Build Kernel..."
 make -f ${ROOT}/setup/kernel.Makefile dep_install
 make -f ${ROOT}/setup/kernel.Makefile build
 make -f ${ROOT}/setup/kernel.Makefile save
+
 echo "Build gem5..."
 make -f ${ROOT}/setup/gem5.Makefile dep_install
 make -f ${ROOT}/setup/gem5.Makefile all
+
 echo "Build disk image..."
-# bash ${ROOT}/setup/create_disk_image.sh $BASE_DIR/workload
+make -f ${ROOT}/setup/disk.Makefile dep_install
+make -f ${ROOT}/setup/disk.Makefile download
+make -f ${ROOT}/setup/disk.Makefile install
+make -f ${ROOT}/setup/disk.Makefile save
 
-make -f ${ROOT}/setup/Makefile download
-make -f ${ROOT}/setup/Makefile install
-make -f ${ROOT}/setup/Makefile save
-
-make -f ${ROOT}/setup/Makefile clean
+make -f ${ROOT}/setup/disk.Makefile clean
 
 # Build the test client
 pushd ${ROOT}/tools/
