@@ -47,7 +47,7 @@ def executeM5FailCode(code):
 
     prYellow(FAIL_CODES[code])
 
-    Before invoking we switch to detailed core
+    # Before invoking we switch to detailed core
     if code == 3:
         print("Switch detailed core")
         system.switchToDetailedCpus()
