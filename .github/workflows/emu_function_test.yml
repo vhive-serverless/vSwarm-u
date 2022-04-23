@@ -48,7 +48,7 @@ jobs:
 
     env:
       FUNCTION: ${{ matrix.function }}
-      MAKEFILE: test/sim_test.Makefile
+      MAKEFILE: test/emu_test.Makefile
       WORKING_DIR: wkdir/${{ matrix.function }}/
 
 
@@ -68,11 +68,7 @@ jobs:
       - name: Check the results file.
         working-directory: ${{ env.WORKING_DIR }}
         run: |
-          if grep -q "SUCCESS" results.log ; then
-            echo "================== Test successful =================="
-          else
-            echo "==================   Test failed   =================="
-          fi
+          make -f ${{ env.MAKEFILE }} check
 
       - name: Clean disk to resources for simulator test.
         run: |
