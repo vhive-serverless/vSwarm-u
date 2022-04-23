@@ -20,7 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-name: Test functions on Qemu
+name: Test function on Qemu Emulator
 
 on:
   # Allows you to run this workflow manually from the Actions tab
@@ -44,11 +44,11 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        function: [aes-go, aes-nodejs, aes-python]
+        function: [aes-go]
 
     env:
       FUNCTION: ${{ matrix.function }}
-      MAKEFILE: test/Makefile
+      MAKEFILE: test/sim_test.Makefile
       WORKING_DIR: wkdir/${{ matrix.function }}/
 
 
@@ -73,6 +73,51 @@ jobs:
           else
             echo "==================   Test failed   =================="
           fi
+
+      - name: Clean disk to resources for simulator test.
+        run: |
+          make -f ${{ env.MAKEFILE }} save_disk
+
+      - name: Clean everything.
+        if: ${{ always() }}
+        run: |
+          make -f ${{ env.MAKEFILE }} clean
+
+
+
+  simulator-function-test:
+    name: Test function on Simulator
+    # For running the qe
+    runs-on: [qemu-test,ubuntu-20.04]
+    needs: emulator-function-test
+    strategy:
+      fail-fast: true
+      matrix:
+        function: [aes-go]
+
+    env:
+      FUNCTION: ${{ matrix.function }}
+      MAKEFILE: test/sim_test.Makefile
+      WORKING_DIR: wkdir/${{ matrix.function }}/
+
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+
+      - name: Create the working directory to run the test.
+        run: |
+          make -f ${{ env.MAKEFILE }} build
+
+      - name: Run the actual test of the simulator.
+        timeout-minutes: 5
+        run: |
+          make -f ${{ env.MAKEFILE }} run
+
+      - name: Check the results file.
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          make -f ${{ env.MAKEFILE }} check
 
       - name: Clean everything.
         if: ${{ always() }}
