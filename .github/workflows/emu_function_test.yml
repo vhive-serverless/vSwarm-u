@@ -83,7 +83,7 @@ jobs:
   simulator-function-test:
     name: Test function on Simulator
     # For running the qe
-    runs-on: [qemu-test,ubuntu-20.04]
+    runs-on: [gem5-test,ubuntu-20.04]
     needs: emulator-function-test
     strategy:
       fail-fast: true
