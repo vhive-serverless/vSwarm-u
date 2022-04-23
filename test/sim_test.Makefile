@@ -29,74 +29,60 @@ ROOT 		:= $(abspath $(dir $(mkfile_path))/../)
 ## User specific inputs
 IMAGE_NAME  		?=vhiveease/aes-go
 RESOURCES 			?=$(ROOT)/resources/
-WORKING_DIR 		?=wkdir/
+WORKING_DIR 		?=wkdir_sim/
+# WORKING_DIR 		?=wkdir/
 
-## Machine parameter
-MEMORY 	:= 2G
-CPUS    := 2
-
+FUNCTION_NAME 		:= $(shell echo $(IMAGE_NAME) | awk -F'/' '{print $$NF}')
 
 ## Required resources
+FUNCTION_DISK_IMAGE := $(RESOURCES)/$(FUNCTION_NAME)-disk.img
 RESRC_KERNEL 		:= $(RESOURCES)/vmlinux
-RESRC_BASE_IMAGE 	:= $(RESOURCES)/base-disk-image.img
-RESRC_CLIENT	 	:= $(RESOURCES)/test-client
-RUN_SCRIPT_TEMPLATE := $(ROOT)/test/run_emu_test.template.sh
+RUN_SCRIPT_TEMPLATE := $(ROOT)/test/run_sim_test.template.sh
+GEM5_CONFIG 		:= $(ROOT)/test/run_sim_test.py
+GEM5_DIR			:= $(RESOURCES)/gem5/
+GEM5				:= $(RESOURCES)/gem5/build/X86/gem5.opt
 
 
 KERNEL 				:= $(WORKING_DIR)/kernel
 DISK_IMAGE 			:= $(WORKING_DIR)/disk.img
-RUN_SCRIPT			:= $(WORKING_DIR)/run.sh
-TEST_CLIENT			:= $(WORKING_DIR)/test-client
-RESULTS				:= $(WORKING_DIR)/results.log
-SERVE 				:= $(WORKING_DIR)/server.pid
+RUN_SCRIPT			:= $(WORKING_DIR)/run_sim.sh
+RESULTS				:= $(WORKING_DIR)/results_sim.log
+STATS_FILE			:= $(WORKING_DIR)/stats.txt
 
 ## Dependencies -------------------------------------------------
-## Check and install all dependencies necessary to perform function
+## Check all dependencies necessary to perform function test
 ##
-dep_install:
-	sudo apt-get update \
-  	&& sudo apt-get install -y \
-        python3-pip \
-        curl lsof \
-        qemu-kvm bridge-utils
-	python3 -m pip install --user uploadserver
 
-dep_check_qemu:
-	$(call check_file, $(RESRC_KERNEL))
-	$(call check_file, $(RESRC_BASE_IMAGE))
-	$(call check_file, $(RESRC_CLIENT))
+
+dep_check_gem5:
+	$(call check_file, $(KERNEL))
+	$(call check_file, $(DISK_IMAGE))
+	$(call check_file, $(GEM5))
 	$(call check_dep, qemu-kvm)
-	$(call check_dep, lsof)
-	$(call check_py_dep, uploadserver)
 
 
-test:
-	$(call check_file, README.md)
-	$(call check_dir, README.mdd)
-	$(call check_dep, python3)
-	$(call check_py_dep, uploadserver)
 
 
-## Run Emulator -------------------------------------------------
+## Run Simulator -------------------------------------------------
 # Do the actual emulation run
 # The command will boot an instance.
-# Then it will listen to port 3003 to retive a run script
+# Then check if for a run script using a magic instruction
 # This run script will be the one we provided.
-run_emulator: build serve_start
-	sudo qemu-system-x86_64 \
-		-nographic \
-		-cpu host -enable-kvm \
-		-smp ${CPUS} \
-		-m ${MEMORY} \
-		-drive file=$(DISK_IMAGE),format=raw \
-		-kernel $(KERNEL) \
-		-append 'console=ttyS0 root=/dev/hda2'
 
-run: run_emulator
+run_simulator:
+	sudo $(GEM5) \
+		--outdir=$(WORKING_DIR) \
+			$(GEM5_CONFIG) \
+				--kernel $(KERNEL) \
+				--disk $(DISK_IMAGE) \
+				--script $(RUN_SCRIPT)
+
+run: run_simulator
+
 
 
 ## Test the results file
-check: $(RESULTS)
+check: $(RESULTS) check_stats
 	@cat $<;
 	@if grep -q "SUCCESS" $< ; then \
 		printf "${GREEN}==================\n Test successful\n==================${NC}\n"; \
@@ -108,50 +94,49 @@ check: $(RESULTS)
 
 
 ## Build the test setup ----------------------------
-build: $(WORKING_DIR) $(DISK_IMAGE) $(KERNEL) $(RUN_SCRIPT) $(TEST_CLIENT)
+build: $(WORKING_DIR) $(DISK_IMAGE) $(KERNEL) $(RUN_SCRIPT)
 
 $(WORKING_DIR):
 	@echo "Create folder: $(WORKING_DIR)"
 	mkdir -p $@
 
+# $(WORKING_DIR):
+# 	@if [ ! -d $< ]; \
+# 	then printf " ${RED}ERROR: WORKING_DIR not ready. Run emulator test first${NC}\n"; fi
+
 $(RUN_SCRIPT): $(WORKING_DIR)
-	sed 's|<__IMAGE_NAME__>|$(IMAGE_NAME)|g' $(RUN_SCRIPT_TEMPLATE) > $@
+	cat $(RUN_SCRIPT_TEMPLATE) | \
+	sed 's|<__IMAGE_NAME__>|$(IMAGE_NAME)|g' | \
+	sed 's|<__FUNCTION_NAME__>|$(FUNCTION_NAME)|g' \
+	> $@
 
 $(KERNEL): $(RESRC_KERNEL)
 	cp $< $@
 
-$(TEST_CLIENT): $(RESRC_CLIENT)
+# The disk image most be prepared for with the function. Pull that function
+# with qemu.
+# Then we can copy it into the working directory
+$(FUNCTION_DISK_IMAGE):
+	@if [ ! -d $@ ]; then \
+		printf "${RED}ERROR: "; \
+		printf "No disk image for this function found: "; \
+		printf "$(FUNCTION_NAME)\n"; \
+		printf "First customize a base image with this function or run the emulator test.\n"; \
+		printf "${NC}\n"; \
+		exist 1; \
+	fi;
+
+$(DISK_IMAGE): $(FUNCTION_DISK_IMAGE)
 	cp $< $@
 
-# Create the disk image from the base image
-$(DISK_IMAGE): $(RESRC_BASE_IMAGE)
-	cp $< $@
 
 
-####
-# File server
-$(SERVE):
-	PID=$$(lsof -t -i :3003); \
-	if [ $$PID > 0 ]; then kill -9 $$PID; fi
 
-	python3 -m uploadserver -d $(WORKING_DIR) 3003 &  \
-	echo "$$!" > $@ ;
-	sleep 2
-	@echo "Run server: $$(cat $@ )"
-
-serve_start: $(SERVE)
-
-serve_stop: $(SERVE)
-	kill `cat $<` && rm $< 2> /dev/null
-	PID=$$(lsof -t -i :3003); \
-	if [ $$PID > 0 ]; then kill -9 $$PID; fi
-
-
-kill_qemu:
-	$(eval PIDS := $(shell pidof qemu-system-x86_64))
+kill_gem5:
+	$(eval PIDS := $(shell pidof $(GEM5)))
 	for p in $(PIDS); do echo $$p; sudo kill $$p; done
 
-clean: serve_stop kill_qemu
+clean: kill_gem5
 	@echo "Clean up"
 	sudo rm -rf $(WORKING_DIR)
 
@@ -167,6 +152,7 @@ define check_dep
 	then printf "$1 ${GREEN}installed ok${NC}\n"; \
 	else printf "$1 ${RED}not installed${NC}\n"; fi
 endef
+
 #	# @if [[ $$(python -c "import $1" &> /dev/null) -eq 0]];
 define check_py_dep
 	@if [ $$(eval pip list | grep -c $1) -ne 0 ] ; \
@@ -198,3 +184,22 @@ define print_result
 	then printf " ${GREEN}ok${NC}\n"; \
 	else printf " ${RED}fail${NC}\n"; fi
 endef
+
+check_stats: $(STATS_FILE)
+	$(eval inst := $(shell awk '/system.detailed_cpu1.exec_context.thread_0.numInsts/ {print $$2; exit;}' $(STATS_FILE)))
+	$(eval cycles := $(shell awk '/system.detailed_cpu1.numCycles/ {print $$2; exit;}' $(STATS_FILE)))
+
+	$(eval ipc := $(shell echo $(inst) $(cycles) | awk '{ tmp=$$1/$$2 ; printf"IPC:\t%0.4f\n", tmp }'))
+
+	@if [ $(cycles) ]; then \
+		printf "${GREEN}==================\n"; \
+		printf "Simulation successful:\n"; \
+		printf " $(inst) instructions\n"; \
+		printf " $(cycles) cycles\n"; \
+		printf " IPC: $(ipc) \n"; \
+		printf "==================${NC}\n"; \
+	else \
+		printf "${RED}==================\n Test failed\n==================${NC}\n"; \
+		exit 1; \
+	fi
+
