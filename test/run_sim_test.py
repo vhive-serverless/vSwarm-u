@@ -1,18 +1,17 @@
-import sys
-
 import m5
 from m5.objects import *
 
 # sys.path.append('configs/common/') # For the next line...
 # import SimpleOpts
+import os
+ROOT = os.path.abspath(os.path.dirname(os.path.realpath(__file__)) + "/../")
+print(ROOT)
 
-import argparse
-
-sys.path.append('../gem5-configs/') # For the next line...
+import sys
+sys.path.append(ROOT +'/gem5-configs/') # For the next line...
 from system import MySystem
 
-
-
+import argparse
 def parse_arguments():
     parser = argparse.ArgumentParser(description=
                         "gem5 config file to run vSwarm benchmarks")
