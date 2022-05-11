@@ -75,12 +75,13 @@ dep_install:
 	python3 -m pip install --user uploadserver
 
 dep_check_qemu:
-	$(call check_dep, qemu-kvm)
-	$(call check_dep, lsof)
-	$(call check_py_dep, uploadserver)
+	@$(call check_dep, qemu-kvm)
+	@$(call check_dep, lsof)
+	@$(call check_py_dep, uploadserver)
 
 
 build: | $(BUILD_DIR) $(INITRD) $(DISK_IMAGE_FILE) $(INSTALL_CONFIG)
+	@$(call print_config)
 
 
 ## Do the actual installation
@@ -102,7 +103,7 @@ install: build $(SERVE)
 
 
 ## Save the created files to the resource directory
-save: $(DISK_IMAGE_FILE) install
+save: $(DISK_IMAGE_FILE)
 	cp $(DISK_IMAGE_FILE) $(RESRC_BASE_IMAGE)
 
 
@@ -180,4 +181,19 @@ clean: serve_stop
 
 define spacing
 	@echo "\n===== $(if $1,$1,$@) ====="
+endef
+
+
+RED=\033[0;31m
+GREEN=\033[0;32m
+NC=\033[0m # No Color
+
+define print_config
+	printf "\n=============================\n"; \
+	printf "${GREEN} Build disk image for gem5 ${NC}\n"; \
+	printf " ---\n"; \
+	printf "ISO: $(CLOUD_IMAGE_FILE)\n"; \
+	printf "Disk name: $(DISK_IMAGE_FILE)\n"; \
+	printf "Disk size: $(DISK_SIZE)\n"; \
+	printf "=============================\n\n";
 endef

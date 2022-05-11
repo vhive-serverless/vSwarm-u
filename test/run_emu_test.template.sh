@@ -31,7 +31,7 @@ sleep 5
 # Modify the invoker parameters depending on your need.
 # /root/test-client -addr localhost:50051 -n 20 && INVOKER_RES=$?
 /root/test-client \
-    -function-name test \
+    -function-name ${FUNCTION_NAME} \
     -url localhost \
     -port 50051 \
     -n 20 \

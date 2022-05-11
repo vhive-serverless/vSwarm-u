@@ -25,16 +25,20 @@ name: Build Linux Kernel
 on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
+  # schedule:
+  #   - cron: "0 7 * * 1"
 
   push:
-    branches: [main, ci-pipelines]
+    branches: [main]
     paths:
-      - "setup/build_kernel.sh"
+      - "setup/kernel.Makefile"
+      - "configs/linux-configs/**"
 
   pull_request:
-    branches: [main, ci-pipelines]
+    branches: [main]
     paths:
-      - "setup/build_kernel.sh"
+      - "setup/kernel.Makefile"
+      - "configs/linux-configs/**"
 
 env:
   WORKDIR: setup/
@@ -47,7 +51,7 @@ jobs:
     # However, they only offer building on one core therefor it take a while
     # Using self hosted is faster
     # runs-on: ubuntu-20.04
-    runs-on: [gem5-build,ubuntu-20.04]
+    runs-on: [self-hosted, gem5-build]
     strategy:
       fail-fast: true
 
@@ -58,10 +62,10 @@ jobs:
       - name: Install dependencies
         shell: bash
         run: |
-          make -f {{ env.MAKEFILE }} dep_install
+          make -f ${{ env.MAKEFILE }} dep_install
 
       - name: Configure and build the Linux kernel
         shell: bash
         run: |
-          make -f {{ env.MAKEFILE }} build
+          make -f ${{ env.MAKEFILE }} build
 

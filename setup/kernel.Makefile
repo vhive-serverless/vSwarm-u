@@ -63,7 +63,7 @@ config: $(LINUX_DIR)
 
 ## Build
 build: $(LINUX_DIR) config
-	$(call print_config)
+	@$(call print_config)
 	cd $(LINUX_DIR); \
 	make -j $$(nproc)
 
@@ -85,7 +85,7 @@ NC=\033[0m # No Color
 define print_config
 	printf "\n=============================\n"; \
 	printf "${GREEN} Build Linux kernel for gem5 ${NC}\n"; \
-	printf "---\n"; \
+	printf " ---\n"; \
 	printf "kernel version: $(KVERSION)\n"; \
 	printf "Output: $(KERNEL)\n"; \
 	printf "=============================\n\n";

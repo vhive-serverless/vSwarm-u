@@ -27,12 +27,15 @@ ROOT 		:= $(abspath $(dir $(mkfile_path))/../)
 
 
 ## User specific inputs
-IMAGE_NAME  		?=vhiveease/aes-go
+FUNCTION 			?=aes-go
 RESOURCES 			?=$(ROOT)/resources/
 WORKING_DIR 		?=wkdir_sim/
 # WORKING_DIR 		?=wkdir/
 
-FUNCTION_NAME 		:= $(shell echo $(IMAGE_NAME) | awk -F'/' '{print $$NF}')
+
+IMAGE_NAME  		:=vhiveease/$(FUNCTION)
+# FUNCTION_NAME 		:= $(shell echo $(IMAGE_NAME) | awk -F'/' '{print $$NF}')
+FUNCTION_NAME 		:= $(FUNCTION)
 
 ## Required resources
 FUNCTION_DISK_IMAGE := $(RESOURCES)/$(FUNCTION_NAME)-disk.img

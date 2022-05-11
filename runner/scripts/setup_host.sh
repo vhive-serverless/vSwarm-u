@@ -39,7 +39,10 @@ if [[ -z "${RESOURCES}" ]]; then
   echo "Warning: RESOURCES environmental variable is not set."
   echo "Warning: Will be set to default `resources/`"
   RESOURCES=$ROOT/resources/
+  mkdir -p $RESOURCES
   export RESOURCES=$RESOURCES
+  sudo sh -c  "echo 'export RESOURCES=${RESOURCES}' >> /etc/profile"
+  sh -c  "echo 'export RESOURCES=${RESOURCES}' >> $HOME/.bashrc"
 fi
 
 echo "Install all resources to: ${RESOURCES}"

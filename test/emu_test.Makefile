@@ -27,9 +27,13 @@ ROOT 		:= $(abspath $(dir $(mkfile_path))/../)
 
 
 ## User specific inputs
-IMAGE_NAME  		?=vhiveease/aes-go
+FUNCTION 			?=aes-go
 RESOURCES 			?=$(ROOT)/resources/
 WORKING_DIR 		?=wkdir_emu/
+
+IMAGE_NAME  		:=vhiveease/$(FUNCTION)
+# FUNCTION_NAME 		:= $(shell echo $(IMAGE_NAME) | awk -F'/' '{print $$NF}')
+FUNCTION_NAME 		:= $(FUNCTION)
 
 ## Machine parameter
 MEMORY 	:= 2G
@@ -39,7 +43,7 @@ CPUS    := 2
 ## Required resources
 RESRC_KERNEL 		:= $(RESOURCES)/vmlinux
 RESRC_BASE_IMAGE 	:= $(RESOURCES)/base-disk-image.img
-RESRC_CLIENT	 	:= $(RESOURCES)/test-client
+RESRC_CLIENT_URL 	:= https://github.com/ease-lab/vSwarm-proto/releases/download/v0.1.3-e9087ac/client-linux-amd64
 RUN_SCRIPT_TEMPLATE := $(ROOT)/test/run_emu_test.template.sh
 
 
@@ -74,11 +78,11 @@ dep_check_qemu:
 	$(call check_py_dep, uploadserver)
 
 
-test:
-	$(call check_file, README.md)
-	$(call check_dir, README.mdd)
-	$(call check_dep, python3)
-	$(call check_py_dep, uploadserver)
+# test:
+# 	# $(call check_file, README.md)
+# 	# $(call check_dir, README.mdd)
+# 	# $(call check_dep, python3)
+# 	# $(call check_py_dep, uploadserver)
 
 
 ## Run Emulator -------------------------------------------------
@@ -133,8 +137,20 @@ $(RUN_SCRIPT): $(WORKING_DIR)
 $(KERNEL): $(RESRC_KERNEL)
 	cp $< $@
 
-$(TEST_CLIENT): $(RESRC_CLIENT)
-	cp $< $@
+
+
+
+# $(TEST_CLIENT): $(RESRC_CLIENT)
+# 	cp $< $@
+
+# DOWNLOAD_URL=$(curl -s https://api.github.com/repos/ease-lab/vSwarm-proto/releases/latest \
+# 	| grep browser_download_url \
+# 	| grep swamp_amd64 \
+# 	| cut -d '"' -f 4)
+
+$(TEST_CLIENT):
+	curl -s -L -o $@ $(RESRC_CLIENT_URL)
+	chmod +x $@
 
 # Create the disk image from the base image
 $(DISK_IMAGE): $(RESRC_BASE_IMAGE)

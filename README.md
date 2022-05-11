@@ -1,6 +1,11 @@
-# Microarchitectural Research
+# Microarchitectural Research for Serverless
 
-[![Build kernel](https://github.com/ease-lab/vGem5/actions/workflows/build_kernel.yml/badge.svg?branch=main)](https://github.com/ease-lab/vGem5/actions/workflows/build_kernel.yml)
+## Build tests
+[![Build Linux Kernel](https://github.com/ease-lab/vSwarm-u/actions/workflows/build_kernel.yml/badge.svg)](https://github.com/ease-lab/vSwarm-u/actions/workflows/build_kernel.yml)
+[![Build Gem5](https://github.com/ease-lab/vSwarm-u/actions/workflows/build_gem5.yml/badge.svg)](https://github.com/ease-lab/vSwarm-u/actions/workflows/build_gem5.yml)
+[![Create base disk image](https://github.com/ease-lab/vSwarm-u/actions/workflows/create_base_disk.yml/badge.svg)](https://github.com/ease-lab/vSwarm-u/actions/workflows/create_base_disk.yml)
+### Functional test
+[![Test function on Qemu Emulator and gem5 Simulator](https://github.com/ease-lab/vSwarm-u/actions/workflows/function_test.yml/badge.svg)](https://github.com/ease-lab/vSwarm-u/actions/workflows/function_test.yml)
 
 ## Preliminary
 
