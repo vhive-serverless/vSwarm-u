@@ -20,7 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-name: Test function on Qemu Emulator
+name: Test function on Qemu Emulator and gem5 Simulator
 
 on:
   # Allows you to run this workflow manually from the Actions tab
@@ -40,11 +40,11 @@ jobs:
   emulator-function-test:
     name: Test function on emulator
     # For running the qe
-    runs-on: [qemu-test,ubuntu-20.04]
+    runs-on: [self-hosted, qemu-test]
     strategy:
       fail-fast: true
       matrix:
-        function: [aes-go]
+        function: [fibonacci-go]
 
     env:
       FUNCTION: ${{ matrix.function }}
@@ -83,12 +83,12 @@ jobs:
   simulator-function-test:
     name: Test function on Simulator
     # For running the qe
-    runs-on: [gem5-test,ubuntu-20.04]
+    runs-on: [self-hosted, gem5-test]
     needs: emulator-function-test
     strategy:
       fail-fast: true
       matrix:
-        function: [aes-go]
+        function: [fibonacci-go]
 
     env:
       FUNCTION: ${{ matrix.function }}

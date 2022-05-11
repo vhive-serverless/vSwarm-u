@@ -17,8 +17,10 @@ function gem5_run() {
         sync
         sleep 10
         /sbin/m5 exit
+    else
+        echo "No script found"
     fi
-    echo "No script found"
+    echo "Gem5 init done"
 }
 
 

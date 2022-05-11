@@ -32,25 +32,32 @@ on:
   workflow_dispatch:
 
   push:
-    branches: [main, ci-pipelines]
+    branches: [main]
     paths:
-      - "setup/create_disk_image.sh"
+      - "setup/disk.Makefile"
+      - "configs/disk-image-configs/**"
 
   pull_request:
-    branches: [main, ci-pipelines]
+    branches: [main]
     paths:
-      - "setup/create_disk_image.sh"
+      - "setup/disk.Makefile"
+      - "configs/disk-image-configs/**"
 
 jobs:
   build-x86-64:
     name: Build disk image for x86
-    runs-on: [gem5-build,ubuntu-20.04]
+    runs-on: [self-hosted, gem5-build]
     strategy:
       fail-fast: true
 
     steps:
       - name: Check out code
         uses: actions/checkout@v2
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          make -f ${{ env.MAKEFILE }} dep_install
 
       - name: Download the iso file
         shell: bash
