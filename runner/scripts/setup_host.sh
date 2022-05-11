@@ -39,7 +39,9 @@ if [[ -z "${RESOURCES}" ]]; then
   echo "Warning: RESOURCES environmental variable is not set."
   echo "Warning: Will be set to default `resources/`"
   RESOURCES=$ROOT/resources/
+  mkdir -p $RESOURCES
   export RESOURCES=$RESOURCES
+  sudo sh -c  "echo 'export RESOURCES=${RESOURCES}' >> /etc/profile"
 fi
 
 echo "Install all resources to: ${RESOURCES}"
@@ -73,6 +75,7 @@ sudo tar -C /usr/local -xzf go1.16.4.linux-amd64.tar.gz
 export PATH=$PATH:/usr/local/go/bin
 sudo sh -c  "echo 'export PATH=\$PATH:/usr/local/go/bin' >> /etc/profile"
 
+source /etc/profile
 
 ## Now prepare the base setup to run the functions.
 
