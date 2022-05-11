@@ -27,14 +27,16 @@ on:
   workflow_dispatch:
 
   push:
-    branches: [main, ci-pipelines]
+    branches: [main]
     paths:
-      - "setup/build_kernel.sh"
+      - "setup/kernel.Makefile"
+      - "configs/linux-configs/**"
 
   pull_request:
-    branches: [main, ci-pipelines]
+    branches: [main]
     paths:
-      - "setup/build_kernel.sh"
+      - "setup/kernel.Makefile"
+      - "configs/linux-configs/**"
 
 env:
   WORKDIR: setup/

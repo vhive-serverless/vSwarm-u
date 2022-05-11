@@ -58,7 +58,7 @@ $(GEM5_DIR):
 ## Build
 
 gem5: $(GEM5_DIR)
-	$(call print_config)
+	@$(call print_config)
 	cd $(GEM5_DIR); \
 	scons build/$(ARCH)/gem5.opt -j $$(nproc) --install-hooks
 
@@ -90,7 +90,7 @@ NC=\033[0m # No Color
 define print_config
 	printf "\n=============================\n"; \
 	printf "${GREEN}  Build gem5 ${NC}\n"; \
-	printf "---\n"; \
+	printf " ---\n"; \
 	printf "Architecture: $(ARCH)\n"; \
 	printf "Output: $(GEM5_DIR)\n"; \
 	printf "=============================\n\n";

@@ -31,14 +31,14 @@ on:
   workflow_dispatch:
 
   push:
-    branches: [main, ci-pipelines]
+    branches: [main]
     paths:
-      - "setup/build_gem5.sh"
+      - "setup/gem5.Makefile"
 
   pull_request:
-    branches: [main, ci-pipelines]
+    branches: [main]
     paths:
-      - "setup/build_gem5.sh"
+      - "setup/gem5.Makefile"
 
 
 jobs:

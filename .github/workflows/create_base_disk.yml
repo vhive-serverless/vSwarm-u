@@ -32,14 +32,16 @@ on:
   workflow_dispatch:
 
   push:
-    branches: [main, ci-pipelines]
+    branches: [main]
     paths:
-      - "setup/create_disk_image.sh"
+      - "setup/disk.Makefile"
+      - "configs/disk-image-configs/**"
 
   pull_request:
-    branches: [main, ci-pipelines]
+    branches: [main]
     paths:
-      - "setup/create_disk_image.sh"
+      - "setup/disk.Makefile"
+      - "configs/disk-image-configs/**"
 
 jobs:
   build-x86-64:
