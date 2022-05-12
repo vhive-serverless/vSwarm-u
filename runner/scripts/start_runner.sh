@@ -33,6 +33,12 @@ ORG=ease-lab
 REPO=vSwarm-u
 OS=ubuntu-focal
 
+if [[ ! ${GH_ACCESS_TOKEN} ]] ;
+then
+  echo "Error: GH_ACCESS_TOKEN needs to be set."
+  exit -1;
+fi;
+
 ACCESS_TOKEN=${GH_ACCESS_TOKEN}
 RESOURCES_DIR=${RESOURCES:-$ROOT/resources/}
 
