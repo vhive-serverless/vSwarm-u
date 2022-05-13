@@ -93,6 +93,7 @@ define print_config
 	printf "${GREEN}  Build gem5 ${NC}\n"; \
 	printf " ---\n"; \
 	printf "Architecture: $(ARCH)\n"; \
+	printf "version: $(VERSION)\n"; \
 	printf "Output: $(GEM5_DIR)\n"; \
 	printf "=============================\n\n";
 endef
