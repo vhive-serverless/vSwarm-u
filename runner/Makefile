@@ -24,8 +24,10 @@
 RESOURCES 	?=$(ROOT)/resources/
 ACCESS_TOKEN :=${GH_ACCESS_TOKEN}
 
-RUNNERS := qemu-test-runner gem5-test-runner
+RUNNERS := gem5-build-runner qemu-test-runner gem5-test-runner
 
+
+#### Build the runner images
 %-runner: Dockerfile
 	DOCKER_BUILDKIT=1 docker build \
 	--tag vhiveease/$@ \
@@ -37,15 +39,26 @@ build: $(RUNNERS)
 
 
 
-
-
+## Push and pull
 push-%:
 	docker push docker.io/vhiveease/$(subst push-,,$@):latest
 
+push:
+	docker push $(RUNNERS)
 
+pull:
+	docker pull $(RUNNERS)
+
+
+
+#@$(eval runner_name := "$(runner)-$(shell echo $$RANDOM | md5sum | head -c 10; echo;)")
+
+##### Start and stop runners ####
 run-%-runner:
-	$(eval runner := $(subst run-,,$@))
-	docker run --name $(runner) -d \
+	@$(eval runner := $(subst run-,,$@))
+	@$(eval runner_name := "$(runner)-$(shell echo $$RANDOM | md5sum | head -c 10; echo;)")
+	echo $(runner_name)
+	docker run --name $(runner_name) -d \
 		--privileged --cap-add=ALL \
 		-e RESOURCES=/tmp/resources/ \
 		-e ACCESS_TOKEN=${ACCESS_TOKEN} \
@@ -54,20 +67,16 @@ run-%-runner:
 		-v $(RESOURCES):/tmp/resources/ \
 		vhiveease/$(runner)
 
-
 stop-%-runner:
 	$(eval runner := $(subst stop-,,$@))
 	docker stop $(runner)
 	docker rm $(runner)
 
+# stop-all:
 
 
-## Push and image
-push:
-	docker push $(RUNNERS)
 
-pull:
-	docker pull $(RUNNERS)
+
 
 
 

@@ -29,6 +29,7 @@ ROOT 		:= $(abspath $(dir $(mkfile_path))/../)
 ## User specific inputs
 RESOURCES 	?=$(ROOT)/resources/
 ARCH		:= X86
+VERSION     := v21.2.1.0
 
 GEM5_DIR 	:= $(RESOURCES)/gem5/
 GEM5 		:= $(RESOURCES)/build/$(ARCH)/gem5.opt
@@ -53,10 +54,10 @@ dep_install:
 ## Clone repo --
 $(GEM5_DIR):
 	git clone https://gem5.googlesource.com/public/gem5 $@
+	cd $@; git checkout $(VERSION)
 
 
 ## Build
-
 gem5: $(GEM5_DIR)
 	@$(call print_config)
 	cd $(GEM5_DIR); \
