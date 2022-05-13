@@ -29,8 +29,8 @@ env:
 on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
-  # schedule:
-  #   - cron: "0 7 * * 1"
+  schedule:
+    - cron: "0 7 * * 1"
 
   push:
     branches: [main]
@@ -49,8 +49,8 @@ jobs:
     # Building the kernel works also on the github runners.
     # However, they only offer building on one core therefor it take a while
     # Using self hosted is faster
-    # runs-on: ubuntu-20.04
-    runs-on: [self-hosted, gem5-build]
+    runs-on: ubuntu-20.04
+    # runs-on: [self-hosted, gem5-build]
     strategy:
       fail-fast: true
 

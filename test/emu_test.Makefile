@@ -54,7 +54,6 @@ TEST_CLIENT			:= $(WORKING_DIR)/test-client
 RESULTS				:= $(WORKING_DIR)/results.log
 SERVE 				:= $(WORKING_DIR)/server.pid
 
-FUNCTION_NAME 		:= $(shell echo $(IMAGE_NAME) | awk -F'/' '{print $$NF}')
 FUNCTION_DISK_IMAGE := $(RESOURCES)/$(FUNCTION_NAME)-disk.img
 
 
@@ -115,7 +114,7 @@ check: $(RESULTS)
 	fi
 
 
-save_disk: check
+save_disk:
 	cp $(DISK_IMAGE) $(FUNCTION_DISK_IMAGE)
 
 
