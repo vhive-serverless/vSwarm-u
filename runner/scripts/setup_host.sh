@@ -42,7 +42,6 @@ if [[ -z "${RESOURCES}" ]]; then
   mkdir -p $RESOURCES
   export RESOURCES=$RESOURCES
   sudo sh -c  "echo 'export RESOURCES=${RESOURCES}' >> /etc/profile"
-  sh -c  "echo 'export RESOURCES=${RESOURCES}' >> $HOME/.bashrc"
 fi
 
 echo "Install all resources to: ${RESOURCES}"
@@ -69,6 +68,11 @@ sudo add-apt-repository \
 && sudo apt-get update \
 && sudo apt-get install -y docker-ce docker-ce-cli containerd.io
 
+## Install also docker compose
+sudo apt install python3-pip
+sudo pip3 install docker-compose
+
+
 
 # Install golang
 wget --continue --quiet https://golang.org/dl/go1.16.4.linux-amd64.tar.gz
@@ -76,6 +80,7 @@ sudo tar -C /usr/local -xzf go1.16.4.linux-amd64.tar.gz
 export PATH=$PATH:/usr/local/go/bin
 sudo sh -c  "echo 'export PATH=\$PATH:/usr/local/go/bin' >> /etc/profile"
 
+source /etc/profile
 
 ## Now prepare the base setup to run the functions.
 
@@ -96,10 +101,11 @@ make -f ${ROOT}/setup/disk.Makefile save
 
 make -f ${ROOT}/setup/disk.Makefile clean
 
-# Build the test client
-pushd ${ROOT}/tools/
-make test-client
-cp client/test-client ${RESOURCES}/test-client
-popd
+# Download the newest the test client
+# from the proto repo.
+curl -L https://github.com/ease-lab/vSwarm-proto/releases/download/v0.1.3-e9087ac/client-linux-amd64 \
+    -o ${RESOURCES}/test-client
+chmod +x ${RESOURCES}/test-client
+
 
 
