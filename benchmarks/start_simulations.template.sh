@@ -3,10 +3,10 @@
 set -x
 
 GEM5=<__GEM5__>
-KERNEL=<__KERNEL__>
-DISK_IMAGE=<__DISK_IMAGE__>
-GEM5_CONFIG=<__GEM5_CONFIG__>
-RUN_SCRIPT_TEMPLATE=<__RUN_SCRIPT_TEMPLATE__>
+KERNEL=kernel
+DISK_IMAGE=disk.img
+GEM5_CONFIG=run_sim.py
+
 
 
 ################################################################################
@@ -15,10 +15,10 @@ RUN_SCRIPT_TEMPLATE=<__RUN_SCRIPT_TEMPLATE__>
 sudo chown $USER /dev/kvm
 
 
-BMS="aes-go aes-nodejs"
+BMS="$(cat functions.list)"
 
 # Define the output file of your run
-BASE_OUTDIR=../results/
+BASE_OUTDIR=results/experiment1/
 
 
 for i in $BMS ;

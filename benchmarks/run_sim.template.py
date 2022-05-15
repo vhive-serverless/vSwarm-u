@@ -1,16 +1,16 @@
-from pkg_resources import run_script
 import m5
 from m5.objects import *
 
 # sys.path.append('configs/common/') # For the next line...
 # import SimpleOpts
 import os
-ROOT = os.path.abspath(os.path.dirname(os.path.realpath(__file__)) + "/../")
+ROOT = '<__ROOT__>'
 print(ROOT)
 
 import sys
-sys.path.append(ROOT +'/gem5-configs/') # For the next line...
-from system import MySystem
+sys.path.append(ROOT +'/gem5-configs/skl_system/') # For the next line...
+from system import SklSystem
+from core import *
 
 import argparse
 def parse_arguments():
@@ -128,12 +128,12 @@ def executeM5FailCode(code):
     prYellow(FAIL_CODES[code])
 
     # Before invoking we switch to detailed core
-    if code == 3:
+    if code == 10:
         print("Switch detailed core")
         system.switchToDetailedCpus()
         m5.stats.reset()
 
-    if code == 4:
+    if code == 11:
         print("Switch to kvm core")
         system.switchToKvmCpus()
         m5.stats.dump()
@@ -176,7 +176,8 @@ if __name__ == "__m5_main__":
 
 
     # create the system we are going to simulate
-    system = MySystem(args.kernel, args.disk, CPUModel=TimingSimpleCPU)
+    # system = MySystem(args.kernel, args.disk, CPUModel=TimingSimpleCPU)
+    system = SklSystem(args.kernel, args.disk, CPUModel=SklTunedCPU)
 
     # Gem5 will automatically start a run script once booted.
     # The script is retrieved from `readfile`.
