@@ -1,41 +1,75 @@
 > [Main](../README.md) ▸ **Benchmarks**
 # Install function images on a disk image
 
+### Build initial working directory
+Once you defined your functions in the yaml the next step is to setup a working directory. The `build_wkdir` recipe will make it convenient to build the initial setup.
+```bash
+make build_wkdir
+```
+The initial working directory will contain a setup with all you will need to run simulations.
+1. Kernel and base disk image
+2. A template of the function.yaml and function.list to define your functions.
+3. A `start_simulation.sh` script for starting a simulation for each function you define in the `functions.list` file.
+4. A basic gem5 config script.
 
-## Function benchmarks
+
+## Defining Function Benchmarks
 
 For managing the functions to be benchmarked during the simulation we use docker-compose. docker compose allows predefining even complexer setups with several connected functions.
 
-The functions to be benchmarks need to be defined in the `benchmarks/function.yaml` as [docker-compose](https://docs.docker.com/compose/compose-file/) configuration. In `benchmarks/all_vswarm_functions.yaml` we predefined the correct confib for all functions we currently supported in our benchmarks suite [vSwarm](https://github.com/ease-lab/vSwarm/. Use it as a reference or simply copy the config to the `function.yaml`
+The functions to be benchmarks need to be defined in the `benchmarks/function.yaml` as [docker-compose](https://docs.docker.com/compose/compose-file/) configuration. The simulation workflows has several requirements on the configuration.
+1. The client to drive the invocations will connect port `50000`. Therefore make sure to forward the function port to this host port.
+2. All functions you
+
+
+In `benchmarks/all_vswarm_functions.yaml` we predefined the correct config for all functions we currently supported in our benchmarks suite [vSwarm](https://github.com/ease-lab/vSwarm/. Use it as a reference or simply copy the config to the `function.yaml`
+
 
 Hints:
-1. The client to drive the invocations will connect port `50000`. Therefore make sure to forward the function port to this host port.
+1.
 2. For all simulations the same disk image is used. Therefore define all functions in this file.
 
-### Build working dir
-```bash
-make build_wkdir
-```
 
-```bash
-make build_wkdir
-```
 
-### Install the images
-Once all setup steps are completed the `RESOURCE` folder should contain a raw base disk image. On this base image all necessary packages i.e. docker, python,.. are preinstalled. However, the disk image does not contain the container images of the benchmarks we want to run. Therefore, before starting simulation the base image need to be augmented with the container images.
+### Install Function images on disk
+Once all setup steps are completed your initial working directory should contain a raw base disk image. On this base image all necessary packages i.e. docker, python,.. are preinstalled. However, the disk image does not contain the container images of the benchmarks we want to run. Therefore, before starting simulation the base image need to be augmented with the container images.
 
-For installing all functions defined in the functions.yaml file run the `install_functions` recipe.
+To do this we use the qemu emulator as it has access to the internet for pulling the most recent image.
+We provide a make recepie to automatically install all functions defined in the functions.yaml file run the `install_functions` recipe.
 ```bash
 make install_functions
 ```
+It will take a while depending on how many functions and how large the images are.
+> Note the base disk image has a size of XXGB with XXGB already used. Make sure that all container images will not exceed the total size available on the disk. If you need a larger disk you can extend the disk image with `qemu image resize`. Note you also need to [extend the root file system](https://computingforgeeks.com/extending-root-filesystem-using-lvm-linux/) afterwards.
 
 
 
 
-To do this use the qemu emulator as it has access to the internet for pulling the most recent image. The image installation can be done manually or with the make recipes we provide.
+## Run simulations
+As soon as the functions are installed on disk its finally time to turn our attention to gem5.
 
-## Automatic install.
-For installing functions automatically on a base disk image the functions need to be defined in the `benchmarks/function.yaml` file.
+The initial working directory will contain gem5 config file that defines a basic system workflow the benchmark one of the function.
+
+### Workflow
+
+1. Spinning up the container
+2. Pin the container to core 1
+3. Reset the gem5 stats
+4. Start the invoker.
+5. Dump the gem5 stats
+6. Exit the simulation.
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

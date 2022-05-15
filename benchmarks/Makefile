@@ -45,9 +45,7 @@ INSTALL_SCRIPT      := $(ROOT)/benchmarks/install_function.sh
 FUNCTION_YAML_TMPL  := $(ROOT)/benchmarks/functions.yaml
 
 GEM5				:= $(RESOURCES)/gem5/build/X86/gem5.opt
-SIM_SCRIPT_TMPL  	:= $(ROOT)/benchmarks/run_sim.sh
-
-GEM5_CONFIG  		:= $(ROOT)/benchmarks/run_sim.py
+GEM5_CONFIG_TMPL  	:= $(ROOT)/benchmarks/run_sim.template.py
 
 KERNEL 				:= $(WORKING_DIR)/kernel
 DISK_IMAGE 			:= $(WORKING_DIR)/disk.img
@@ -57,8 +55,9 @@ RESULTS				:= $(WORKING_DIR)/install.log
 SERVE 				:= $(WORKING_DIR)/server.pid
 FUNCTION_YAML       := $(WORKING_DIR)/functions.yaml
 FUNCTIONS 			:= $(WORKING_DIR)/functions.list
+GEM5_CONFIG  		:= $(WORKING_DIR)/run_sim.py
 
-
+SIM_SCRIPT_TMPL  	:= $(ROOT)/benchmarks/start_simulations.template.sh
 SIM_SCRIPT          := $(WORKING_DIR)/start_simulations.sh
 
 FUNCTION_NAME 		:= $(shell echo $(IMAGE_NAME) | awk -F'/' '{print $$NF}')
@@ -130,7 +129,10 @@ run_simulator:
 
 
 ## Build the working directory ----------------------------
-build_wkdir: $(WORKING_DIR) $(DISK_IMAGE) $(KERNEL) $(TEST_CLIENT) $(FUNCTION_YAML) $(FUNCTIONS) $(RUN_SCRIPT)
+build_wkdir: $(WORKING_DIR) \
+			$(DISK_IMAGE) $(KERNEL) $(TEST_CLIENT) \
+			$(FUNCTION_YAML) $(FUNCTIONS) $(RUN_SCRIPT) \
+			$(GEM5_CONFIG) $(SIM_SCRIPT)
 
 $(WORKING_DIR):
 	@echo "Create folder: $(WORKING_DIR)"
@@ -155,6 +157,10 @@ $(RUN_SCRIPT): $(INSTALL_SCRIPT)
 $(FUNCTIONS): $(FUNCTION_YAML)
 	python -m niet "services.*.container_name" $< > $@
 
+$(GEM5_CONFIG): $(GEM5_CONFIG_TMPL)
+	cat $< | \
+	sed 's|<__ROOT__>|$(ROOT)|g' \
+	> $@
 
 $(SIM_SCRIPT): $(SIM_SCRIPT_TMPL)
 	cat $< | \
