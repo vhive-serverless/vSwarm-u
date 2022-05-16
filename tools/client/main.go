@@ -26,14 +26,16 @@
 package main
 
 import (
-	"context"
 	"flag"
-	"log"
+	"fmt"
 	"os"
-	"time"
 
-	"google.golang.org/grpc"
-	pb "google.golang.org/grpc/examples/helloworld/helloworld"
+	log "github.com/sirupsen/logrus"
+
+	// pb "google.golang.org/grpc/examples/helloworld/helloworld"
+	m5ops "client/m5"
+
+	grpcClients "github.com/ease-lab/vSwarm-proto/grpcclient"
 )
 
 const (
@@ -41,14 +43,28 @@ const (
 )
 
 var (
-	addr    = flag.String("addr", "localhost:50051", "the address to connect to")
-	name    = flag.String("name", defaultName, "Name to greet")
-	n       = flag.Int("n", 10, "Number of invokations")
-	logfile = flag.String("logging", "", "Log to file instead of standart out")
+	print_version  = flag.Bool("version", false, "Version of client")
+	functionName   = flag.String("function-name", "helloworld", "Specify the name of the function being invoked.")
+	url            = flag.String("url", "0.0.0.0", "The url to connect to")
+	port           = flag.String("port", "50051", "the port to connect to")
+	input          = flag.String("input", defaultInput, "Input to the function")
+	functionMethod = flag.String("function-method", "default", "Which method of benchmark to invoke")
+	n              = flag.Int("n", 10, "Number of invokations")
+	logfile        = flag.String("logging", "", "Log to file instead of standart out")
+	m5_enable      = flag.Bool("m5ops", false, "Enable m5 magic instructions")
+	// Client
+	client    grpcClients.GrpcClient
+	generator grpcClients.Generator
+	m5        m5ops.M5Ops
 )
 
 func main() {
 	flag.Parse()
+
+	if *print_version {
+		fmt.Println(version)
+		os.Exit(0)
+	}
 
 	// open file and create if non-existent
 	if *logfile != "" {
@@ -61,18 +77,43 @@ func main() {
 	}
 
 	log.Println("-- Invokation test --")
+	// Add also the m5 magic instructions
+	if *m5_enable {
+		m5 = m5ops.NewM5Ops()
+		defer m5.Close()
 
-	// Set up a connection to the server.
-	conn, err := grpc.Dial(*addr, grpc.WithInsecure())
-	if err != nil {
-		log.Fatalf("FAIL: did not connect: %v", err)
+		m5.Fail(0, 20) // 20: Connection established
 	}
-	defer conn.Close()
-	c := pb.NewGreeterClient(conn)
 
-	// // Contact the server and print out its response.
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
+	// Set up a connection to the function server.
+	serviceName := grpcClients.FindServiceName(*functionName)
+	client = grpcClients.FindGrpcClient(serviceName)
+	client.Init(*url, *port)
+	defer client.Close()
+
+	// conn, err := grpc.Dial(*addr, grpc.WithInsecure())
+	// if err != nil {
+	// 	log.Fatalf("FAIL: did not connect: %v", err)
+	// }
+	// defer conn.Close()
+	// c := pb.NewGreeterClient(conn)
+
+	// // // Contact the server and print out its response.
+	// ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	// defer cancel()
+
+	// Create packet to send to the function
+	// var pkt grpcClients.Input
+	// pkt.SetGenerator(grpcClients.Unique)
+	// pkt.SetValue(*input)
+	generator = client.GetGenerator()
+	generator.SetGenerator(grpcClients.Unique)
+	generator.SetValue(*input)
+	generator.SetMethod(*functionMethod)
+	pkt := generator.Next()
+
+	reply := client.Request(pkt)
+	// log.Debug(reply)
 
 	r, err := c.SayHello(ctx, &pb.HelloRequest{Name: *name})
 	if err != nil {
@@ -80,18 +121,68 @@ func main() {
 	}
 	log.Printf("Greeting: %s", r.GetMessage())
 
+	if *m5_enable {
+		invokeFunctionInstrumented(*n)
+	} else {
+		invokeFunction(*n)
+	}
+
+	log.Printf("Finished invoking: %s", reply)
+	log.Printf("SUCCESS: Calling functions for %d times", *n)
+}
+
+func invokeFunction(n int) {
 	// Print 5 times the progress
 	mod := 1
-	if *n > 2*5 {
-		mod = *n / 5
+	if n > 2*5 {
+		mod = n / 5
 	}
-	for i := 0; i < *n; i++ {
+	for i := 0; i < n; i++ {
 
-		c.SayHello(ctx, &pb.HelloRequest{Name: *name})
+		pkt := generator.Next()
+		client.Request(pkt)
 		if i%mod == 0 {
 			log.Printf("Invoked for %d times\n", i)
 		}
 	}
-	log.Printf("Finished invoking: %s", *n, r.GetMessage())
-	log.Printf("SUCCESS: Calling functions for %d times", *n)
+}
+
+func invokeFunctionInstrumented(n int) {
+	// Print 5 times the progress
+	mod := 1
+	if n > 2*5 {
+		mod = n / 5
+	}
+	for i := 0; i < n; i++ {
+
+		pkt := generator.Next()
+
+		m5.Fail(0, 21) // 21: Send Request
+
+		// c.SayHello(ctx, &pb.HelloRequest{Name: *name})
+		client.Request(pkt)
+
+		m5.Fail(0, 22) // 21: Send Request
+		if i%mod == 0 {
+			log.Printf("Invoked for %d times\n", i)
+		}
+	}
+}
+
+func Dump() {
+	// defer func() {
+	// 	// recover from panic if one occured. Set err to nil otherwise.
+	// 	if recover() != nil {
+	// 		err = errors.New("array index out of bounds")
+	// 	}
+	// }()
+	// defer func() {
+	// 	if r := recover(); r != nil {
+	// 		fmt.Println("Recovered in f", r)
+	// 	}
+	// }()
+
+	// m5ops.DumpStats(0, 0)
+	// m5ops.
+
 }
