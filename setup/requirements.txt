@@ -1,0 +1,10 @@
+matplotlib
+numpy
+brewer2mpl
+pydot
+objectpath
+seaborn
+docker-compose
+uploadserver
+niet
+#mlpd3

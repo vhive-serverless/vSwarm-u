@@ -70,7 +70,7 @@ sudo add-apt-repository \
 
 ## Install also docker compose
 sudo apt install python3-pip
-sudo pip3 install docker-compose
+sudo pip3 install -r ${ROOT}/setup/requirements.txt
 
 
 

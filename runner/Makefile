@@ -37,6 +37,9 @@ RUNNERS := gem5-build-runner qemu-test-runner gem5-test-runner
 
 build: $(RUNNERS)
 
+start-all: start-test-runners start-build-runners
+stop-all: stop-test-runners stop-build-runners
+
 
 
 ## Push and pull
@@ -54,8 +57,12 @@ pull:
 #@$(eval runner_name := "$(runner)-$(shell echo $$RANDOM | md5sum | head -c 10; echo;)")
 
 ##### Start and stop runners ####
-run-%-runner:
-	@$(eval runner := $(subst run-,,$@))
+# Test runners
+start-test-runners: start-qemu-test-runner start-gem5-test-runner
+stop-test-runners: stop-qemu-test-runner stop-gem5-test-runner
+
+start-%-test-runner:
+	@$(eval runner := $(subst start-,,$@))
 	@$(eval runner_name := "$(runner)-$(shell echo $$RANDOM | md5sum | head -c 10; echo;)")
 	echo $(runner_name)
 	docker run --name $(runner_name) -d \
@@ -69,7 +76,11 @@ run-%-runner:
 		vhiveease/$(runner)
 
 
-run-gem5-build-runner:
+# Build runners
+start-build-runners: start-gem5-build-runner
+stop-build-runners: stop-gem5-build-runner
+
+start-gem5-build-runner:
 	@$(eval runner := gem5-build-runner)
 	@$(eval runner_name := "$(runner)-$(shell echo $$RANDOM | md5sum | head -c 10; echo;)")
 	echo $(runner_name)
@@ -85,9 +96,11 @@ run-gem5-build-runner:
 stop-%-runner:
 	$(eval runner := $(subst stop-,,$@))
 	$(eval runners := $(shell docker container ls -a -q --filter "ancestor=vhiveease/$(runner)"))
-	echo "Stop $(runners)"
-	docker stop $(runners)
-	docker rm $(runners)
+	echo "Stop $(runners) $$(expr length "$(runners)")"
+	if [ $$(expr length "$(runners)") -gt 0 ]; then \
+	docker stop $(runners); \
+	docker rm $(runners); \
+	fi;
 
 # stop-all:
 
