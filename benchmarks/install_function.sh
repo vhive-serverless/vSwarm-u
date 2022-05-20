@@ -25,7 +25,7 @@ function pull_test_function {
 
     ## Pull the image from regestry
     docker-compose -f functions.yaml pull ${FUNCTION_NAME}
-    docker-compose -f functions.yaml up -d ${FUNCTION_NAME}
+    docker-compose -f functions.yaml up -d --remove-orphans ${FUNCTION_NAME}
 
     sleep 5
 
@@ -38,12 +38,14 @@ function pull_test_function {
 
     ## Stop container
     docker-compose -f functions.yaml down
+    docker stop $(docker ps -a -q)
+    docker rm $(docker ps -a -q)
 }
 
 
 start_logging
 {
-set -e
+# set -e
 ## Download the test client.
 curl  "http://10.0.2.2:3003/test-client" -f -o /root/test-client
 chmod 755 /root/test-client
@@ -69,7 +71,7 @@ for f in $FUNCTIONS
   echo "----------------\033[0m"
   cat results.log
 }
-set +e
+# set +e
 end_logging
 
 ## Upload the log file.
