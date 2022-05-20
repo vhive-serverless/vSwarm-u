@@ -105,8 +105,9 @@ run_simulator:
 		--outdir=$(WORKING_DIR) \
 			$(GEM5_CONFIG) \
 				--kernel $(KERNEL) \
-				--disk $(DISK_IMAGE) \
-				--script $(RUN_SCRIPT)
+				--disk $(DISK_IMAGE)
+
+# --script $(RUN_SCRIPT)
 
 # run: run_simulator
 
