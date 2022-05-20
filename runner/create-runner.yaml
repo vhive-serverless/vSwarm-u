@@ -23,45 +23,19 @@
 # Execute this playbook using
 #   GH_ACCESS_TOKEN=... ansible-playbook -u YOUR_SSH_USERNAME -i REMOTE_HOSTNAME, create-runner.yaml
 #
-# To create N=10 runners, use
-#   for run in {1..10}; do GH_ACCESS_TOKEN=... ansible-playbook -u YOUR_SSH_USERNAME -i REMOTE_HOSTNAME, create-runner.yaml; done
-
 ---
 - name: Create GitHub Runners for gem5 CI
   hosts: all
   tasks:
-    # - name: Get GitHub runner token
-    #   uri:
-    #     method: POST
-    #     url: https://api.github.com/repos/ease-lab/vSwarm-u/actions/runners/registration-token
-    #     headers:
-    #       Accept: application/vnd.github.v3+json
-    #       Authorization: "token {{ lookup('env', 'GH_ACCESS_TOKEN') }}"
-    #     status_code: 201
-    #   register: registration
 
-    - name: Generate a random runner name
-      shell: 'printf "$(shuf -n1 /usr/share/dict/predicates)-$(shuf -n1 /usr/share/dict/objects)"'
-      register: runner_name
+    # - name: Generate a random runner name
+    #   shell: 'printf "$(shuf -n1 /usr/share/dict/predicates)-$(shuf -n1 /usr/share/dict/objects)"'
+    #   register: runner_name
 
-    - name: Print the generated name
-      ansible.builtin.debug:
-        var: runner_name.stdout
+    # - name: Print the generated name
+    #   ansible.builtin.debug:
+    #     var: runner_name.stdout
 
-    # - name: Create working directory for the runner
-    #   become: yes
-    #   ansible.builtin.file:
-    #     path: /tmp/_work-{{ runner_name.stdout }}/
-    #     state: directory
-    #     mode: '0755'
-
-    - name: Start the git-hub runner
+    - name: Start the gem5 runners
       command: |
-        sudo docker run --name github-runner-build --rm \
-          --privileged --cap-add=ALL \
-          -e RESOURCES=/tmp/resources/ \
-          -e RUNNER_NAME="gem5-build-runner-{{ cluster_name.stdout }}" \
-          -e RUNNER_TOKEN={{ registration.json.token }} \
-          -v /var/run/docker.socker.sock:/var/run/docker.sock \
-          -v {{ lookup('env', 'RESOURCES') }}:/tmp/resources/
-          vhiveease/qemu-test-runner
+        GH_ACCESS_TOKEN={{ lookup('env', 'GH_ACCESS_TOKEN') }} sudo make -f /wkdir/vSwarm-u/runner/Makefile start-all

@@ -27,29 +27,7 @@
 - name: Delete All GitHub Runners
   hosts: all
   tasks:
-    # - name: Get GitHub runner remove token
-    #   uri:
-    #     method: POST
-    #     url: https://api.github.com/repos/ease-lab/vSwarm-u/actions/runners/remove-token
-    #     headers:
-    #       Accept: application/vnd.github.v3+json
-    #       Authorization: "token {{ lookup('env', 'GH_ACCESS_TOKEN') }}"
-    #     status_code: 201
-    #   register: token
 
-    - name: List all running containers
-      command: sudo docker ps -q
-      register: runners
-
-    # - name: Unregister each runner
-    #   command: "sudo docker stop {{ item }}"
-    #   ignore_errors: yes
-    #   loop: "{{ runners.stdout_lines }}"
-
-    - name: Stop the containers
-      command: "sudo docker stop {{ item }}"
-      loop: "{{ runners.stdout_lines }}"
-
-    - name: Remove the containers
-      command: "sudo docker rm {{ item }}"
-      loop: "{{ runners.stdout_lines }}"
+    - name: Stop the gem5 runners
+      command: |
+        GH_ACCESS_TOKEN={{ lookup('env', 'GH_ACCESS_TOKEN') }} sudo make -f /wkdir/vSwarm-u/runner/Makefile stop-all

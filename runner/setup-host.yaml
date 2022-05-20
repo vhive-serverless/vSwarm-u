@@ -22,7 +22,7 @@
 
 
 # Execute this playbook using
-#   ansible-playbook -u YOUR_SSH_USERNAME -i REMOTE_HOSTNAME, setup-host.yaml
+#  ansible-playbook -u YOUR_SSH_USERNAME -i REMOTE_HOSTNAME, setup-host.yaml
 
 ---
 - name: Setup vSwarm-u runner host
@@ -62,60 +62,7 @@
           - dirmngr
           - gpg-agent
 
-    - name: Add custom repository keys
-      become: yes
-      ansible.builtin.apt_key:
-        url: "{{ item }}"
-      loop:
-        - https://download.docker.com/linux/ubuntu/gpg
 
-    - name: Add custom repositories
-      become: yes
-      ansible.builtin.apt_repository:
-        repo: "{{ item }}"
-        update_cache: no
-      loop:
-        - ppa:git-core/ppa
-        - deb [arch=amd64] https://download.docker.com/linux/ubuntu bionic stable
-
-    - name: Upgrade packages
-      become: yes
-      apt:
-        update_cache: yes
-        upgrade: safe
-
-    - name: Install required packages
-      become: yes
-      apt:
-        state: latest
-        name:
-          - docker-ce
-          - docker-ce-cli
-          - containerd.io
-          - git-lfs
-          - mosh
-
-    - name: Add user "{{ ansible_user }}" to group docker
-      become: yes
-      ansible.builtin.user:
-        name: "{{ ansible_user }}"
-        groups: docker
-        append: yes
-
-    - name: Reset SSH connection to activate changes
-      meta: reset_connection
-
-    - name: Download predicates word-list
-      become: yes
-      get_url:
-        url: https://raw.githubusercontent.com/glitchdotcom/friendly-words/master/words/predicates.txt
-        dest: /usr/share/dict/predicates
-
-    - name: Download objects word-list
-      become: yes
-      get_url:
-        url: https://raw.githubusercontent.com/glitchdotcom/friendly-words/master/words/objects.txt
-        dest: /usr/share/dict/objects
 
 
     - name: Create Working directory
@@ -153,20 +100,17 @@
 
     ## Clone vSwarm-u
     - name: Clone a github repository
-      shell: git clone https://{{ lookup('env', 'GH_ACCESS_TOKEN') }}@github.com/ease-lab/vSwarm-u.git /wkdir/vSwarm-u
+      shell: git clone https://github.com/ease-lab/vSwarm-u.git /wkdir/vSwarm-u
 
-
-    - name: Copy setup script to the remote host
-      ansible.builtin.copy:
-        src: ./scripts/setup_host.sh
-        dest: /wkdir/vSwarm-u/runner/scripts/setup_host.sh
-        force: yes
 
     ## Put all remaining installation into the setup script.
     ## This makes it easier to do the setup manually
     - name: Run the Host setup script
-      shell: "/wkdir/vSwarm-u/runner/scripts/setup_host.sh"
+      shell: "/wkdir/vSwarm-u/setup/setup_host.sh"
 
+    - name: Build the gem5 runners
+      command: |
+        sudo make -f /wkdir/vSwarm-u/runner/Makefile build
 
     # - name: Add cron entry to reboot at midnight
     #   become: yes

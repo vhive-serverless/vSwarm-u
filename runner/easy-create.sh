@@ -26,22 +26,16 @@ set -e -x
 
 PWD="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-REMOTE=hp150.utah.cloudlab.us
-COUNT=2
-AS_USER=dschall
-PRIVATE_KEY=${4:-}
+REMOTE=$1
+AS_USER=$2
+PRIVATE_KEY=$3
 
-# sudo apt update -qq
-# sudo apt install software-properties-common
-# sudo add-apt-repository --yes --update ppa:ansible/ansible
-# sudo apt install -q ansible
+sudo apt update -qq
+sudo apt install software-properties-common
+sudo add-apt-repository --yes --update ppa:ansible/ansible
+sudo apt install -q ansible
 
 
-GH_ACCESS_TOKEN=${GH_ACCESS_TOKEN} ansible-playbook -vvv --private-key ~/.ssh/id_cloudlab -u $AS_USER -i ${REMOTE}, ${PWD}/setup-host.yaml
+ansible-playbook -v -u $AS_USER -i ${REMOTE}, ${PWD}/setup-host.yaml
 
-# # ansible-playbook --private-key ~/.ssh/id_cloudlab -u $AS_USER -i ${REMOTE}, ${PWD}/delete-runners.yaml
-
-# for i in $(seq ${COUNT}); do
-#     GH_ACCESS_TOKEN=${GH_ACCESS_TOKEN} ansible-playbook --private-key ~/.ssh/id_cloudlab -u $AS_USER -i ${REMOTE}, ${PWD}/create-runner.yaml
-#     # ansible-playbook --private-key ~/.ssh/id_cloudlab -u dschall -i pc01.cloudlab.umass.edu, create-runner.yaml
-# done
+GH_ACCESS_TOKEN=${GH_ACCESS_TOKEN} ansible-playbook -v -u $AS_USER -i ${REMOTE}, ${PWD}/create-runner.yaml
