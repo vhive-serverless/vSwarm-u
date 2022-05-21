@@ -16,6 +16,7 @@ _CGO_LDFLAGS="-g -O2 -no-pie"
 $(BIN): main.go version.go m5lib
 	CGO_LDFLAGS=$(_CGO_LDFLAGS) go build -o $@ -v .
 
+all: $(BIN)
 
 libclean:
 	rm $(DIR)/*.o
@@ -23,7 +24,6 @@ libclean:
 
 clean: libclean
 	go clean
-
 
 
 

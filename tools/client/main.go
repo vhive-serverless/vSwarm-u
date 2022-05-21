@@ -39,7 +39,7 @@ import (
 )
 
 const (
-	defaultName = "world"
+	defaultInput = "1"
 )
 
 var (
@@ -115,11 +115,11 @@ func main() {
 	reply := client.Request(pkt)
 	// log.Debug(reply)
 
-	r, err := c.SayHello(ctx, &pb.HelloRequest{Name: *name})
-	if err != nil {
-		log.Fatalf("FAIL: could not greet: %v", err)
-	}
-	log.Printf("Greeting: %s", r.GetMessage())
+	// r, err := c.SayHello(ctx, &pb.HelloRequest{Name: *name})
+	// if err != nil {
+	// 	log.Fatalf("FAIL: could not greet: %v", err)
+	// }
+	log.Printf("Greeting: %s", reply)
 
 	if *m5_enable {
 		invokeFunctionInstrumented(*n)

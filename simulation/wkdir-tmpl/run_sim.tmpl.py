@@ -1,16 +1,40 @@
-from pkg_resources import run_script
+# MIT License
+#
+# Copyright (c) 2022 David Schall and EASE lab
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+
 import m5
 from m5.objects import *
 
 # sys.path.append('configs/common/') # For the next line...
 # import SimpleOpts
 import os
-ROOT = os.path.abspath(os.path.dirname(os.path.realpath(__file__)) + "/../")
+ROOT = '<__ROOT__>'
 print(ROOT)
 
 import sys
-sys.path.append(ROOT +'/gem5-configs/') # For the next line...
-from system import MySystem
+sys.path.append(ROOT +'/gem5utils/systems/') # For the next line...
+from skylake.system import SklSystem
+from skylake.core import SklTunedCPU
+from simple.system import SimpleSystem
 
 import argparse
 def parse_arguments():
@@ -24,6 +48,8 @@ def parse_arguments():
                             after booting from the gem5init service.""")
     parser.add_argument("-f", "--function", action="store", type=str, default="",
                         help="""Specify a function that should run in the simulator.""")
+    parser.add_argument("--system", type=str, default="simple",choices=["simple", "skylake",],
+                        help="""Define the system to be used.""")
     return parser.parse_args()
 
 
@@ -38,14 +64,14 @@ def writeRunScript(dir, function_name):
 
 ## Define the image name of your function.
 
-# We use the fail code magic instruction to indicate the
-# python script where in test process we are.
+# We use the 'm5 fail <code>' magic instruction to indicate the
+# python script where in workflow the system currently is.
 
 m5 fail 1 ## 1: BOOTING complete
 
 ## Spin up Container
 echo "Start the container..."
-docker-compose -f functions.yaml up -d {function_name} &&DOCKER_START_RES=$?
+docker-compose -f functions.yaml up -d {FN_NAME} &&DOCKER_START_RES=$?
 m5 fail 2 ## 2: Started container
 
 echo "Pin to core 1"
@@ -102,8 +128,6 @@ m5 fail -1 ## 5: Test done
 
 
 
-
-
 def prRed(skk): print("\033[91m {}\033[00m" .format(skk))
 def prGreen(skk): print("\033[92m {}\033[00m" .format(skk))
 def prYellow(skk): print("\033[93m {}\033[00m" .format(skk))
@@ -128,19 +152,19 @@ def executeM5FailCode(code):
     prYellow(FAIL_CODES[code])
 
     # Before invoking we switch to detailed core
-    if code == 3:
+    if code == 10:
         print("Switch detailed core")
         system.switchToDetailedCpus()
         m5.stats.reset()
 
-    if code == 4:
+    if code == 11:
         print("Switch to kvm core")
         system.switchToKvmCpus()
         m5.stats.dump()
         m5.stats.reset()
 
     if code == -1:
-        prGreen("Test simulation done.")
+        prGreen("Simulation done.")
         exit(0)
 
 
@@ -173,10 +197,12 @@ if __name__ == "__m5_main__":
 
     args = parse_arguments()
 
-
-
     # create the system we are going to simulate
-    system = MySystem(args.kernel, args.disk, CPUModel=TimingSimpleCPU)
+    if args.system =="skylake":
+        system = SklSystem(args.kernel, args.disk, CPUModel=SklTunedCPU)
+    else:
+        system = SimpleSystem(args.kernel, args.disk, CPUModel=TimingSimpleCPU)
+
 
     # Gem5 will automatically start a run script once booted.
     # The script is retrieved from `readfile`.

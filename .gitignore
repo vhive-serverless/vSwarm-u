@@ -225,6 +225,7 @@ cython_debug/
 **/linux
 **/workload
 **/wkdir*
+!**/wkdir-tmpl
 **/resources
 **/results
 

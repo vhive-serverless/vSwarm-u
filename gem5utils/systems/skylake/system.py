@@ -1,16 +1,43 @@
-
+# -*- coding: utf-8 -*-
+# Copyright (c) 2016 Jason Lowe-Power
+# Copyright (c) 2022 EASE lab, University of Edinburgh
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are
+# met: redistributions of source code must retain the above copyright
+# notice, this list of conditions and the following disclaimer;
+# redistributions in binary form must reproduce the above copyright
+# notice, this list of conditions and the following disclaimer in the
+# documentation and/or other materials provided with the distribution;
+# neither the name of the copyright holders nor the names of its
+# contributors may be used to endorse or promote products derived from
+# this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+# A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+# OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+# THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+# Authors: Jason Lowe-Power, David Schall
 import m5
 from m5.objects import *
 from m5.util import convert
 
-import x86
+from . import x86
+from .caches import *
 
-from caches import *
-
-class MySystem(System):
+class SklSystem(System):
 
     def __init__(self, kernel, disk, num_cpus=2, CPUModel=AtomicSimpleCPU):
-        super(MySystem, self).__init__()
+        super(SklSystem, self).__init__()
 
         self._host_parallel = False if num_cpus == 1 else True
 
@@ -59,14 +86,23 @@ class MySystem(System):
 
         # Create the CPU for our system.
         self.createCPU(num_cpus=num_cpus, CPUModel=CPUModel)
-
+        # Create the CPUs for our system.
+        print("Test system: {} {} cores".format(num_cpus, CPUModel))
+        self.createCPU(num_cpus, CPUModel)
         # Set up the interrupt controllers for the system (x86 specific)
         self.setupInterrupts()
         # Create the cache heirarchy for the system.
         self.createCacheHierarchy()
 
         # Create the memory controller for the sytem
-        self.createMemoryControllers()
+        # self.createMemoryControllers()
+        # n_dram_cntrl = 1 if simple else 4
+        # if simple:
+        n_dram_cntrl = 1
+        self.createMemoryController(n_dram_cntrl)
+        # else:
+        #     self.createMemoryControllersDDR4(n_dram_cntrl)
+
 
         if self._host_parallel:
             # To get the KVM CPUs to run on different host CPUs
@@ -140,6 +176,49 @@ class MySystem(System):
         disk0 = CowDisk(img_path)
         self.pc.south_bridge.ide.disks = [disk0]
 
+
+    def createCacheHierarchy(self):
+        # Create an L3 cache (with crossbar)
+        self.l3bus = L2XBar(width = 64,
+                            snoop_filter = SnoopFilter(max_capacity='32MB'))
+        self._caches = []
+
+        for cpu in self.cpu:
+            # Create a memory bus, a coherent crossbar, in this case
+            cpu.l2bus = L2XBar()
+
+            # Create an L1 instruction and data cache
+            cpu.icache = L1ICache()
+            cpu.dcache = L1DCache()
+            cpu.mmucache = MMUCache()
+            self._caches += [cpu.icache, cpu.dcache, cpu.mmucache]
+
+            # Connect the instruction and data caches to the CPU
+            cpu.icache.connectCPU(cpu)
+            cpu.dcache.connectCPU(cpu)
+            cpu.mmucache.connectCPU(cpu)
+
+            # Hook the CPU ports up to the l2bus
+            cpu.icache.connectBus(cpu.l2bus)
+            cpu.dcache.connectBus(cpu.l2bus)
+            cpu.mmucache.connectBus(cpu.l2bus)
+
+            # Create an L2 cache and connect it to the l2bus
+            cpu.l2cache = L2Cache()
+            self._caches += [cpu.l2cache]
+            cpu.l2cache.connectCPUSideBus(cpu.l2bus)
+
+            # Connect the L2 cache to the L3 bus
+            cpu.l2cache.connectMemSideBus(self.l3bus)
+
+        self.l3cache = L3Cache()
+        self._caches += [self.l3cache]
+        self.l3cache.connectCPUSideBus(self.l3bus)
+
+        # Connect the L3 cache to the membus
+        self.l3cache.connectMemSideBus(self.membus)
+
+
     def connectCPUDirectly(self):
         self.llc_bus = L2XBar(width = 64,
                             snoop_filter = SnoopFilter(max_capacity='32MB'))
@@ -153,6 +232,7 @@ class MySystem(System):
                                 mshrs = 20,
                                 size = '1kB',
                                 tgts_per_mshr = 12,)
+        self._caches = [self.llc_cache]
         self.llc_cache.mem_side = self.membus.cpu_side_ports
         self.llc_cache.cpu_side = self.llc_bus.mem_side_ports
 
@@ -162,37 +242,18 @@ class MySystem(System):
             for tlb in [cpu.mmu.itb, cpu.mmu.dtb]:
                 self.llc_bus.cpu_side_ports = tlb.walker.port
 
-    def createCacheHierarchy(self):
-        """ Create a simple cache heirarchy with a shared LLC"""
 
-        # Create an L3 cache (with crossbar)
-        self.llcbus = L2XBar(width = 64)
-        self.llc = LLCCache()
+    def flushCaches(self):
+        m5.drain()
 
-        # Connect the LLC
-        self.llc.connectCPUSideBus(self.llcbus)
-        self.llc.connectMemSideBus(self.membus)
+        for cache in self._caches:
+            print("Flush: ", cache)
+            cache.memWriteback()
+            cache.memInvalidate()
 
 
-        for cpu in self.cpu:
-            # Create an L1 instruction and data cache
-            cpu.icache = L1ICache()
-            cpu.dcache = L1DCache()
 
-            # Connect the instruction and data caches to the CPU
-            cpu.icache.connectCPU(cpu)
-            cpu.dcache.connectCPU(cpu)
-
-            # Hook the CPU ports up to the llcbus
-            cpu.icache.connectBus(self.llcbus)
-            cpu.dcache.connectBus(self.llcbus)
-
-            # Connect the CPU TLBs directly to the mem.
-            cpu.mmu.itb.walker.port = self.membus.cpu_side_ports
-            cpu.mmu.dtb.walker.port = self.membus.cpu_side_ports
-
-
-    def createMemoryControllers(self):
+    def createSimpleMemoryController(self):
         """ Create the memory controller for the system """
 
         # Just create a controller for the first range, assuming the memory
@@ -201,6 +262,39 @@ class MySystem(System):
         # updated accordingly
         self.mem_cntrl = SimpleMemory(range = self.mem_ranges[0],
                                        port = self.membus.mem_side_ports)
+
+
+    def createMemoryController(self, n_dram_cntrl=1):
+        self._createMemoryControllers(n_dram_cntrl, DDR4_2400_16x4)
+
+    def _createMemoryControllers(self, n_dram_cntrl=1, dram_cls=SimpleMemory):
+        ranges = self._getInterleaveRanges(self.mem_ranges[0], n_dram_cntrl, 7, 20)
+        self.mem_cntrls = [
+            MemCtrl(dram = dram_cls(range = ranges[i]), port = self.membus.mem_side_ports)
+                for i in range(n_dram_cntrl)
+        ]
+
+    def _getInterleaveRanges(self, rng, num, intlv_low_bit, xor_low_bit):
+        from math import log
+        bits = int(log(num, 2))
+        if 2**bits != num:
+            m5.fatal("Non-power of two number of memory controllers")
+
+        intlv_bits = bits
+        ranges = [
+            AddrRange(start=rng.start,
+                      end=rng.end,
+                      intlvHighBit = intlv_low_bit + intlv_bits - 1,
+                      xorHighBit = xor_low_bit + intlv_bits - 1,
+                      intlvBits = intlv_bits,
+                      intlvMatch = i)
+                for i in range(num)
+            ]
+
+        return ranges
+
+
+
 
     def setupInterrupts(self):
         """ Create the interrupt controller for the CPU """

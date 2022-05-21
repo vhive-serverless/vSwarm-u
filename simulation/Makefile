@@ -22,14 +22,13 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
-ROOT 		:= $(abspath $(dir $(mkfile_path))/../)
+MKFILE := $(abspath $(lastword $(MAKEFILE_LIST)))
+ROOT 		:= $(abspath $(dir $(MKFILE))/../)
 
 
 ## User specific inputs
-IMAGE_NAME  		?=vhiveease/aes-go
 RESOURCES 			?=$(ROOT)/resources/
-WORKING_DIR 		?=wkdir/
+WORKING_DIR 		?=$(ROOT)/wkdir/
 
 ## Machine parameter
 MEMORY 	:= 2G
@@ -39,29 +38,9 @@ CPUS    := 2
 ## Required resources
 RESRC_KERNEL 		:= $(RESOURCES)/vmlinux
 RESRC_BASE_IMAGE 	:= $(RESOURCES)/base-disk-image.img
-RESRC_CLIENT	 	:= $(RESOURCES)/test-client
-
-INSTALL_SCRIPT      := $(ROOT)/benchmarks/install_function.sh
-FUNCTION_YAML_TMPL  := $(ROOT)/benchmarks/functions.yaml
-
 GEM5				:= $(RESOURCES)/gem5/build/X86/gem5.opt
-GEM5_CONFIG_TMPL  	:= $(ROOT)/benchmarks/run_sim.template.py
 
-KERNEL 				:= $(WORKING_DIR)/kernel
-DISK_IMAGE 			:= $(WORKING_DIR)/disk.img
-RUN_SCRIPT			:= $(WORKING_DIR)/run.sh
-TEST_CLIENT			:= $(WORKING_DIR)/test-client
-RESULTS				:= $(WORKING_DIR)/install.log
-SERVE 				:= $(WORKING_DIR)/server.pid
-FUNCTION_YAML       := $(WORKING_DIR)/functions.yaml
-FUNCTIONS 			:= $(WORKING_DIR)/functions.list
-GEM5_CONFIG  		:= $(WORKING_DIR)/run_sim.py
 
-SIM_SCRIPT_TMPL  	:= $(ROOT)/benchmarks/start_simulations.template.sh
-SIM_SCRIPT          := $(WORKING_DIR)/start_simulations.sh
-
-FUNCTION_NAME 		:= $(shell echo $(IMAGE_NAME) | awk -F'/' '{print $$NF}')
-FUNCTION_DISK_IMAGE := $(RESOURCES)/$(FUNCTION_NAME)-disk.img
 
 
 ## Dependencies -------------------------------------------------
@@ -87,12 +66,6 @@ run_emulator:
 
 run: run_emulator
 
-install_functions: build_wkdir
-	$(MAKE) serve_start
-	$(MAKE) run_emulator
-	$(MAKE) serve_stop
-
-
 
 ## Run Simulator -------------------------------------------------
 # Do the actual emulation run
@@ -107,33 +80,57 @@ run_simulator:
 				--kernel $(KERNEL) \
 				--disk $(DISK_IMAGE)
 
-# --script $(RUN_SCRIPT)
-
-# run: run_simulator
-
-# setup_all_simulations:
-# 	$(eval BMS := $(shell cat $(FUNCTIONS)))
-# 	for i in $(BMS); \
-# 		OUTDIR=$BASE_OUTDIR/${i}/
-
-#     ## Create output directory
-#     mkdir -p $OUTDIR
-# start_all_simulations:
 
 
 
 
+## Install functions --------------------------------------
+#
+INSTALL_LOG    := $(WORKING_DIR)/install.log
+
+create_install_script: $(ROOT)/simulation/install_functions.sh
+	cp $< $(WORKING_DIR)/run.sh
+
+delete_run_script: $(WORKING_DIR)/run.sh
+	rm $(WORKING_DIR)/run.sh
 
 
+install_functions: build-wkdir
+	if [ -f $(INSTALL_LOG) ]; then rm $(INSTALL_LOG); fi
+	$(MAKE) -f $(MKFILE) create_install_script
+	$(MAKE) -f $(MKFILE) serve_start
+	$(MAKE) -f $(MKFILE) run_emulator
+	$(MAKE) -f $(MKFILE) serve_stop
+	$(MAKE) -f $(MKFILE) delete_run_script
 
 
+## Test the results file
+install_check: $(INSTALL_LOG)
+	$(eval fn_inst := $(shell cat $(FUNCTIONS_LIST) | sed '/^\s*#/d;/^\s*$$/d' | wc -l))
+	$(eval fn_res := $(shell grep -c "SUCCESS" $< ))
+	echo "Tryed to install $(fn_inst) functions. $(fn_res) installed and tested successful"
+	@if [ $(fn_inst) -eq $(fn_res) ] ; then \
+		printf "${GREEN}==================\n Install successful\n==================${NC}\n"; \
+	else \
+		printf "${RED}==================\n"; \
+		printf "Install failed\n"; \
+		printf "Check $<\n"; \
+		printf "==================${NC}\n"; \
+		exit 1; \
+	fi
 
 
+#
 ## Build the working directory ----------------------------
-build_wkdir: $(WORKING_DIR) \
+#
+KERNEL 				:= $(WORKING_DIR)/kernel
+DISK_IMAGE 			:= $(WORKING_DIR)/disk.img
+TEST_CLIENT			:= $(WORKING_DIR)/test-client
+
+build-wkdir: $(WORKING_DIR) \
 			$(DISK_IMAGE) $(KERNEL) $(TEST_CLIENT) \
-			$(FUNCTION_YAML) $(FUNCTIONS) $(RUN_SCRIPT) \
-			$(GEM5_CONFIG) $(SIM_SCRIPT)
+			templates
+
 
 $(WORKING_DIR):
 	@echo "Create folder: $(WORKING_DIR)"
@@ -142,38 +139,56 @@ $(WORKING_DIR):
 $(KERNEL): $(RESRC_KERNEL)
 	cp $< $@
 
-$(TEST_CLIENT): $(RESRC_CLIENT)
-	cp $< $@
-
 # Create the disk image from the base image
 $(DISK_IMAGE): $(RESRC_BASE_IMAGE)
 	cp $< $@
 
-$(FUNCTION_YAML): $(FUNCTION_YAML_TMPL)
+
+## Build test client from sources
+$(TEST_CLIENT):
+	cd $(ROOT)/tools/client/ &&	$(MAKE) all
+	cp $(ROOT)/tools/client/client $@
+
+
+
+## Generate the scripts from templates -------
+# Templates
+TEMPLATES_DIR 		:= $(ROOT)/simulation/wkdir-tmpl
+
+# Target scripts
+SERVE 				:= $(WORKING_DIR)/server.pid
+FUNCTIONS_YAML      := $(WORKING_DIR)/functions.yaml
+FUNCTIONS_LIST		:= $(WORKING_DIR)/functions.list
+GEM5_CONFIG  		:= $(WORKING_DIR)/run_sim.py
+SIM_ALL_SCRIPT      := $(WORKING_DIR)/sim_all_functions.sh
+SIM_FN_SCRIPT       := $(WORKING_DIR)/sim_function.sh
+
+templates: $(SIM_ALL_SCRIPT) $(SIM_FN_SCRIPT) $(GEM5_CONFIG) $(FUNCTIONS_YAML) $(FUNCTIONS_LIST)
+
+
+$(WORKING_DIR)/functions.%: $(ROOT)/simulation/functions/functions.%
 	cp $< $@
 
-$(RUN_SCRIPT): $(INSTALL_SCRIPT)
-	cp $< $@
 
-$(FUNCTIONS): $(FUNCTION_YAML)
-	python -m niet "services.*.container_name" $< > $@
+test3: $(FUNCTIONS_YAML)
 
-$(GEM5_CONFIG): $(GEM5_CONFIG_TMPL)
+# $(FUNCTIONS): $(FUNCTION_YAML)
+# 	python -m niet "services.*.container_name" $< > $@
+
+
+$(WORKING_DIR)/%.py: $(TEMPLATES_DIR)/%.tmpl.py
 	cat $< | \
 	sed 's|<__ROOT__>|$(ROOT)|g' \
 	> $@
 
-$(SIM_SCRIPT): $(SIM_SCRIPT_TMPL)
+$(WORKING_DIR)/%.sh: $(TEMPLATES_DIR)/%.tmpl.sh
 	cat $< | \
-	sed 's|<__GEM5__>|$(GEM5)|g' | \
-	sed 's|<__KERNEL__>|$(KERNEL)|g' | \
-	sed 's|<__DISK_IMAGE__>|$(DISK_IMAGE)|g' | \
-	sed 's|<__GEM5_CONFIG__>|$(GEM5_CONFIG)|g' | \
-	sed 's|<__RUN_SCRIPT_TEMPLATE__>|$(RUN_SCRIPT_TEMPLATE)|g' \
+	sed 's|<__GEM5__>|$(GEM5)|g' \
 	> $@
 	chmod +x $@
 
-test: $(SIM_SCRIPT)
+
+
 
 ######################################
 #### UTILS

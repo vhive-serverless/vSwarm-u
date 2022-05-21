@@ -1,5 +1,7 @@
+
 # -*- coding: utf-8 -*-
-# Copyright (c) 2016 Jason Lowe-Power
+# Copyright (c) 2015 Jason Power
+# Copyright (c) 2022 EASE lab, University of Edinburgh
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -25,7 +27,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# Authors: Jason Lowe-Power, David Schall
+# Authors: Jason Power, David Schall
 
 """ Caches with options for a gem5 configuration script
 

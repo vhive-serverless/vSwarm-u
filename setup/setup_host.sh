@@ -42,6 +42,7 @@ if [[ -z "${RESOURCES}" ]]; then
   mkdir -p $RESOURCES
   export RESOURCES=$RESOURCES
   sudo sh -c  "echo 'export RESOURCES=${RESOURCES}' >> /etc/profile"
+  sudo sh -c  "echo 'export RESOURCES=${RESOURCES}' >> ${HOME}/.bashrc"
 fi
 
 echo "Install all resources to: ${RESOURCES}"
@@ -101,11 +102,15 @@ make -f ${ROOT}/setup/disk.Makefile save
 
 make -f ${ROOT}/setup/disk.Makefile clean
 
-# Download the newest the test client
-# from the proto repo.
-curl -L https://github.com/ease-lab/vSwarm-proto/releases/download/v0.1.3-e9087ac/client-linux-amd64 \
-    -o ${RESOURCES}/test-client
-chmod +x ${RESOURCES}/test-client
+# # Download the newest the test client
+# # from the proto repo.
+# curl -L https://github.com/ease-lab/vSwarm-proto/releases/download/v0.1.3-e9087ac/client-linux-amd64 \
+#     -o ${RESOURCES}/test-client
+# chmod +x ${RESOURCES}/test-client
 
-
+# Build client from source
+pushd ${ROOT}/tools/client/
+make all
+cp client ${RESOURCES}/test-client
+popd
 
