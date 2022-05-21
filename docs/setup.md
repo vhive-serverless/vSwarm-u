@@ -1,5 +1,22 @@
-> [Main](../README.md) ▸ **Setup**
-# Build Resources for Full-System Simulation in gem5
+---
+layout: default
+title: Setup
+nav_order: 2
+has_children: false
+---
+
+# Setup Resources for Full-System Simulation in gem5
+
+{: .no_toc }
+
+<details open markdown="block">
+  <summary>
+    Table of contents
+  </summary>
+  {: .text-delta }
+1. TOC
+{:toc}
+</details>
 
 Before experimenting with gem5 and serverless functions several things need to be setup.
 The following describes the setup process in more detail. For a quick start use `setup_host.sh` script to install everything at once.

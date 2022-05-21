@@ -1,5 +1,25 @@
-> [Main](../README.md) ▸ **CI Functional test**
-# Function unit test
+---
+layout: default
+title: Integration test
+nav_order: 2
+has_children: false
+---
+
+# Function Integration test
+
+{: .no_toc }
+
+<details open markdown="block">
+  <summary>
+    Table of contents
+  </summary>
+  {: .text-delta }
+1. TOC
+{:toc}
+</details>
+
+---
+
 
 The functionalities in the `test/` folder aim to test if functions can run on the base image in the qemu emulator and later in gem5.
 
