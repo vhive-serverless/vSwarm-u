@@ -86,7 +86,7 @@ run_simulator:
 
 ## Install functions --------------------------------------
 #
-INSTALL_LOG    := $(WORKING_DIR)/install.log
+LOGFILE    := $(WORKING_DIR)/install.log
 
 create_install_script: $(ROOT)/simulation/install_functions.sh
 	cp $< $(WORKING_DIR)/run.sh
@@ -96,7 +96,7 @@ delete_run_script: $(WORKING_DIR)/run.sh
 
 
 install_functions: build-wkdir
-	if [ -f $(INSTALL_LOG) ]; then rm $(INSTALL_LOG); fi
+	if [ -f $(LOGFILE) ]; then rm $(LOGFILE); fi
 	$(MAKE) -f $(MKFILE) create_install_script
 	$(MAKE) -f $(MKFILE) serve_start
 	$(MAKE) -f $(MKFILE) run_emulator
@@ -105,7 +105,7 @@ install_functions: build-wkdir
 
 
 ## Test the results file
-install_check: $(INSTALL_LOG)
+install_check: $(LOGFILE)
 	$(eval fn_inst := $(shell cat $(FUNCTIONS_LIST) | sed '/^\s*#/d;/^\s*$$/d' | wc -l))
 	$(eval fn_res := $(shell grep -c "SUCCESS" $< ))
 	echo "Tryed to install $(fn_inst) functions. $(fn_res) installed and tested successful"

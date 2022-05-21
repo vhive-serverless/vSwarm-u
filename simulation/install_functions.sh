@@ -13,7 +13,7 @@ function start_logging {
   exec 1> $LOGFILE 2>&1
 }
 function end_logging {
-  Restore file descriptors
+  # Restore file descriptors
   exec 2>&4 1>&3
 }
 

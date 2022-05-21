@@ -1,6 +1,6 @@
 # MIT License
 #
-# Copyright (c) 2022 David Schall and EASE Lab
+# Copyright (c) 2022 EASE lab, University of Edinburgh
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -19,8 +19,10 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+#
+# Authors: David Schall
 
-name: Test function on Qemu Emulator and gem5 Simulator
+name: Function CI for gem5 Simulator
 
 on:
   # Allows you to run this workflow manually from the Actions tab
@@ -31,13 +33,17 @@ on:
   push:
     branches: [main]
     paths:
-      - "setup/test/**"
+      - "test/**"
+      - "gem5utils/**"
 
   pull_request:
     branches: [main]
     paths:
-      - "setup/test/**"
+      - "test/**"
+      - "gem5utils/**"
 
+env:
+  WORKING_DIR: wkdir/test/
 
 jobs:
   emulator-function-test:
@@ -46,14 +52,10 @@ jobs:
     runs-on: [self-hosted, qemu-test]
     strategy:
       fail-fast: true
-      matrix:
-        function: [fibonacci-go]
 
     env:
-      FUNCTION: ${{ matrix.function }}
+      FUNCTIONS_UNDER_TEST: "fibonacci-go fibonacci-nodejs fibonacci-python aes-go aes-nodejs aes-python auth-go auth-nodejs auth-python"
       MAKEFILE: test/emu_test.Makefile
-      WORKING_DIR: wkdir/${{ matrix.function }}/
-
 
     steps:
       - name: Check out code
@@ -66,7 +68,7 @@ jobs:
       - name: Run the actual test of the emulator.
         timeout-minutes: 5
         run: |
-          make -f ${{ env.MAKEFILE }} run
+          make -f ${{ env.MAKEFILE }} run_test
 
       - name: Check the results file.
         run: |
@@ -82,7 +84,6 @@ jobs:
           make -f ${{ env.MAKEFILE }} clean
 
 
-
   simulator-function-test:
     name: Test function on Simulator
     # For running the qe
@@ -91,13 +92,11 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        function: [fibonacci-go]
+        function: [fibonacci-go, fibonacci-nodejs, fibonacci-python, aes-go]
 
     env:
       FUNCTION: ${{ matrix.function }}
       MAKEFILE: test/sim_test.Makefile
-      WORKING_DIR: wkdir/${{ matrix.function }}/
-
 
     steps:
       - name: Check out code
@@ -110,13 +109,13 @@ jobs:
       - name: Run the actual test of the simulator.
         timeout-minutes: 5
         run: |
-          make -f ${{ env.MAKEFILE }} run
+          make -f ${{ env.MAKEFILE }} run_test
 
       - name: Check the results file.
         run: |
           make -f ${{ env.MAKEFILE }} check
 
-      - name: Clean everything.
-        if: ${{ always() }}
-        run: |
-          make -f ${{ env.MAKEFILE }} clean
+      # - name: Clean everything.
+      #   if: ${{ always() }}
+      #   run: |
+      #     make -f ${{ env.MAKEFILE }} clean
