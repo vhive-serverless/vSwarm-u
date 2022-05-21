@@ -1,125 +1,106 @@
-# Microarchitectural Research for Serverless
+# **vSwarm-&mu;:** Microarchitectural Research for Serverless
 
 ## Build tests
 [![Build Linux Kernel](https://github.com/ease-lab/vSwarm-u/actions/workflows/build_kernel.yml/badge.svg)](https://github.com/ease-lab/vSwarm-u/actions/workflows/build_kernel.yml)
 [![Build Gem5](https://github.com/ease-lab/vSwarm-u/actions/workflows/build_gem5.yml/badge.svg)](https://github.com/ease-lab/vSwarm-u/actions/workflows/build_gem5.yml)
-[![Create base disk image](https://github.com/ease-lab/vSwarm-u/actions/workflows/create_base_disk.yml/badge.svg)](https://github.com/ease-lab/vSwarm-u/actions/workflows/create_base_disk.yml)
-### Functional test
-[![Test function on Qemu Emulator and gem5 Simulator](https://github.com/ease-lab/vSwarm-u/actions/workflows/function_test.yml/badge.svg)](https://github.com/ease-lab/vSwarm-u/actions/workflows/function_test.yml)
-
-## Preliminary
-
-In order to simulate containerized functions using gem5 several general steps need to be done before your first experiments.
-Due to time limits and long compile time we already preinstalled all required base components on to the GCP image you go from us.
-
-In order to setup those base by your own later on, we created a separate hands on [here](setup/README.md) where you can find all instructions to do so.
-
-## Customize the simulator
-At this point You are are ready to customize the base components onto your own needs and start your microarchitectual research.
-In the following we will guide you through all the necessary step you need to do before starting the simulator:
-1. Configure your system
-2. Augment base disk image with your own custom containerized function.
-3. Adapt the `run_script.sh` to your function.
-
-### 1. Configure the hardware system you want to simulate
-Gem5 is a collection of models and in order to let the simulator know how which models we want to use and how to combine them it needs a config file(s). Because teaching how to creating the config file is not the intention of this tutorial we did the configuration you already. You can find it in the `gem5-configs/` folder.
-> Note: The [gem5 documentation](https://www.gem5.org/documentation/learning_gem5/introduction/) provide a lot of information and some nice tutorials how those config file works and how to setup one by your own.
-
-The system we configured consists of a dual in-order core machine. Each core has their private 16kB I and D-cache and is clocked at 2.5Ghz. Both core share a common 128kB LLC and a 2GB of memory.
-Because we are only interested in the characteristics of the function itself
-By using linux's `isolcpus` feature we isolate core 1 from the rest of the system to run only the function container on it. With that we can exclusively measure the workload characteristics of our function without any interferences from other parts of the system. On core 0 we will run a small client to drive our function.
+[![Build base disk image](https://github.com/ease-lab/vSwarm-u/actions/workflows/create_base_disk.yml/badge.svg)](https://github.com/ease-lab/vSwarm-u/actions/workflows/create_base_disk.yml)
+[![Function Integration Test](https://github.com/ease-lab/vSwarm-u/actions/workflows/function_test.yml/badge.svg)](https://github.com/ease-lab/vSwarm-u/actions/workflows/function_test.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+<a href="https://twitter.com/intent/follow?screen_name=ease_lab" target="_blank">
+<img src="https://img.shields.io/twitter/follow/ease_lab?style=social&logo=twitter" alt="follow on Twitter"></a>
 
 
-### 2. Augment disk image and setup your function
-Before running the simulator you need to install your own containerized function onto the base disk image.
-For this we will use the qemu emulator as it faster and has access to the internet for pulling the image. Run the long command for qemu by executing in the `run_qemu.sh` script.
+<!-- ![vSwarm-u Header](docs/figures/vhive_hdr.jpg) -->
+
+>## Note
+>vSwarm-u is still in beta state but will be released soon for the ISCA'22 conference.
+
+## Mission
+
+Serverless computing has emerged as a widely used paradigm for deploying services in the cloud. In serverless, developers organize their application as a set of functions, which are invoked on-demand in response to a trigger, such as user request or an invocation by another function.
+
+Recent studies of production data  reveal drastic differences in the characteristics of serverless workloads compared to conventional cloud workloads: short execution time and infrequent invocation of function instances. Performance studies  further finds that serverless workloads are inefficient when running on modern CPUs designed for traditional long-running workloads. To make serverless workload execution efficient, there is a strong need to understand more about the detailed implications serverless workload characteristics have on modern hardware.
+
+However, existing platforms that support the required level of detail make significant simplifications in the test setup and the software stack to achieve feasible simulation times. Prior work often lacks the key layers of the serverless software stack, such as containerization and HTTP-level communication fabric, to simplify and increase the simulation speed. However, the short execution time of serverless functions leads to a significant fraction of execution time spent in system layers. Such simplifications may result in wrong experimental data and, consequently, mislead the systems researchers.
+
+With vSwarm-&mu; we are addressing the challenges of serverless host server simulation and allow researchers to conduct experiments with systems representative of a modern serverless cloud. To achieve this, the vSwarm-u framework integrates various serverless workloads packages as containerized functions and featuring the full communication stack with gem5, the state-of-the-art research platform for system- and microarchitecture. This allows researcher to perform cycles accurate simulation of the representative serverless software stack in gem5’s full system mode.
+
+Furthermore, vSwarm-u includes the infrastructure to drive function instances running on the simulated serverless host server without interfering or simplifying the complexity of the test system. The robust evaluation methodology allows benchmarking and microarchitecture analysis in a realistic scenario.
+
+## vSwarm-u Design
+<img src="docs/figures/vswarm-u-design.jpg" title="vSwarm-u design" height="200"/>
+
+## Referencing our work
+
+If you decide to use vSwarm-&mu; for your research and experiments, we are thrilled to support you by offering
+advice for potential extensions of vSwarm-&mu; and always open for collaboration.
+
+Please cite our [paper](https://ease-lab.github.io/ease_website/pubs/JUKEBOX_ISCA22.pdf) that has been recently accepted to ICSA 2022:
+
+<!--
+```
+@inproceedings{schall:lukewarm,
+  author    = {David Schall and
+               Artemiy Margaritov and
+               Dmitrii Ustiugov and
+               Andreas Sandberg and
+               Boris Grot},
+  title     = {Lukewarm Serverless Functions: Characterization and Optimization},
+  booktitle = {2022 ACM/IEEE 49th Annual International Symposium on Computer Architecture (ISCA)},
+  publisher = {{ACM}},
+  year      = {2022},
+  doi       = {10.1145/3470496.3527390},
+}
+``` -->
+
+
+## Getting started with vSwarm-&mu;
+
+vSwarm-&mu; can be deployed on premises or in the cloud, with support for nested virtualization. We provide [a quick-start guide](docs/quickstart_guide.md)
+that describes the intial setup, as well as how to set up benchmarking experiments.
+
+You can view the vSwarm-&mu; documentation [here](docs/).
+
+
+### Getting help and contributing
+
+We would be happy to answer any questions in GitHub Issues and encourage the open-source community to submit new Issues, assist in addressing existing issues and limitations, and contribute their code with Pull Requests.
+
+
+## License and copyright
+
+vSwarm-&mu; is free. We publish the code under the terms of the MIT License that allows distribution, modification, and commercial use.
+This software, however, comes without any warranty or liability.
+
+The software is maintained at the [EASE lab](https://easelab.inf.ed.ac.uk/) as part of the University of Edinburgh.
+
+
+### Maintainers
+
+* David Schall: [GitHub](https://github.com/dhschall), [web page](https://dhschall.github.io/)
+
+
+
+## Directory Structure
+
+- `simulation` contains everything related to run simulations.
+- `setup` contains all scripts and makefiles to setup vSwarm-u
+- `tools` includes a client that can be instrumented for gem5
+- `runner` is for setting up self-hosted GitHub Actions runners.
+- `docs` contains the documentation on a number of relevant topics.
+
+
+
+
+
+## Known problems
+
+Sometimes the simulator get stuck during while running with the detailed core model. We are working on it and try to make the setup more stable.
+In the meantime the best is to kill the process and restart the simulation for this particular funtion.
+Use
 ```bash
-./scripts/run_qemu.sh
+make -f simulation/Makefile kill_gem5
 ```
-Qemu will boot the base disk image `workload/` folder.
-As soon as the system is booted you can login as `root` (password `root`).
-Now you are able to pull your function onto base disk image. Use for this tutorial the `vhiveease/aes-go` function image as example:
-```bash
-# Pull your containerized function image
-docker pull  vhiveease/aes-go
-```
-In order to test if your function actually works from a software perspective use the client we put onto the image to perform a quick test.
-   > Note you can find the source code of the client together with your hands out material.
+to kill all currently running simulations at once.
 
-```bash
-# 1. Start your function container
-# -d detaches the process and we can continue in the same console.
-# -p must be set to export the ports
-docker run -d --name mycontainer -p 50051:50051 vhiveease/aes-go
-
-# run the client with the port you export in docker as well as the number of invocations you want to run.
-# -addr is the address and port we where exporting with the docker command
-# -n is the number of invocations the client should perform
-./client -addr localhost:50051 -n 100
-```
-The client should print its progress after every 10 invocations.
-Now the disk image is ready for the Gem5 simulator. Stop the container and shutdown qemu.
-```
-docker stop mycontainer && docker rm mycontainer
-shutdown -h now
-```
-> Note: Qemu breaks the line wrapping you might want to reset the console by executing `reset`.
-
-### 3. Define the run script.
-
-Finally we need to define a run script. Its a script that say's linux what to do after booting completes. The steps we want to perform are similar to the steps we did with qemu except pulling the container.
-
-1. Spinning up the container
-2. Pin the container to core 1
-3. Reset the gem5 stats
-4. Start the invoker.
-5. Dump the gem5 stats
-6. Exit the simulation.
-
-The `run_function.sh` script provides a skeleton for the commands to perform those steps. You only need to specify the name of your function image at very top of the script. In our case this is `vhiveease/aes-go`.
-
-
-## Simulating serverless workloads with gem5
-
-Finally everything is set to start the actual simulations with the command:
-```bash
-./gem5/build/X86/gem5.opt --outdir=results gem5-configs/run.py  --kernel workload/vmlinux --disk workload/disk-image.img --script scripts/run_function.sh
-```
-Gem5 will now start, boot linux and then execute the run script we just modified. Note simulating HW is usually very time consuming. Booting linux using one of the detailed or even the atomic core could easily take hours. In order to fast forward this booting gem5 provides the nice feature to use kvm instead of any other CPU model. We will use this feature for booting and starting the function. Then we "magically" ;) switch to a more detailed core model.
-
-While the simulation is running we can inspect what is happening by connecting the terminal tool provided by gem5. To use it open a second terminal (Ctr+b % will create a second tmux plane for you.) and connect with:
-```bash
-./gem5/util/term/m5term localhost 3456
-```
-> Note: Infos about how to use `m5term` you can find [here](https://www.gem5.org/documentation/general_docs/fullsystem/m5term).
-
-In this terminal you should see first how linux boots and then how the gem5 service will start your run-script.
-
-As soon as the simulation is completed gem5 will exit and a stats will be written to the results directory `results`. The stats file contain a lot of statistic counter which where collected during the simulation. As example we will search the cycles and instructions to see how well your system perform to execute our function.
-```bash
-grep "system.detailed_cpu1.numCycles" results/stats.txt \
-&& grep "system.detailed_cpu1.exec_context.thread_0.numInsts" results/stats.txt
-```
-We also put a small bash script that does the math for you and calculate CPI (or IPC) for you directly.
-```
-# A small bash script that does the math for us.
-./scripts/cpi.sh results/stats.txt
-```
-Now you are done :) Congratulation you just did your first simulation of a containerized function using the gem5 simulator. You can now start with your own research and to play with the configurations or your own functions images.
-
-### Additional example: Modify the config file
-This example should show you how easy it can be to modify the configuration of your hardware system. To get a bit more performance out of our system we want to increase the cache size and associativity of the LLC. For that:
-
-1. Open the `cache.py` file in the gem5-config folder. Change the LLCCache's default parameter for size and associativity to for example 2MB and 16 respectively. Save and close the file.
-2. Run the same command as in the previous step to run the simulation.
-```bash
-./gem5/build/X86/gem5.opt --outdir=results gem5-configs/run.py  --kernel workload/vmlinux --disk workload/disk-image.img --script scripts/run_function.sh
-```
-3. Finally inspect the stats file. The larger cache and higher associativity should have a improved the IPC of your function. In case you are interested can also search for the number of cache misses to see how your larger LLC improved its MPKI (misses per kilo instruction).
-```bash
-grep "system.detailed_cpu1.numCycles" results/stats.txt && \
-grep "system.detailed_cpu1.exec_context.thread_0.numInsts" results/stats.txt
-# A small bash script that does the math for us.
-./scripts/cpi.sh results/stats.txt
-```
 
