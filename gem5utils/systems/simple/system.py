@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2016 Jason Lowe-Power
-# Copyright (c) 2022 EASE lab, University of Edinbursh
+# Copyright (c) 2022 EASE lab, University of Edinburgh
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -26,19 +25,19 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# Authors: Jason Lowe-Power, David Schall
+# Authors: David Schall
+
 import m5
 from m5.objects import *
 from m5.util import convert
 
-import x86
+from . import x86
+from .caches import *
 
-from caches import *
-
-class SklSystem(System):
+class SimpleSystem(System):
 
     def __init__(self, kernel, disk, num_cpus=2, CPUModel=AtomicSimpleCPU):
-        super(SklSystem, self).__init__()
+        super(SimpleSystem, self).__init__()
 
         self._host_parallel = False if num_cpus == 1 else True
 
@@ -87,23 +86,14 @@ class SklSystem(System):
 
         # Create the CPU for our system.
         self.createCPU(num_cpus=num_cpus, CPUModel=CPUModel)
-        # Create the CPUs for our system.
-        print("Test system: {} {} cores".format(num_cpus, CPUModel))
-        self.createCPU(num_cpus, CPUModel)
+
         # Set up the interrupt controllers for the system (x86 specific)
         self.setupInterrupts()
         # Create the cache heirarchy for the system.
         self.createCacheHierarchy()
 
         # Create the memory controller for the sytem
-        # self.createMemoryControllers()
-        # n_dram_cntrl = 1 if simple else 4
-        # if simple:
-        n_dram_cntrl = 1
-        self.createMemoryController(n_dram_cntrl)
-        # else:
-        #     self.createMemoryControllersDDR4(n_dram_cntrl)
-
+        self.createMemoryControllers()
 
         if self._host_parallel:
             # To get the KVM CPUs to run on different host CPUs
@@ -142,22 +132,6 @@ class SklSystem(System):
         self.createCPUThreads(self.detailed_cpu)
 
 
-        # # KVM core for booting and setup
-        # # Note KVM needs a VM and atomic_noncaching
-        # self.cpu = [X86KvmCPU(clk_domain=self.clk_domain,
-        #                     cpu_id = 0,
-        #                     switched_out = False)]
-        # self.createCPUThreads(self.cpu)
-        # self.kvm_vm = KvmVM()
-        # self.mem_mode = 'atomic_noncaching'
-
-        # # Create atomic cpu for driving the test
-        # self.detailed_cpu = [AtomicSimpleCPU(clk_domain=self.clk_domain,
-        #                                 cpu_id = 0,
-        #                                 switched_out = True)]
-        # self.createCPUThreads(self.detailed_cpu)
-
-
     def createCPUThreads(self, cpu):
         for c in cpu:
             c.createThreads()
@@ -177,49 +151,6 @@ class SklSystem(System):
         disk0 = CowDisk(img_path)
         self.pc.south_bridge.ide.disks = [disk0]
 
-
-    def createCacheHierarchy(self):
-        # Create an L3 cache (with crossbar)
-        self.l3bus = L2XBar(width = 64,
-                            snoop_filter = SnoopFilter(max_capacity='32MB'))
-        self._caches = []
-
-        for cpu in self.cpu:
-            # Create a memory bus, a coherent crossbar, in this case
-            cpu.l2bus = L2XBar()
-
-            # Create an L1 instruction and data cache
-            cpu.icache = L1ICache()
-            cpu.dcache = L1DCache()
-            cpu.mmucache = MMUCache()
-            self._caches += [cpu.icache, cpu.dcache, cpu.mmucache]
-
-            # Connect the instruction and data caches to the CPU
-            cpu.icache.connectCPU(cpu)
-            cpu.dcache.connectCPU(cpu)
-            cpu.mmucache.connectCPU(cpu)
-
-            # Hook the CPU ports up to the l2bus
-            cpu.icache.connectBus(cpu.l2bus)
-            cpu.dcache.connectBus(cpu.l2bus)
-            cpu.mmucache.connectBus(cpu.l2bus)
-
-            # Create an L2 cache and connect it to the l2bus
-            cpu.l2cache = L2Cache()
-            self._caches += [cpu.l2cache]
-            cpu.l2cache.connectCPUSideBus(cpu.l2bus)
-
-            # Connect the L2 cache to the L3 bus
-            cpu.l2cache.connectMemSideBus(self.l3bus)
-
-        self.l3cache = L3Cache()
-        self._caches += [self.l3cache]
-        self.l3cache.connectCPUSideBus(self.l3bus)
-
-        # Connect the L3 cache to the membus
-        self.l3cache.connectMemSideBus(self.membus)
-
-
     def connectCPUDirectly(self):
         self.llc_bus = L2XBar(width = 64,
                             snoop_filter = SnoopFilter(max_capacity='32MB'))
@@ -233,7 +164,6 @@ class SklSystem(System):
                                 mshrs = 20,
                                 size = '1kB',
                                 tgts_per_mshr = 12,)
-        self._caches = [self.llc_cache]
         self.llc_cache.mem_side = self.membus.cpu_side_ports
         self.llc_cache.cpu_side = self.llc_bus.mem_side_ports
 
@@ -243,18 +173,37 @@ class SklSystem(System):
             for tlb in [cpu.mmu.itb, cpu.mmu.dtb]:
                 self.llc_bus.cpu_side_ports = tlb.walker.port
 
+    def createCacheHierarchy(self):
+        """ Create a simple cache heirarchy with a shared LLC"""
 
-    def flushCaches(self):
-        m5.drain()
+        # Create an L3 cache (with crossbar)
+        self.llcbus = L2XBar(width = 64)
+        self.llc = LLCCache()
 
-        for cache in self._caches:
-            print("Flush: ", cache)
-            cache.memWriteback()
-            cache.memInvalidate()
+        # Connect the LLC
+        self.llc.connectCPUSideBus(self.llcbus)
+        self.llc.connectMemSideBus(self.membus)
 
 
+        for cpu in self.cpu:
+            # Create an L1 instruction and data cache
+            cpu.icache = L1ICache()
+            cpu.dcache = L1DCache()
 
-    def createSimpleMemoryController(self):
+            # Connect the instruction and data caches to the CPU
+            cpu.icache.connectCPU(cpu)
+            cpu.dcache.connectCPU(cpu)
+
+            # Hook the CPU ports up to the llcbus
+            cpu.icache.connectBus(self.llcbus)
+            cpu.dcache.connectBus(self.llcbus)
+
+            # Connect the CPU TLBs directly to the mem.
+            cpu.mmu.itb.walker.port = self.membus.cpu_side_ports
+            cpu.mmu.dtb.walker.port = self.membus.cpu_side_ports
+
+
+    def createMemoryControllers(self):
         """ Create the memory controller for the system """
 
         # Just create a controller for the first range, assuming the memory
@@ -263,39 +212,6 @@ class SklSystem(System):
         # updated accordingly
         self.mem_cntrl = SimpleMemory(range = self.mem_ranges[0],
                                        port = self.membus.mem_side_ports)
-
-
-    def createMemoryController(self, n_dram_cntrl=1):
-        self._createMemoryControllers(n_dram_cntrl, DDR4_2400_16x4)
-
-    def _createMemoryControllers(self, n_dram_cntrl=1, dram_cls=SimpleMemory):
-        ranges = self._getInterleaveRanges(self.mem_ranges[0], n_dram_cntrl, 7, 20)
-        self.mem_cntrls = [
-            MemCtrl(dram = dram_cls(range = ranges[i]), port = self.membus.mem_side_ports)
-                for i in range(n_dram_cntrl)
-        ]
-
-    def _getInterleaveRanges(self, rng, num, intlv_low_bit, xor_low_bit):
-        from math import log
-        bits = int(log(num, 2))
-        if 2**bits != num:
-            m5.fatal("Non-power of two number of memory controllers")
-
-        intlv_bits = bits
-        ranges = [
-            AddrRange(start=rng.start,
-                      end=rng.end,
-                      intlvHighBit = intlv_low_bit + intlv_bits - 1,
-                      xorHighBit = xor_low_bit + intlv_bits - 1,
-                      intlvBits = intlv_bits,
-                      intlvMatch = i)
-                for i in range(num)
-            ]
-
-        return ranges
-
-
-
 
     def setupInterrupts(self):
         """ Create the interrupt controller for the CPU """

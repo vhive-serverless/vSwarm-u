@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2020 The Regents of the University of California
+# Copyright (c) 2022 EASE lab, University of Edinburgh
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -25,7 +26,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# Authors: Jason Lowe-Power, Trivikram Reddy
+# Authors: Jason Lowe-Power, Trivikram Reddy, David Schall
 
 import m5
 from m5.objects import *

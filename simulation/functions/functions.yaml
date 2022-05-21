@@ -25,7 +25,7 @@ services:
   ## Fibonacci ---------------------------------
   fibonacci-go:
     image: vhiveease/fibonacci-go:latest
-    container_name: fibonacci-go
+    container_name: function
     entrypoint:
       - /app/server
       - -addr=0.0.0.0:50051
@@ -35,7 +35,7 @@ services:
 
   fibonacci-nodejs:
     image: vhiveease/fibonacci-nodejs:latest
-    container_name: fibonacci-nodejs
+    container_name: function
     entrypoint:
       - node
       - server.js
@@ -47,7 +47,7 @@ services:
 
   fibonacci-python:
     image: vhiveease/fibonacci-python:latest
-    container_name: fibonacci-python
+    container_name: function
     entrypoint:
       - python
       - /app/server.py
@@ -61,7 +61,7 @@ services:
   ## AES ---------------------------------
   aes-go:
     image: vhiveease/aes-go:latest
-    container_name: aes-go
+    container_name: function
     entrypoint:
       - /app/server
       - -addr=0.0.0.0:50051
@@ -71,7 +71,7 @@ services:
 
   aes-nodejs:
     image: vhiveease/aes-nodejs:latest
-    container_name: aes-nodejs
+    container_name: function
     entrypoint:
       - node
       - server.js
@@ -83,7 +83,7 @@ services:
 
   aes-python:
     image: vhiveease/aes-python:latest
-    container_name: aes-python
+    container_name: function
     entrypoint:
       - python
       - /app/server.py
@@ -97,7 +97,7 @@ services:
   ## Authentication -----------------------
   auth-go:
     image: vhiveease/auth-go:latest
-    container_name: auth-go
+    container_name: function
     entrypoint:
       - /app/server
       - -addr=0.0.0.0:50051
@@ -107,7 +107,7 @@ services:
 
   auth-nodejs:
     image: vhiveease/auth-nodejs:latest
-    container_name: auth-nodejs
+    container_name: function
     entrypoint:
       - node
       - server.js
@@ -119,7 +119,7 @@ services:
 
   auth-python:
     image: vhiveease/auth-python:latest
-    container_name: auth-python
+    container_name: function
     entrypoint:
       - python
       - /app/server.py

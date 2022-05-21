@@ -2,7 +2,7 @@
 
 set -x
 
-LOGFILE=results.log
+LOGFILE=install.log
 
 function start_logging {
   ## Log everything to a empty log file
@@ -38,8 +38,12 @@ function pull_test_function {
 
     ## Stop container
     docker-compose -f functions.yaml down
-    docker stop $(docker ps -a -q)
-    docker rm $(docker ps -a -q)
+    CONTAINERS="$(docker ps -a -q)"
+    if [ $(expr length "$CONTAINERS") -gt 0 ];
+    then
+      docker stop $CONTAINERS
+      docker rm $CONTAINERS
+    fi
 }
 
 
@@ -57,7 +61,8 @@ curl  "http://10.0.2.2:3003/functions.list" -f -o functions.list
 
 # docker-compose -f functions.yaml pull
 
-FUNCTIONS=$(cat functions.list)
+## List all functions can be commented out
+FUNCTIONS=$(cat functions.list | sed '/^\s*#/d;/^\s*$/d')
 
 for f in $FUNCTIONS
   do
