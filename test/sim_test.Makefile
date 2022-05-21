@@ -2,7 +2,7 @@
 
 # MIT License
 #
-# Copyright (c) 2022 David Schall and EASE lab
+# Copyright (c) 2022 EASE lab, University of Edinburgh
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -21,10 +21,11 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+#
+# Authors: David Schall
 
-mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
-ROOT 		:= $(abspath $(dir $(mkfile_path))/../)
-
+MKFILE := $(abspath $(lastword $(MAKEFILE_LIST)))
+ROOT   := $(abspath $(dir $(MKFILE))/../)
 
 ## User specific inputs
 FUNCTION 			?=aes-go
@@ -38,7 +39,7 @@ IMAGE_NAME  		:=vhiveease/$(FUNCTION)
 FUNCTION_NAME 		:= $(FUNCTION)
 
 ## Required resources
-FUNCTION_DISK_IMAGE := $(RESOURCES)/$(FUNCTION_NAME)-disk.img
+FUNCTION_DISK_IMAGE := $(RESOURCES)/test-disk.img
 RESRC_KERNEL 		:= $(RESOURCES)/vmlinux
 RUN_SCRIPT_TEMPLATE := $(ROOT)/test/run_sim_test.template.sh
 GEM5_CONFIG 		:= $(ROOT)/test/run_sim_test.py
@@ -49,8 +50,10 @@ GEM5				:= $(RESOURCES)/gem5/build/X86/gem5.opt
 KERNEL 				:= $(WORKING_DIR)/kernel
 DISK_IMAGE 			:= $(WORKING_DIR)/disk.img
 RUN_SCRIPT			:= $(WORKING_DIR)/run_sim.sh
-RESULTS				:= $(WORKING_DIR)/results_sim.log
-STATS_FILE			:= $(WORKING_DIR)/stats.txt
+
+OUTDIR 				:= $(WORKING_DIR)/$(FUNCTION)
+STATS_FILE			:= $(OUTDIR)/stats.txt
+LOGFILE				:= $(OUTDIR)/system.pc.com_1.device
 
 ## Dependencies -------------------------------------------------
 ## Check all dependencies necessary to perform function test
@@ -73,31 +76,20 @@ dep_check_gem5:
 # This run script will be the one we provided.
 
 run_simulator:
+	mkdir -p $(OUTDIR)
 	sudo $(GEM5) \
-		--outdir=$(WORKING_DIR) \
+		--outdir=$(OUTDIR) \
 			$(GEM5_CONFIG) \
 				--kernel $(KERNEL) \
 				--disk $(DISK_IMAGE) \
-				--script $(RUN_SCRIPT)
+				--function $(FUNCTION)
 
 run: run_simulator
-
-
-
-## Test the results file
-check: $(RESULTS) check_stats
-	@cat $<;
-	@if grep -q "SUCCESS" $< ; then \
-		printf "${GREEN}==================\n Test successful\n==================${NC}\n"; \
-	else \
-		printf "${RED}==================\n Test failed\n==================${NC}\n"; \
-		exit 1; \
-	fi
-
+run_test: run_simulator
 
 
 ## Build the test setup ----------------------------
-build: $(WORKING_DIR) $(DISK_IMAGE) $(KERNEL) $(RUN_SCRIPT)
+build: $(WORKING_DIR) $(DISK_IMAGE) $(KERNEL)
 
 $(WORKING_DIR):
 	@echo "Create folder: $(WORKING_DIR)"
@@ -107,11 +99,6 @@ $(WORKING_DIR):
 # 	@if [ ! -d $< ]; \
 # 	then printf " ${RED}ERROR: WORKING_DIR not ready. Run emulator test first${NC}\n"; fi
 
-$(RUN_SCRIPT): $(WORKING_DIR)
-	cat $(RUN_SCRIPT_TEMPLATE) | \
-	sed 's|<__IMAGE_NAME__>|$(IMAGE_NAME)|g' | \
-	sed 's|<__FUNCTION_NAME__>|$(FUNCTION_NAME)|g' \
-	> $@
 
 $(KERNEL): $(RESRC_KERNEL)
 	cp $< $@
@@ -188,6 +175,7 @@ define print_result
 	else printf " ${RED}fail${NC}\n"; fi
 endef
 
+
 check_stats: $(STATS_FILE)
 	$(eval inst := $(shell awk '/system.detailed_cpu1.exec_context.thread_0.numInsts/ {print $$2; exit;}' $(STATS_FILE)))
 	$(eval cycles := $(shell awk '/system.detailed_cpu1.numCycles/ {print $$2; exit;}' $(STATS_FILE)))
@@ -206,3 +194,13 @@ check_stats: $(STATS_FILE)
 		exit 1; \
 	fi
 
+check_log: $(LOGFILE)
+	@cat $<;
+	@if grep -q "SUCCESS: Calling functions for 5 times" $< ; then \
+		printf "${GREEN}==================\n Test successful\n==================${NC}\n"; \
+	else \
+		printf "${RED}==================\n Test failed\n==================${NC}\n"; \
+		exit 1; \
+	fi
+
+check: check_stats check_log

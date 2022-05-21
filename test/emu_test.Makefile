@@ -1,8 +1,9 @@
+
 #!/bin/bash
 
 # MIT License
 #
-# Copyright (c) 2022 David Schall and EASE lab
+# Copyright (c) 2022 EASE lab, University of Edinburgh
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -21,19 +22,17 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+#
+# Authors: David Schall
 
-mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
-ROOT 		:= $(abspath $(dir $(mkfile_path))/../)
+MKFILE := $(abspath $(lastword $(MAKEFILE_LIST)))
+ROOT   := $(abspath $(dir $(MKFILE))/../)
 
 
 ## User specific inputs
-FUNCTION 			?=aes-go
-RESOURCES 			?=$(ROOT)/resources/
-WORKING_DIR 		?=wkdir_emu/
-
-IMAGE_NAME  		:=vhiveease/$(FUNCTION)
-# FUNCTION_NAME 		:= $(shell echo $(IMAGE_NAME) | awk -F'/' '{print $$NF}')
-FUNCTION_NAME 		:= $(FUNCTION)
+FUNCTIONS_UNDER_TEST  ?= fibonacci-go aes-go
+RESOURCES 			  ?=$(ROOT)/resources/
+WORKING_DIR 		  ?=wkdir_emu/
 
 ## Machine parameter
 MEMORY 	:= 2G
@@ -44,17 +43,15 @@ CPUS    := 2
 RESRC_KERNEL 		:= $(RESOURCES)/vmlinux
 RESRC_BASE_IMAGE 	:= $(RESOURCES)/base-disk-image.img
 RESRC_CLIENT_URL 	:= https://github.com/ease-lab/vSwarm-proto/releases/download/v0.1.3-e9087ac/client-linux-amd64
-RUN_SCRIPT_TEMPLATE := $(ROOT)/test/run_emu_test.template.sh
 
 
 KERNEL 				:= $(WORKING_DIR)/kernel
 DISK_IMAGE 			:= $(WORKING_DIR)/disk.img
-RUN_SCRIPT			:= $(WORKING_DIR)/run.sh
 TEST_CLIENT			:= $(WORKING_DIR)/test-client
-RESULTS				:= $(WORKING_DIR)/results.log
+LOGFILE				:= $(WORKING_DIR)/test.log
 SERVE 				:= $(WORKING_DIR)/server.pid
 
-FUNCTION_DISK_IMAGE := $(RESOURCES)/$(FUNCTION_NAME)-disk.img
+FUNCTION_DISK_IMAGE := $(RESOURCES)/test-disk.img
 
 
 ## Dependencies -------------------------------------------------
@@ -77,19 +74,13 @@ dep_check_qemu:
 	$(call check_py_dep, uploadserver)
 
 
-# test:
-# 	# $(call check_file, README.md)
-# 	# $(call check_dir, README.mdd)
-# 	# $(call check_dep, python3)
-# 	# $(call check_py_dep, uploadserver)
-
 
 ## Run Emulator -------------------------------------------------
 # Do the actual emulation run
 # The command will boot an instance.
 # Then it will listen to port 3003 to retive a run script
 # This run script will be the one we provided.
-run_emulator: build serve_start
+run_emulator:
 	sudo qemu-system-x86_64 \
 		-nographic \
 		-cpu host -enable-kvm \
@@ -103,13 +94,45 @@ run: run_emulator
 
 
 
-## Test the results file
-check: $(RESULTS)
-	@cat $<;
-	@if grep -q "SUCCESS" $< ; then \
+## Test run ----------------------------------------------------
+#
+# Files for test run
+FUNCTIONS_LIST		  := $(WORKING_DIR)/functions.list
+FUNCTIONS_YAML        := $(WORKING_DIR)/functions.yaml
+FUNCTIONS_REF_YAML    := $(ROOT)/simulation/functions/all_vswarm_functions.yaml
+RUN_SCRIPT_TEMPLATE   := $(ROOT)/test/run_emu_test.template.sh
+
+
+create_run_script: $(RUN_SCRIPT_TEMPLATE)
+	cp $< $(WORKING_DIR)/run.sh
+
+delete_run_script: $(WORKING_DIR)/run.sh
+	rm $(WORKING_DIR)/run.sh
+
+
+run_test: build
+	if [ -f $(LOGFILE) ]; then rm $(LOGFILE); fi
+	$(MAKE) -f $(MKFILE) create_run_script
+	$(MAKE) -f $(MKFILE) serve_start
+	$(MAKE) -f $(MKFILE) run_emulator
+	$(MAKE) -f $(MKFILE) serve_stop
+	$(MAKE) -f $(MKFILE) delete_run_script
+
+
+
+## Test the log file
+check: $(LOGFILE)
+	@cat $<
+	$(eval fn_inst := $(shell cat $(FUNCTIONS_LIST) | sed '/^\s*#/d;/^\s*$$/d' | wc -l))
+	$(eval fn_res := $(shell grep -c "SUCCESS: All commands completed successfully" $< ))
+	echo "Tested $(fn_inst) functions. $(fn_res) installed and tested successful"
+	@if [ $(fn_inst) -eq $(fn_res) ] ; then \
 		printf "${GREEN}==================\n Test successful\n==================${NC}\n"; \
 	else \
-		printf "${RED}==================\n Test failed\n==================${NC}\n"; \
+		printf "${RED}==================\n"; \
+		printf "Test failed\n"; \
+		printf "Check $<\n"; \
+		printf "==================${NC}\n"; \
 		exit 1; \
 	fi
 
@@ -119,23 +142,31 @@ save_disk:
 
 
 
-
 ## Build the test setup ----------------------------
-build: $(WORKING_DIR) $(DISK_IMAGE) $(KERNEL) $(RUN_SCRIPT) $(TEST_CLIENT)
+build: $(WORKING_DIR) \
+	$(DISK_IMAGE) $(KERNEL) \
+	$(TEST_CLIENT) \
+	$(FUNCTIONS_YAML) $(FUNCTIONS_LIST)
+
 
 $(WORKING_DIR):
 	@echo "Create folder: $(WORKING_DIR)"
 	mkdir -p $@
 
-$(RUN_SCRIPT): $(WORKING_DIR)
-	cat $(RUN_SCRIPT_TEMPLATE) | \
-	sed 's|<__IMAGE_NAME__>|$(IMAGE_NAME)|g' | \
-	sed 's|<__FUNCTION_NAME__>|$(FUNCTION_NAME)|g' \
+$(FUNCTIONS_YAML): $(FUNCTIONS_REF_YAML)
+	cp $< $@
+
+$(FUNCTIONS_LIST):
 	> $@
+	for fn in $(FUNCTIONS_UNDER_TEST); \
+	do echo $$fn >> $@; done;
 
 $(KERNEL): $(RESRC_KERNEL)
 	cp $< $@
 
+# Create the disk image from the base image
+$(DISK_IMAGE): $(RESRC_BASE_IMAGE)
+	cp $< $@
 
 
 
@@ -151,10 +182,11 @@ $(TEST_CLIENT):
 	curl -s -L -o $@ $(RESRC_CLIENT_URL)
 	chmod +x $@
 
-# Create the disk image from the base image
-$(DISK_IMAGE): $(RESRC_BASE_IMAGE)
-	cp $< $@
 
+
+
+######################################
+#### UTILS
 
 ####
 # File server
@@ -169,8 +201,8 @@ $(SERVE):
 
 serve_start: $(SERVE)
 
-serve_stop: $(SERVE)
-	kill `cat $<` && rm $< 2> /dev/null
+serve_stop:
+	if [ -e $(SERVE) ]; then kill `cat $(SERVE)` && rm $(SERVE) 2> /dev/null; fi
 	PID=$$(lsof -t -i :3003); \
 	if [ ! -z $$PID ]; then kill -9 $$PID; fi
 

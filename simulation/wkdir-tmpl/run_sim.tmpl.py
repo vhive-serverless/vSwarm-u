@@ -71,11 +71,11 @@ m5 fail 1 ## 1: BOOTING complete
 
 ## Spin up Container
 echo "Start the container..."
-docker-compose -f functions.yaml up -d {FN_NAME} &&DOCKER_START_RES=$?
+docker-compose -f functions.yaml up -d {FN_NAME}
 m5 fail 2 ## 2: Started container
 
-echo "Pin to core 1"
-docker update  {FN_NAME} --cpuset-cpus 1
+echo "Pin function container to core 1"
+docker update function --cpuset-cpus 1
 
 sleep 5
 m5 fail 3 ## 3: Pinned container
@@ -86,8 +86,7 @@ m5 fail 3 ## 3: Pinned container
     -function-name {FN_NAME} \
     -url localhost \
     -port 50000 \
-    -n {n_warming} -input 10 \
-    && INVOKER_RES=$?
+    -n {n_warming} -input 10
 
 m5 fail 4 ## 4: Warming done
 
@@ -99,23 +98,16 @@ m5 fail 10 ## 10: Start invoking
     -function-name {FN_NAME} \
     -url localhost \
     -port 50000 \
-    -n {n_invocations} -input 10 \
-    && INVOKER_RES=$?
+    -n {n_invocations} -input 10
 
 m5 fail 11 ## 11: Stop invoking
 # -------------------------------------------
 
 
 ## Stop container
-docker-compose -f functions.yaml down && DOCKER_STOP_RES=$?
+docker-compose -f functions.yaml down
 m5 fail 6 ## 6: Container stop
 
-
-if [ $INVOKER_RES ] && [ $DOCKER_START_RES ] && [ $DOCKER_STOP_RES ] ; then
-    echo "SUCCESS: All commands completed successfully"
-else
-    echo "FAIL: Commands failed"
-fi
 
 ## M5 fail -1 will exit the simulations
 m5 fail -1 ## 5: Test done
