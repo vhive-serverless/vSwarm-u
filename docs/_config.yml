@@ -5,7 +5,7 @@ search_enabled: true
 # theme: "just-the-docs"
 
 domain: ease-lab.github.io         # if you want to force HTTPS, specify the domain without the http at the start, e.g. example.com
-url: "https://ease-lab.github.io/vswarm-u"  # the base hostname and protocol for your site, e.g. http://example.com
+url: "https://ease-lab.github.io"  # the base hostname and protocol for your site, e.g. http://example.com
 baseurl: "/vSwarm-u"
 
 # Aux links for the upper right navigation
