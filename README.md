@@ -4,7 +4,8 @@
 [![Build Linux Kernel](https://github.com/ease-lab/vSwarm-u/actions/workflows/build_kernel.yml/badge.svg)](https://github.com/ease-lab/vSwarm-u/actions/workflows/build_kernel.yml)
 [![Build Gem5](https://github.com/ease-lab/vSwarm-u/actions/workflows/build_gem5.yml/badge.svg)](https://github.com/ease-lab/vSwarm-u/actions/workflows/build_gem5.yml)
 [![Build base disk image](https://github.com/ease-lab/vSwarm-u/actions/workflows/create_base_disk.yml/badge.svg)](https://github.com/ease-lab/vSwarm-u/actions/workflows/create_base_disk.yml)
-[![Function Integration Test](https://github.com/ease-lab/vSwarm-u/actions/workflows/function_test.yml/badge.svg)](https://github.com/ease-lab/vSwarm-u/actions/workflows/function_test.yml)
+[![Function CI for gem5 Simulator](https://github.com/ease-lab/vSwarm-u/actions/workflows/function_ci.yml/badge.svg)](https://github.com/ease-lab/vSwarm-u/actions/workflows/function_ci.yml)
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 <a href="https://twitter.com/intent/follow?screen_name=ease_lab" target="_blank">
 <img src="https://img.shields.io/twitter/follow/ease_lab?style=social&logo=twitter" alt="follow on Twitter"></a>
@@ -12,8 +13,8 @@
 
 <!-- ![vSwarm-u Header](docs/figures/vhive_hdr.jpg) -->
 
->## Note
->vSwarm-u is still in beta state but will be released soon for the ISCA'22 conference.
+> **Warning**
+> *vSwarm-u is still in beta state but will be released soon for the ISCA'22 conference.*
 
 ## Mission
 
