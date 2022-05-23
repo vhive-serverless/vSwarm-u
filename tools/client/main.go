@@ -50,7 +50,8 @@ var (
 	port           = flag.String("port", "50051", "the port to connect to")
 	input          = flag.String("input", defaultInput, "Input to the function")
 	functionMethod = flag.String("function-method", "default", "Which method of benchmark to invoke")
-	n              = flag.Int("n", 10, "Number of invokations")
+	numInvoke      = flag.Int("n", 10, "Number of invocations")
+	numWarm        = flag.Int("w", 0, "Number of invocations for warming")
 	logfile        = flag.String("logging", "", "Log to file instead of standart out")
 	m5_enable      = flag.Bool("m5ops", false, "Enable m5 magic instructions")
 	// Client
@@ -120,14 +121,31 @@ func main() {
 
 	log.Printf("Greeting: %s", reply)
 
+	if *numWarm > 0 {
+		warmFunction(ctx)
+	}
+
 	if *m5_enable {
-		invokeFunctionInstrumented(ctx, *n)
+		invokeFunctionInstrumented(ctx, *numInvoke)
 	} else {
-		invokeFunction(ctx, *n)
+		invokeFunction(ctx, *numInvoke)
 	}
 
 	log.Printf("Finished invoking: %s", reply)
-	log.Printf("SUCCESS: Calling functions for %d times", *n)
+	log.Printf("SUCCESS: Calling functions for %d times", *numInvoke)
+}
+
+func warmFunction(ctx context.Context) {
+	log.Printf("Invoke functions %d times for warming", *numWarm)
+	if *m5_enable {
+		m5.Fail(0, 31) // 31: Start Warming
+	}
+
+	invokeFunction(ctx, *numWarm)
+
+	if *m5_enable {
+		m5.Fail(0, 32) // 32: End Warming
+	}
 }
 
 func invokeFunction(ctx context.Context, n int) {
@@ -156,32 +174,13 @@ func invokeFunctionInstrumented(ctx context.Context, n int) {
 
 		pkt := generator.Next()
 
-		m5.Fail(0, 21) // 21: Send Request
+		m5.WorkBegin(100+i, 0) // 21: Send Request
 
-		// c.SayHello(ctx, &pb.HelloRequest{Name: *name})
 		client.Request(ctx, pkt)
 
-		m5.Fail(0, 22) // 21: Send Request
+		m5.WorkEnd(100+i, 0) // 21: Response received
 		if i%mod == 0 {
 			log.Printf("Invoked for %d times\n", i)
 		}
 	}
-}
-
-func Dump() {
-	// defer func() {
-	// 	// recover from panic if one occured. Set err to nil otherwise.
-	// 	if recover() != nil {
-	// 		err = errors.New("array index out of bounds")
-	// 	}
-	// }()
-	// defer func() {
-	// 	if r := recover(); r != nil {
-	// 		fmt.Println("Recovered in f", r)
-	// 	}
-	// }()
-
-	// m5ops.DumpStats(0, 0)
-	// m5ops.
-
 }
