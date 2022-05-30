@@ -39,7 +39,7 @@ Furthermore, vSwarm-u includes the infrastructure to drive function instances ru
 If you decide to use vSwarm-&mu; for your research and experiments, we are thrilled to support you by offering
 advice for potential extensions of vSwarm-&mu; and always open for collaboration.
 
-Please cite our [paper](https://ease-lab.github.io/ease_website/pubs/JUKEBOX_ISCA22.pdf) that has been recently accepted to ICSA 2022:
+Please cite our [paper](https://ease-lab.github.io/ease_website/pubs/JUKEBOX_ISCA22.pdf) that has been recently accepted to ISCA 2022:
 
 
 ```
@@ -68,7 +68,7 @@ Please cite our [paper](https://ease-lab.github.io/ease_website/pubs/JUKEBOX_ISC
 ## Getting started with vSwarm-&mu;
 
 vSwarm-&mu; can be deployed on premises or in the cloud, with support for nested virtualization. We provide [a quick-start guide](docs/quickstart_guide.md)
-that describes the intial setup, as well as how to set up benchmarking experiments.
+that describes the initial setup, as well as how to set up benchmarking experiments.
 
 You can view the vSwarm-&mu; documentation [here](docs/).
 
@@ -107,7 +107,7 @@ The software is maintained at the [EASE lab](https://easelab.inf.ed.ac.uk/) as p
 ## Known problems
 
 Sometimes the simulator get stuck during while running with the detailed core model. We are working on it and try to make the setup more stable.
-In the meantime the best is to kill the process and restart the simulation for this particular funtion.
+In the meantime the best is to kill the process and restart the simulation for this particular function.
 Use
 ```bash
 make -f simulation/Makefile kill_gem5
