@@ -2,11 +2,11 @@
 
 ## Theme template
 
-For the documentation we use the [Just-the-docs](https://just-the-docs.github.io/just-the-docs/) theme. Refer to it for more details how to costumize the documentation.
+For the documentation we use the [Just-the-docs](https://just-the-docs.github.io/just-the-docs/) theme. Refer to it for more details how to customize the documentation.
 
 ## Serve the website locally
 
-In order to create new features on the website its usually more convenient to do this locally. I.e. by using the livereload feature one can see changes immediately. For more details see [here](https://jekyllrb.com/docs/installation/).
+In order to create new features on the website its usually more convenient to do this locally. I.e. by using the "livereload" feature one can see changes immediately. For more details see [here](https://jekyllrb.com/docs/installation/).
 
 ### Install dependencies
 ```

@@ -81,7 +81,7 @@ In case such file is found it will be automatically executed by the service with
 
 With this entry point (`run.sh`) any arbitrary complex workflow can be implemented and automatically executed by the emulator. Only this script need to be served by the host system at port 3003. One easiest way to do this is to use the [python http server](https://docs.python.org/3/library/http.server.html).
 I.e. `python -m http.server 3003` will serve files from the current directory at port 3003. Use `-d` to defined another directory to be served.
-The folder can contain more files but the run script that can be downloaded if neccessary with `curl` or `wget`.
+The folder can contain more files but the run script that can be downloaded if necessary with `curl` or `wget`.
 
 In oder to get feedback from the emulator one can use python's [upload server](https://pypi.org/project/uploadserver/) to not just download but also upload files.
 ```python
