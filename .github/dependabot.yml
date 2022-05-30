@@ -1,0 +1,12 @@
+# Use https://dependabot.com/docs/config-file/validator/ to check for errors.
+version: 2
+updates:
+  - package-ecosystem: "gomod"
+    directory: "./aes-go"
+    schedule:
+      interval: "weekly"
+
+  - package-ecosystem: "gomod"
+    directory: "./tools/client"
+    schedule:
+      interval: "weekly"
