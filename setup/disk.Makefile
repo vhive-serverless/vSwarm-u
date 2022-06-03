@@ -164,7 +164,7 @@ $(INITRD): $(CLOUD_IMAGE_FILE)
 # File server
 $(SERVE):
 	PID=$$(lsof -t -i :3003); \
-	if [ $$PID > 0 ]; then kill -9 $$PID; fi
+	if [ ! -z $$PID ]; then kill -9 $$PID; fi
 
 	python3 -m uploadserver -d $(BUILD_DIR) 3003 &  \
 	echo "$$!" > $@ ;
@@ -173,10 +173,10 @@ $(SERVE):
 
 serve_start: $(SERVE)
 
-serve_stop: $(SERVE)
-	kill `cat $<` && rm $< 2> /dev/null
+serve_stop:
+	if [ -e $(SERVE) ]; then kill `cat $(SERVE)` && rm $(SERVE) 2> /dev/null; fi
 	PID=$$(lsof -t -i :3003); \
-	if [ $$PID > 0 ]; then kill -9 $$PID; fi
+	if [ ! -z $$PID ]; then kill -9 $$PID; fi
 
 
 
