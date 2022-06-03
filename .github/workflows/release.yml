@@ -1,0 +1,275 @@
+# MIT License
+#
+# Copyright (c) 2022 EASE lab
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+
+name: Release
+
+on:
+  workflow_dispatch:
+
+  ### Only for testing remove this!!!!
+  pull_request:
+    branches: [main]
+
+
+  # For all pushed tags
+  push:
+    tags:
+      - 'v*'
+
+env:
+  GOOS: linux
+  GO111MODULE: on
+
+
+jobs:
+  build_release:
+    name: Build Release
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-20.04
+            arch: amd64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v3
+
+      ## Build resources
+      - name: Build Resources
+        working-directory: resources
+        run: make build-release-resources
+
+      # ## Test resources
+      # - name: Test Resources
+      #   working-directory: resources
+      #   run: make test-resources
+
+
+      # - name: Build release
+      #   working-directory: resources
+      #   run: make build-release
+      # # - name: Get the version
+      # #   id: get_version
+      # #   run: |
+      # #     echo ::set-output name=TAG::${GITHUB_REF/refs\/tags\//}
+
+      - name: Check Release
+        working-directory: resources
+        run: make check-release
+
+      - name: Get Release artifacts
+        id: artifacts
+        working-directory: resources
+        run: make release-artifacts
+
+      - name: Get the version
+        id: version
+        working-directory: resources
+        run: make release-version
+
+
+
+      ## Create the release
+      - name: Create Release
+        uses: actions/create-release@v1
+        id: create_release
+        with:
+          draft: false
+          prerelease: true
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ steps.artifacts.outputs.VERSION }}
+          # body_path: CHANGELOG.md
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+
+
+      # ## Upload the artifacts
+      # - name: Upload Kernel artifact
+      #   uses: actions/upload-release-asset@v1
+      #   env:
+      #     GITHUB_TOKEN: ${{ github.token }}
+      #   with:
+      #     upload_url: ${{ steps.create_release.outputs.upload_url }}
+      #     asset_path: ${{ steps.artifacts.outputs.KERNEL }}
+      #     asset_name: vmlinux-${{ matrix.arch }}
+      #     asset_content_type: application
+
+      # - name: Upload Disk image artifact
+      #   uses: actions/upload-release-asset@v1
+      #   env:
+      #     GITHUB_TOKEN: ${{ github.token }}
+      #   with:
+      #     upload_url: ${{ steps.create_release.outputs.upload_url }}
+      #     asset_path: ${{ steps.artifacts.outputs.DISK_IMAGE }}
+      #     asset_name: base-image-${{ matrix.arch }}
+      #     asset_content_type: image
+
+      # - name: Upload Disk image artifact
+      #   uses: actions/upload-release-asset@v1
+      #   env:
+      #     GITHUB_TOKEN: ${{ github.token }}
+      #   with:
+      #     upload_url: ${{ steps.create_release.outputs.upload_url }}
+      #     asset_path: ${{ steps.artifacts.outputs.TEST_CLIENT }}
+      #     asset_name: test-client-${{ matrix.arch }}
+      #     asset_content_type: application
+
+      - name: Upload Artifacts
+        working-directory: resources
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          RELEASE_ID: ${{ steps.create_release.outputs.id }}
+        id: upload
+        run: make upload_all_artifacts
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# jobs:
+#   build_release_resources:
+#     name: build_release
+#     runs-on: ubuntu-20.04
+#     steps:
+#       - uses: actions/checkout@v3
+
+#       ## Build resources
+#       - name: Build Resources
+#         working-directory: resources
+#         run: make build-release-resources
+
+#       # ## Test resources
+#       # - name: Test Resources
+#       #   working-directory: resources
+#       #   run: make test-resources
+
+
+#       # - name: Build release
+#       #   working-directory: resources
+#       #   run: make build-release
+#       # # - name: Get the version
+#       # #   id: get_version
+#       # #   run: |
+#       # #     echo ::set-output name=TAG::${GITHUB_REF/refs\/tags\//}
+
+#       - name: Check Release
+#         working-directory: resources
+#         run: make check-release
+
+#       - name: Get the version
+#         id: version
+#         working-directory: resources
+#         run: make release-version
+
+
+
+  # build_release:
+  #   name: build_release
+  #   runs-on: ubuntu-20.04
+  #   needs: build_release_resources
+  #   steps:
+  #     - uses: actions/checkout@v3
+
+  #     ## Build resources
+  #     - name: Build Resources
+  #       working-directory: resources
+  #       run: make build-release-resources
+
+  #     # ## Test resources
+  #     # - name: Test Resources
+  #     #   working-directory: resources
+  #     #   run: make test-resources
+
+
+  #     # - name: Build release
+  #     #   working-directory: resources
+  #     #   run: make build-release
+  #     # # - name: Get the version
+  #     # #   id: get_version
+  #     # #   run: |
+  #     # #     echo ::set-output name=TAG::${GITHUB_REF/refs\/tags\//}
+
+  #     - name: Check Release
+  #       working-directory: resources
+  #       run: make check-release
+
+  #     - name: Get the version
+  #       id: version
+  #       working-directory: resources
+  #       run: make release-version
+
+
+      # ## Create the release
+      # - name: release
+      #   uses: actions/create-release@v1
+      #   id: create_release
+      #   with:
+      #     draft: true
+      #     prerelease: true
+      #     release_name: ${{ steps.version.outputs.version }}
+      #     tag_name: ${{ github.ref }}
+      #     # body_path: CHANGELOG.md
+      #   env:
+      #     GITHUB_TOKEN: ${{ github.token }}
+
+      # ## Upload the artifacts
+      # - name: Upload Kernel artifact
+      #   uses: actions/upload-release-asset@v1
+      #   env:
+      #     GITHUB_TOKEN: ${{ github.token }}
+      #   with:
+      #     upload_url: ${{ steps.create_release.outputs.upload_url }}
+      #     asset_path: ./resources/vmlinux
+      #     asset_name: vmlinux-amd64
+      #     asset_content_type: application
+
+      # - name: Upload disk image artifact
+      #   uses: actions/upload-release-asset@v1
+      #   env:
+      #     GITHUB_TOKEN: ${{ github.token }}
+      #   with:
+      #     upload_url: ${{ steps.create_release.outputs.upload_url }}
+      #     asset_path: ./resources/vmlinux
+      #     asset_name: base-image-amd64
+      #     asset_content_type: application
+
+#         uses: alexellis/upload-assets@0.2.2
+#         env:
+#           GITHUB_TOKEN: ${{ github.token }}
+#         with:
+#           asset_paths: '["./resources/vmlinux"]'
+# #          asset_paths: '["./bin/release-it-darwin", "./bin/release-it-amd64", "./bin/release-it-arm", "./bin/release-it-arm64", "./bin/release-it.exe"]'
