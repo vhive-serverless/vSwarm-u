@@ -151,18 +151,23 @@ build-resources: build-kernel build-disk
 build-release-resources: build-kernel build-disk build-client
 
 
-clean-release: build-clean
+clean-release:
 	rm -rf $(RESRC_KERNEL)
 	rm -rf $(RESRC_DISK)
 	rm -rf $(RESRC_CLIENT)
 
 
-### ----- DOWNLOAD RESOURCES ----- ###
+# ### ----- DOWNLOAD RESOURCES ----- ###
+# # download-resources:
+# # 	$(call download_artifact,$(ARTIFACT_KERNEL),$(RESRC_KERNEL))
+# # 	$(call download_artifact,$(ARTIFACT_DISK),$(ARTIFACT_DISK))
+# # 	$(call decompress,$(ARTIFACT_DISK))
+# # 	$(call download_artifact,$(ARTIFACT_CLIENT),$(RESRC_CLIENT))
+
 download-resources:
-	$(call download_artifact,$(ARTIFACT_KERNEL),$(RESRC_KERNEL))
-	$(call download_artifact,$(ARTIFACT_DISK),$(ARTIFACT_DISK))
-	$(call decompress,$(ARTIFACT_DISK))
-	$(call download_artifact,$(ARTIFACT_CLIENT),$(RESRC_CLIENT))
+	./artifacts.sh download $(RESRC_KERNEL) $(ARTIFACT_KERNEL)
+	./artifacts.sh download $(RESRC_CLIENT) $(ARTIFACT_CLIENT)
+	./artifacts.sh download-disk $(RESRC_BASE_DISK) $(ARTIFACT_DISK)
 
 
 
@@ -183,7 +188,7 @@ test-release-resources: test-emu
 
 ## ARTIFACTS ---------------------- ###
 ARTIFACT_KERNEL 	:= vmlinux-$(ARCH)
-ARTIFACT_DISK 		:= disk-image-$(ARCH).zip
+ARTIFACT_DISK 		:= test-disk-image-$(ARCH)
 ARTIFACT_CLIENT 	:= test-client-$(ARCH)
 
 ## Upload artifacts to release ##
@@ -208,10 +213,9 @@ endef
 
 
 upload_all_artifacts:
-	$(call compress,$(RESRC_DISK),$(ARTIFACT_DISK))
-	$(call upload_artifact,$(ARTIFACT_DISK),$(ARTIFACT_DISK))
-	$(call upload_artifact,$(RESRC_CLIENT),$(ARTIFACT_CLIENT))
-	$(call upload_artifact,$(RESRC_KERNEL),$(ARTIFACT_KERNEL))
+	./artifacts.sh upload $(RESRC_KERNEL) $(ARTIFACT_KERNEL).new2
+	./artifacts.sh upload $(RESRC_CLIENT) $(ARTIFACT_CLIENT).new2
+	./artifacts.sh upload-disk $(RESRC_DISK) $(ARTIFACT_DISK).new2
 
 
 upload_base:
@@ -235,17 +239,80 @@ upload_base:
 # 	tar -xvf $1.tar.gz
 # endef
 
-define compress
-	zip -9 $2 $1
-endef
+# define compress
+# 	zip -9 $2 $1
+# endef
 
-define decompress
-	unzip $1
-endef
+# define decompress
+# 	unzip $1
+# endef
 
-test-compress:
-	$(call compress,test,$(ARTIFACT_DISK))
-	$(call decompress,$(ARTIFACT_DISK))
+# test-compress:
+# 	$(call compress,test,$(ARTIFACT_DISK))
+# 	$(call decompress,$(ARTIFACT_DISK))
+
+
+
+
+
+# # define compress-split
+# # 	shasum -a 256 $1 > $2.sums
+# # 	zip -4 tmp.zip $1
+# # 	zip tmp.zip --out $2.zip -s 2m
+# # endef
+
+
+# # define decompress-split
+# # 	zip -s0 $1.zip --out existing.zip
+# # 	unzip existing.zip
+# # 	shasum -a 256 -c $2.sums
+# # endef
+
+
+# define compress-split
+# 	shasum -a 256 $1 > $2.sums
+# 	tar cvzf tmp.tar.gz $1
+# 	split -b 1m tmp.tar.gz $2.tar.gz.
+# endef
+
+
+# define decompress-split
+# 	cat $1.tar.gz.* > tmp2.tar.gz
+# 	tar xzvf tmp2.tar.gz
+# 	shasum -a 256 -c $1.sums
+# endef
+
+# # define upload_all
+# # 	for f in $1.tar.gz.*; do \
+# # 	echo Upload $$f; \
+# # 	$(eval $(call upload_artifact,$$f,$$f)); \
+# # 	done
+# # endef
+
+
+
+# define upload_all
+# 	$(eval $(files := $(wildcard $1.tar.gz.*)))
+# 	echo $(files)
+# 	$(foreach f,$(files),echo $(f))
+# endef
+
+
+
+
+# test-disk:
+# 	cp vmlinux vmtest
+# 	$(call compress-split,vmtest,vmart)
+# 	$(call upload_all,vmart)
+# 	rm vmtest
+# 	$(call decompress-split,vmart,vmtest)
+
+
+
+
+
+
+
 
 ## Download Artifacts ---------------------
 
