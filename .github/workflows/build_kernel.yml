@@ -69,3 +69,15 @@ jobs:
         run: |
           make -f ${{ env.MAKEFILE }} build
 
+      - name: Save the outup binary
+        shell: bash
+        env:
+          OUTPUT: kernel
+        run: |
+          make -f ${{ env.MAKEFILE }} save_output
+
+      - name: Upload Kernel Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: vmlinux-amd64
+          path: kernel
