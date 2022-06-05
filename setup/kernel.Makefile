@@ -74,7 +74,7 @@ build: $(LINUX_DIR) config
 save: build
 	cp $(LINUX_DIR)/vmlinux $(KERNEL_OUT)
 
-save_output: build
+save_output:
 	cp $(LINUX_DIR)/vmlinux $(OUTPUT)
 
 
