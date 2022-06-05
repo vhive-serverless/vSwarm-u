@@ -90,18 +90,100 @@ build: | $(BUILD_DIR) $(INITRD) $(DISK_IMAGE_FILE) $(INSTALL_CONFIG)
 # The command will boot from the iso file.
 # Then it will listen to port 3003 to retive further files.
 # If such provided the install process will automatically done for you.
-install: build $(SERVE)
+install_kvm: build
+	$(MAKE) -f $(MKFILE) serve_start
 	sudo qemu-system-x86_64 \
 		-nographic \
 		-cpu host -enable-kvm \
 		-smp ${CPUS} \
 		-m ${MEMORY} \
 		-no-reboot \
-		-drive file=$(DISK_IMAGE_FILE),format=raw \
+		-drive file=$(DISK_IMAGE_FILE),format=qcow2 \
 		-cdrom $(CLOUD_IMAGE_FILE) \
 		-kernel $(KERNEL) \
 		-initrd $(INITRD) \
 		-append 'autoinstall ds=nocloud-net;s=http://_gateway:3003/'
+	$(MAKE) -f $(MKFILE) serve_stop
+
+
+install_no_kvm: build
+	$(MAKE) -f $(MKFILE) serve_start
+	sudo qemu-system-x86_64 \
+		-nographic \
+		-smp ${CPUS} \
+		-m ${MEMORY} \
+		-no-reboot \
+		-drive file=$(DISK_IMAGE_FILE),format=qcow2 \
+		-cdrom $(CLOUD_IMAGE_FILE) \
+		-kernel $(KERNEL) \
+		-initrd $(INITRD) \
+		-append 'autoinstall ds=nocloud-net;s=http://_gateway:3003/'
+	$(MAKE) -f $(MKFILE) serve_stop
+
+
+install:
+
+# ## Finalize installation.
+# # First boot will do the final step of cloud-init
+# # Afterwards we can disable it.
+# run_emulator:
+# 	sudo qemu-system-x86_64 \
+# 		-nographic \
+# 		-cpu host -enable-kvm \
+# 		-smp ${CPUS} \
+# 		-m ${MEMORY} \
+# 		-drive file=$(DISK_IMAGE_FILE),format=raw \
+# 		-kernel $(KERNEL) \
+# 		-append 'console=ttyS0 root=/dev/hda2'
+
+
+
+## Finalize installation.
+# First boot will do the final step of cloud-init
+# Afterwards we can disable it.
+
+## Run Emulator -------------------------------------------------
+# Do the actual emulation run
+# The command will boot an instance.
+# Then it will listen to port 3003 to retive a run script
+# This run script will be the one we provided.
+run_emulator:
+	sudo qemu-system-x86_64 \
+		-nographic \
+		-cpu host -enable-kvm \
+		-smp ${CPUS} \
+		-m ${MEMORY} \
+		-device e1000,netdev=net0 \
+    	-netdev type=user,id=net0,hostfwd=tcp:127.0.0.1:5555-:22  \
+		-drive file=$(DISK_IMAGE_FILE),format=qcow2 \
+		-kernel $(KERNEL) \
+		-append 'console=ttyS0 root=/dev/hda2'
+
+run: run_emulator
+
+run_emulator_install_kernel:
+	sudo qemu-system-x86_64 \
+		-nographic \
+		-cpu host -enable-kvm \
+		-smp ${CPUS} \
+		-m ${MEMORY} \
+		-drive file=$(DISK_IMAGE_FILE),format=qcow2
+
+
+# install_finalize:
+# 	cp $(ROOT)/configs/disk-image-configs/finalize.sh $(WORKING_DIR)/run.sh
+# 	$(MAKE) -f $(MKFILE) serve_start
+# 	$(MAKE) -f $(MKFILE) run_emulator
+# 	$(MAKE) -f $(MKFILE) serve_stop
+# 	rm $(BUILD_DIR)/run.sh
+
+install_finalize:
+	cp $(CONFIGS_DIR)/finalize.sh $(BUILD_DIR)/run.sh
+	$(MAKE) -f $(MKFILE) serve_start
+	$(MAKE) -f $(MKFILE) run_emulator_install_kernel
+	$(MAKE) -f $(MKFILE) serve_stop
+	rm $(BUILD_DIR)/run.sh
+
 
 
 ## Save the created files to the resource directory
