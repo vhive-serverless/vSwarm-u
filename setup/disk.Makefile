@@ -2,7 +2,7 @@
 
 # MIT License
 #
-# Copyright (c) 2022 EASE lab, University of Edinburgh
+# Copyright (c) 2022 David Schall and EASE lab
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -21,19 +21,17 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-#
-# Authors: David Schall
+
 # Adopted from: https://github.com/brennancheung/playbooks/blob/master/cloud-init-lab/
 
 
-MKFILE := $(abspath $(lastword $(MAKEFILE_LIST)))
-ROOT 		:= $(abspath $(dir $(MKFILE))/../)
+mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
+ROOT 		:= $(abspath $(dir $(mkfile_path))/../)
 
 ## User specific inputs
 IMAGE_NAME  := gem5-disk-image
 BUILD_DIR   ?= wkdir/
 RESOURCES 	?=$(ROOT)/resources/
-OUTPUT		?=
 
 DISK_SIZE   := 8G
 MEMORY      := 8G
@@ -108,10 +106,6 @@ install: build $(SERVE)
 save: $(DISK_IMAGE_FILE)
 	cp $(DISK_IMAGE_FILE) $(RESRC_BASE_IMAGE)
 
-## Save the created files to the resource directory
-save_output: $(DISK_IMAGE_FILE)
-	cp $(DISK_IMAGE_FILE) $(OUTPUT)
-
 
 $(RUN_SCRIPT): $(BUILD_DIR)
 	sed 's|<__IMAGE_NAME__>|$(IMAGE_NAME)|g' $(RUN_SCRIPT_TEMPLATE) > $@
@@ -145,7 +139,7 @@ $(BUILD_DIR):
 # Create the disk image file
 $(DISK_IMAGE_FILE): | $(BUILD_DIR)
 	$(call spacing,"Build main disk image: $(DISK_SIZE)")
-	qemu-img create -f qcow2 $@ $(DISK_SIZE)
+	qemu-img create $@ $(DISK_SIZE)
 
 
 # Extract the initrd file from the install disk

@@ -2,7 +2,7 @@
 
 # MIT License
 #
-# Copyright (c) 2022 EASE lab, University of Edinburgh
+# Copyright (c) 2022 David Schall and EASE lab
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -21,8 +21,6 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-#
-# Authors: David Schall
 
 
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
@@ -32,8 +30,7 @@ ROOT 		:= $(abspath $(dir $(mkfile_path))/../)
 RESOURCES 	?=$(ROOT)/resources/
 
 LINUX_DIR 	:= linux/
-KERNEL_OUT 	?= $(RESOURCES)/vmlinux
-OUTPUT		?=
+KERNEL_OUT 	:= $(RESOURCES)/vmlinux
 
 KVERSION	:= v5.4.84
 KERNEL_CONFIG_GEM5 := $(ROOT)/configs/linux-configs/$(KVERSION).config
@@ -73,9 +70,6 @@ build: $(LINUX_DIR) config
 
 save: build
 	cp $(LINUX_DIR)/vmlinux $(KERNEL_OUT)
-
-save_output: build
-	cp $(LINUX_DIR)/vmlinux $(OUTPUT)
 
 
 clean:

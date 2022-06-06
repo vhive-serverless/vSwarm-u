@@ -40,16 +40,14 @@ CPUS    := 2
 
 
 ## Required resources
-KERNEL 		?= $(RESOURCES)/vmlinux
-DISK 		?= $(RESOURCES)/base-disk-image.qcow2
-TEST_CLIENT	?= $(RESOURCES)/test-client
-
-OUTPUT		?=
+RESRC_KERNEL 		:= $(RESOURCES)/vmlinux
+RESRC_BASE_IMAGE 	:= $(RESOURCES)/base-disk-image.img
+RESRC_CLIENT_URL 	:= https://github.com/ease-lab/vSwarm-proto/releases/download/v0.1.3-e9087ac/client-linux-amd64
 
 
-WK_KERNEL 			:= $(WORKING_DIR)/kernel
-WK_DISK 			:= $(WORKING_DIR)/disk.img
-WK_CLIENT			:= $(WORKING_DIR)/test-client
+KERNEL 				:= $(WORKING_DIR)/kernel
+DISK_IMAGE 			:= $(WORKING_DIR)/disk.img
+TEST_CLIENT			:= $(WORKING_DIR)/test-client
 LOGFILE				:= $(WORKING_DIR)/test.log
 SERVE 				:= $(WORKING_DIR)/server.pid
 
@@ -68,9 +66,9 @@ dep_install:
 	python3 -m pip install --user uploadserver
 
 dep_check_qemu:
-	$(call check_file, $(KERNEL))
-	$(call check_file, $(BASE_IMAGE))
-	$(call check_file, $(TEST_CLIENT))
+	$(call check_file, $(RESRC_KERNEL))
+	$(call check_file, $(RESRC_BASE_IMAGE))
+	$(call check_file, $(RESRC_CLIENT))
 	$(call check_dep, qemu-kvm)
 	$(call check_dep, lsof)
 	$(call check_py_dep, uploadserver)
@@ -82,35 +80,19 @@ dep_check_qemu:
 # The command will boot an instance.
 # Then it will listen to port 3003 to retive a run script
 # This run script will be the one we provided.
-run_kvm:
+run_emulator:
 	sudo qemu-system-x86_64 \
 		-nographic \
 		-cpu host -enable-kvm \
 		-smp ${CPUS} \
 		-m ${MEMORY} \
-		-drive file=$(WK_DISK) \
-		-kernel $(WK_KERNEL) \
+		-drive file=$(DISK_IMAGE),format=raw \
+		-kernel $(KERNEL) \
 		-append 'console=ttyS0 root=/dev/hda2'
-
-
-run_emulator:
-	sudo qemu-system-x86_64 \
-		-nographic \
-		-smp ${CPUS} \
-		-m ${MEMORY} \
-		-drive file=$(WK_DISK) \
-		-kernel $(WK_KERNEL) \
-		-append 'console=ttyS0 root=/dev/hda2'
-
 
 run: run_emulator
 
-install_finalize:
-	cp $(ROOT)/configs/disk-image-configs/finalize.sh $(WORKING_DIR)/run.sh
-	$(MAKE) -f $(MKFILE) serve_start
-	$(MAKE) -f $(MKFILE) run_emulator
-	$(MAKE) -f $(MKFILE) serve_stop
-	rm $(BUILD_DIR)/run.sh
+
 
 ## Test run ----------------------------------------------------
 #
@@ -128,7 +110,7 @@ delete_run_script: $(WORKING_DIR)/run.sh
 	rm $(WORKING_DIR)/run.sh
 
 
-run_test:
+run_test: build
 	if [ -f $(LOGFILE) ]; then rm $(LOGFILE); fi
 	$(MAKE) -f $(MKFILE) create_run_script
 	$(MAKE) -f $(MKFILE) serve_start
@@ -156,17 +138,14 @@ check: $(LOGFILE)
 
 
 save_disk:
-	cp $(WK_DISK) $(FUNCTION_DISK_IMAGE)
-
-save_output:
-	cp $(WK_DISK) $(OUTPUT)
+	cp $(DISK_IMAGE) $(FUNCTION_DISK_IMAGE)
 
 
 
 ## Build the test setup ----------------------------
 build: $(WORKING_DIR) \
-	$(WK_DISK) $(WK_KERNEL) \
-	$(WK_CLIENT) \
+	$(DISK_IMAGE) $(KERNEL) \
+	$(TEST_CLIENT) \
 	$(FUNCTIONS_YAML) $(FUNCTIONS_LIST)
 
 
@@ -182,24 +161,26 @@ $(FUNCTIONS_LIST):
 	for fn in $(FUNCTIONS_UNDER_TEST); \
 	do echo $$fn >> $@; done;
 
-$(WK_KERNEL): $(KERNEL)
+$(KERNEL): $(RESRC_KERNEL)
 	cp $< $@
 
 # Create the disk image from the base image
-$(WK_DISK): $(DISK)
+$(DISK_IMAGE): $(RESRC_BASE_IMAGE)
 	cp $< $@
 
-$(WK_CLIENT): $(TEST_CLIENT)
-	cp $< $@
+
+
+# $(TEST_CLIENT): $(RESRC_CLIENT)
+# 	cp $< $@
 
 # DOWNLOAD_URL=$(curl -s https://api.github.com/repos/ease-lab/vSwarm-proto/releases/latest \
 # 	| grep browser_download_url \
 # 	| grep swamp_amd64 \
 # 	| cut -d '"' -f 4)
 
-# $(WK_CLIENT):
-# 	curl -s -L -o $@ $(TEST_CLIENT)
-# 	chmod +x $@
+$(TEST_CLIENT):
+	curl -s -L -o $@ $(RESRC_CLIENT_URL)
+	chmod +x $@
 
 
 

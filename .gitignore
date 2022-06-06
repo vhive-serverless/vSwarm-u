@@ -226,13 +226,9 @@ cython_debug/
 **/workload
 **/wkdir*
 !**/wkdir-tmpl
+**/resources
 **/results
 
 **/tmp
 **/iso
 **/mnt
-
-## Resources folder
-resources/*
-!resources/Makefile
-
