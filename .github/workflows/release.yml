@@ -53,15 +53,16 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      ## Build resources
-      - name: Build Resources
-        working-directory: resources
-        run: make build-release-resources
-
-      # ## Download resources
-      # - name: Download Resources
+      # ## Build resources
+      # - name: Build Resources
       #   working-directory: resources
-      #   run: make download-resources
+      #   run: make build-release-resources
+
+
+      ## Download resources
+      - name: Download Resources
+        working-directory: resources
+        run: make download-resources
 
       ## Test resources
       - name: Test Resources
