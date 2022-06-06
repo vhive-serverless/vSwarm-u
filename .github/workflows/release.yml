@@ -34,6 +34,11 @@ on:
   pull_request:
     branches: [main]
 
+env:
+  GOOS: linux
+  GO111MODULE: on
+
+
 # jobs:
 #   build_release:
 #     name: Build Release
@@ -147,168 +152,87 @@ on:
 
 
 
-env:
-  ARTIFACTS_DIR: ${{ github.workspace }}/artifacts/
-  KERNEL: ${{ github.workspace }}/artifacts/kernel
-  DISK: ${{ github.workspace }}/artifacts/disk.img
-  TEST_CLIENT: ${{ github.workspace }}/artifacts/test-client
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 jobs:
-
-  ### We want to use the cache from the build stage
-  ## Check if the cache exist otherwise download it from the artifacts
-  prepare-artifacts:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v2
-      - name: Use the cache from the build workflow
-        id: build-artifacts
-        uses: actions/cache@v3
-        with:
-          path: artifacts/
-          key: ${{ runner.os }}-${{ github.sha }}-base-disk-tested
-
-      - name: Download latest kernel
-        if: steps.build-artifacts.outputs.cache-hit != 'true'
-        uses: dawidd6/action-download-artifact@v2
-        with:
-          workflow: build_kernel.yml
-          name: vmlinux-amd64
-          path: tmp
-
-      - name: Download latest test client
-        if: steps.build-artifacts.outputs.cache-hit != 'true'
-        uses: dawidd6/action-download-artifact@v2
-        with:
-          workflow: test_client.yml
-          name: test-client
-          path: tmp
-
-      - name: Download latest base image
-        if: steps.build-artifacts.outputs.cache-hit != 'true'
-        uses: dawidd6/action-download-artifact@v2
-        with:
-          workflow: create_base_image.yml
-          name: disk-image-amd64
-          # workflow_conclusion: "completed"
-          run_id: 2449076375
-          path: disktmp
-
-
-      - name: Copy Artifacts
-        if: steps.build-artifacts.outputs.cache-hit != 'true'
-        run: |
-          mkdir -p ${{ env.ARTIFACTS_DIR }}
-          cp tmp/kernel ${{ env.KERNEL }}
-          cp tmp/test-client ${{ env.TEST_CLIENT }}
-          ./resources/artifacts.sh decompress-split disktmp/disk.img
-          cp temp/disk.img ${{ env.DISK }}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
   release:
     name: Release
-    needs: prepare-artifacts
     strategy:
       matrix:
         include:
           - os: ubuntu-20.04
             arch: amd64
     runs-on: ${{ matrix.os }}
-    # env:
-    #   KERNEL: ${{ env.KERNEL }}
-    #   DISK: ${{ env.DISK }}
-    #   TEST_CLIENT: ${{ env.TEST_CLIENT }}
 
     steps:
-      - name: Check out code
-        uses: actions/checkout@v2
-      - name: Use the cache from the build workflow
-        id: build-artifacts
-        uses: actions/cache@v3
+      - uses: actions/checkout@v3
+
+
+
+
+      # ## Create the release
+      # - name: Create Release
+      #   uses: actions/create-release@v1
+      #   id: create_release
+      #   with:
+      #     draft: false
+      #     prerelease: true
+      #     tag_name: ${{ github.ref }}
+      #     release_name: Release ${{ steps.artifacts.outputs.VERSION }}
+      #     # body_path: CHANGELOG.md
+      #   env:
+      #     GITHUB_TOKEN: ${{ github.token }}
+
+
+
+      - name: Download 1
+        uses: dawidd6/action-download-artifact@v2
         with:
-          path: artifacts/
-          key: ${{ runner.os }}-${{ github.sha }}-base-disk-tested
-
-      # ## Download resources
-      # - name: Download Resources
-      #   working-directory: resources
-      #   run: |
-      #     mkdir -p ${{ env.ARTIFACTS_DIR }}
-      #     make download-resources
-
-      # ## Test resources
-      # - name: Test Resources
-      #   working-directory: resources
-      #   run: make test-release-resources
+          workflow: build_kernel.yml
+          name: kernel1
+          path: kernel_p1
 
 
-      # - name: Build release
-      #   working-directory: resources
-      #   run: make build-release
-      # # - name: Get the version
-      # #   id: get_version
-      # #   run: |
-      # #     echo ::set-output name=TAG::${GITHUB_REF/refs\/tags\//}
-
-
-      # - name: Get Resources from artifacts cache
-      #   working-directory: resources
-      #   run: make get-resoures-from-artifact-cache
-
-      - name: Check Release
-        working-directory: resources
-        run: make check-release
-
-      - name: Get Release artifacts
-        id: artifacts
-        working-directory: resources
-        run: make release-artifacts
-
-      - name: Get the version
-        id: version
-        working-directory: resources
-        run: make release-version
-
-
-      ## Create the release
-      - name: Create Release
-        uses: actions/create-release@v1
-        id: create_release
+      - name: Download 2
+        uses: dawidd6/action-download-artifact@v2
         with:
-          draft: false
-          prerelease: true
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ steps.artifacts.outputs.VERSION }}
-          # body_path: CHANGELOG.md
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
+          workflow: build_kernel.yml
+          name: kernel2
+          path: kernel_p2
 
 
-      - name: Upload Artifacts
-        working-directory: resources
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-          RELEASE_ID: ${{ steps.create_release.outputs.id }}
-        id: upload
-        run: make upload_all_artifacts
+      - name: Download 3
+        uses: dawidd6/action-download-artifact@v2
+        with:
+          workflow: build_kernel.yml
+          path: kernel
+
+
+      - name: Test
+        run: |
+          ls -la
+          ls -la kernel
+          ls -la kernel_p2
+          ls -la kernel_p1
 
 
 
@@ -412,7 +336,10 @@ jobs:
 #         working-directory: resources
 #         run: make check-release
 
-
+#       - name: Get the version
+#         id: version
+#         working-directory: resources
+#         run: make release-version
 
 
 

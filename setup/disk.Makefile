@@ -191,7 +191,7 @@ save: $(DISK_IMAGE_FILE)
 	cp $(DISK_IMAGE_FILE) $(RESRC_BASE_IMAGE)
 
 ## Save the created files to the resource directory
-save_output:
+save_output: $(DISK_IMAGE_FILE)
 	cp $(DISK_IMAGE_FILE) $(OUTPUT)
 
 

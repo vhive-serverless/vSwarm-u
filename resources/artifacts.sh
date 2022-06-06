@@ -126,27 +126,11 @@ function decompress-split {
 	# tar xzvf tmp2.tar.gz
 	## Uncompress parallel
 	pigz -cd tmp2.tar.gz | tar xf -
-	rm tmp2.tar.gz
 
 	## Verify checksum
 	shasum -a 256 -c ${file}.sums
 	# ## Remove archives
 	# rm *.tar.gz.* tmp2.tar.gz *.sums
-}
-
-function compress-split-disk {
-	disk=$1
-	asset_name=$1
-	[ $# == 2 ] && asset_name=$2
-
-	## Create folder
-	mkdir -p $asset_name && cp $disk $asset_name
-
-	pushd $asset_name > /dev/null
-	# Compress
-	compress-split $disk
-	rm $disk
-	popd > /dev/null
 }
 
 

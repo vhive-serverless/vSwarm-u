@@ -26,7 +26,6 @@
 
 MKFILE := $(abspath $(lastword $(MAKEFILE_LIST)))
 ROOT 		:= $(abspath $(dir $(MKFILE))/../../)
-OUTPUT ?= test-client
 
 
 # Go parameters
@@ -56,9 +55,6 @@ libclean:
 clean: libclean
 	go clean
 
-
-save_output: all
-	cp $(BIN) $(OUTPUT)
 
 
 

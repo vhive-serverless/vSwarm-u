@@ -44,71 +44,12 @@ on:
 
 env:
   WORKING_DIR: wkdir/test/
-  ARTIFACTS_DIR: artifacts/
-  KERNEL: artifacts/kernel
-  DISK: artifacts/disk.img
-  DISK2: artifacts/disk2.img
-  CLIENT: artifacts/test-client
 
 jobs:
-
-  ### We want to use the cache from the build stage
-  ## Check if the cache exist otherwise download it from the artifacts
-  prepare-artifacts:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v2
-      - name: Use the cache from the build workflow
-        id: build-artifacts
-        uses: actions/cache@v3
-        with:
-          path: artifacts/
-          key: ${{ runner.os }}-${{ github.sha }}-base-disk-tested
-
-      - name: Download latest kernel
-        if: steps.build-artifacts.outputs.cache-hit != 'true'
-        uses: dawidd6/action-download-artifact@v2
-        with:
-          workflow: build_kernel.yml
-          name: vmlinux-amd64
-          path: tmp
-
-      - name: Download latest test client
-        if: steps.build-artifacts.outputs.cache-hit != 'true'
-        uses: dawidd6/action-download-artifact@v2
-        with:
-          workflow: test_client.yml
-          name: test-client
-          path: tmp
-
-      - name: Download latest base image
-        if: steps.build-artifacts.outputs.cache-hit != 'true'
-        uses: dawidd6/action-download-artifact@v2
-        with:
-          workflow: create_base_image.yml
-          name: disk-image-amd64
-          # workflow_conclusion: success
-          run_id: 2447779005
-          path: disktmp
-
-
-      - name: Copy Artifacts
-        if: steps.build-artifacts.outputs.cache-hit != 'true'
-        run: |
-          mkdir -p ${{ env.ARTIFACTS_DIR }}
-          cp tmp/kernel ${{ env.KERNEL }}
-          cp tmp/test-client ${{ env.CLIENT }}
-          ./resources/artifacts.sh decompress-split disktmp/disk.img
-          cp temp/disk.img ${{ env.DISK }}
-
-
-
   emulator-function-test:
-    name: Test functions on emulator
+    name: Test function on emulator
     # For running the qe
-    runs-on: ubuntu-20.04
-    needs: prepare-artifacts
+    runs-on: [self-hosted, qemu-test]
     strategy:
       fail-fast: true
 
@@ -120,29 +61,12 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v2
 
-      ## Use the artifact cache from the build stage
-      - name: Cache Build Artifacts
-        uses: actions/cache@v3
-        with:
-          path: artifacts/
-          key: ${{ runner.os }}-${{ github.sha }}-base-disk-tested
-
-
-      ##### Setup Test #####
-      - name: Install dependencies
-        run: |
-          make -f ${{ env.MAKEFILE }} dep_install
-
       - name: Create the working directory to run the test.
-        env:
-          KERNEL: ${{ env.KERNEL }}
-          DISK: ${{ env.DISK }}
-          TEST_CLIENT: ${{ env.CLIENT }}
         run: |
           make -f ${{ env.MAKEFILE }} build
 
       - name: Run the actual test of the emulator.
-        timeout-minutes: 30
+        timeout-minutes: 5
         run: |
           make -f ${{ env.MAKEFILE }} run_test
 
@@ -150,24 +74,9 @@ jobs:
         run: |
           make -f ${{ env.MAKEFILE }} check
 
-
-
-      ## Once the Test completed successfully
-      ## cache the test image for the later simulator test jobs
-      - name: Cache test disk image
-        id: test-disk
-        uses: actions/cache@v3
-        with:
-          path: artifacts/
-          key: ${{ runner.os }}-${{ github.run_number }}-func-ci-test
-
-      - name: Save the image as for simulator tests
-        shell: bash
-        env:
-          OUTPUT: ${{ env.DISK2 }}
+      - name: Clean disk to resources for simulator test.
         run: |
-          make -f ${{ env.MAKEFILE }} save_output
-
+          make -f ${{ env.MAKEFILE }} save_disk
 
       - name: Clean everything.
         if: ${{ always() }}
@@ -175,11 +84,8 @@ jobs:
           make -f ${{ env.MAKEFILE }} clean
 
 
-
-
   simulator-function-test:
     name: Test function on Simulator
-
     # For running the qe
     runs-on: [self-hosted, gem5-test]
     needs: emulator-function-test
@@ -196,18 +102,7 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v2
 
-      ## Use the artifact cache from the build stage
-      - name: Cache Build Artifacts
-        uses: actions/cache@v3
-        with:
-          path: artifacts/
-          key: ${{ runner.os }}-${{ github.sha }}-base-disk-tested
-
       - name: Create the working directory to run the test.
-        env:
-          KERNEL: ${{ env.KERNEL }}
-          DISK: ${{ env.DISK }}
-          TEST_CLIENT: ${{ env.CLIENT }}
         run: |
           make -f ${{ env.MAKEFILE }} build
 

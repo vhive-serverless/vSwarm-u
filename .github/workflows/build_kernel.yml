@@ -43,7 +43,6 @@ on:
 env:
   WORKDIR: setup/
   MAKEFILE: setup/kernel.Makefile
-  KERNEL: kernel
 
 jobs:
   build-x86-64:
@@ -73,7 +72,7 @@ jobs:
       - name: Save the outup binary
         shell: bash
         env:
-          OUTPUT: ${{ env.KERNEL }}
+          OUTPUT: kernel
         run: |
           make -f ${{ env.MAKEFILE }} save_output
 
@@ -81,4 +80,4 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: vmlinux-amd64
-          path: ${{ env.KERNEL }}
+          path: kernel
