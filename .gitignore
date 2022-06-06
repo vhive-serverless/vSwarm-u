@@ -235,5 +235,4 @@ cython_debug/
 ## Resources folder
 resources/*
 !resources/Makefile
-!resources/artifacts*
 
