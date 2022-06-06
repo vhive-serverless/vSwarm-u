@@ -32,7 +32,7 @@ ROOT 		:= $(abspath $(dir $(mkfile_path))/../)
 RESOURCES 	?=$(ROOT)/resources/
 
 
-VERSION := v0.0.4
+VERSION := v0.0.5
 TAG 	:= $(VERSION)-$(shell git rev-parse --short HEAD)
 ARCH	:= amd64
 
@@ -92,17 +92,17 @@ BIN_DIR=build-dir
 
 
 ### ----- BUILD RESOURCES ----- ###
-RESRC_KERNEL 	:= $(RESOURCES)/kernel
-RESRC_BASE_DISK	:= $(RESOURCES)/base-disk-image.qcow2
-RESRC_DISK 		:= $(RESOURCES)/disk-image.qcow2
-RESRC_CLIENT 	:= $(RESOURCES)/test-client
+KERNEL 			?= $(RESOURCES)/kernel
+BASE_DISK		?= $(RESOURCES)/base-disk-image.qcow2
+DISK 			?= $(RESOURCES)/disk-image.qcow2
+TEST_CLIENT 	?= $(RESOURCES)/test-client
 
 ## Build fresh kernel
 build-kernel:
 	@echo "\nBuild Kernel..."
 	$(MAKE) -f ${ROOT}/setup/kernel.Makefile dep_install
 	$(MAKE) -f ${ROOT}/setup/kernel.Makefile build
-	OUTPUT=$(RESRC_KERNEL) $(MAKE) -f ${ROOT}/setup/kernel.Makefile save_output
+	OUTPUT=$(KERNEL) $(MAKE) -f ${ROOT}/setup/kernel.Makefile save_output
 
 ## Bake new base disk image
 build-disk:
@@ -110,36 +110,36 @@ build-disk:
 	make -f ${ROOT}/setup/disk.Makefile dep_install
 	make -f ${ROOT}/setup/disk.Makefile download
 	make -f ${ROOT}/setup/disk.Makefile install_no_kvm
-	OUTPUT=$(RESRC_BASE_DISK) make -f ${ROOT}/setup/disk.Makefile save_output
+	OUTPUT=$(BASE_DISK) make -f ${ROOT}/setup/disk.Makefile save_output
 
 # Build client from source
 build-client:
 	@echo "\nBuild Test client ..."
 	cd $(ROOT)/tools/client/; \
 	$(MAKE) all; \
-	cp client $(RESRC_CLIENT)
+	cp client $(TEST_CLIENT)
 
 
 # ## Build fresh kernel
 # build-kernel:
 # 	@echo "Build Kernel..."
-# 	echo "Test kernel" > $(RESRC_KERNEL)
+# 	echo "Test kernel" > $(KERNEL)
 
 # ## Bake new base disk image
 # build-disk:
 # 	@echo "Build Disk ..."
-# 	echo "Test Disk" > $(RESRC_DISK)
+# 	echo "Test Disk" > $(DISK)
 
 
 # ## Bake new base disk image
 # build-disk:
 # 	@echo "\nBuild Disk ..."
-# 	cp ../wkdir/disk.img.bak $(RESRC_DISK)
+# 	cp ../wkdir/disk.img.bak $(DISK)
 
 # # Build client from source
 # build-client:
 # 	echo "Build Test client ..."
-# 	echo "Test Disk" > $(RESRC_CLIENT)
+# 	echo "Test Disk" > $(TEST_CLIENT)
 
 
 clean-build:
@@ -152,22 +152,22 @@ build-release-resources: build-kernel build-disk build-client
 
 
 clean-release:
-	rm -rf $(RESRC_KERNEL)
-	rm -rf $(RESRC_DISK)
-	rm -rf $(RESRC_CLIENT)
+	rm -rf $(KERNEL)
+	rm -rf $(DISK)
+	rm -rf $(TEST_CLIENT)
 
 
 # ### ----- DOWNLOAD RESOURCES ----- ###
 # # download-resources:
-# # 	$(call download_artifact,$(ARTIFACT_KERNEL),$(RESRC_KERNEL))
+# # 	$(call download_artifact,$(ARTIFACT_KERNEL),$(KERNEL))
 # # 	$(call download_artifact,$(ARTIFACT_DISK),$(ARTIFACT_DISK))
 # # 	$(call decompress,$(ARTIFACT_DISK))
-# # 	$(call download_artifact,$(ARTIFACT_CLIENT),$(RESRC_CLIENT))
+# # 	$(call download_artifact,$(ARTIFACT_CLIENT),$(TEST_CLIENT))
 
 download-resources:
-	./artifacts.sh download $(RESRC_KERNEL) $(ARTIFACT_KERNEL)
-	./artifacts.sh download $(RESRC_CLIENT) $(ARTIFACT_CLIENT)
-	./artifacts.sh download-disk $(RESRC_BASE_DISK) $(ARTIFACT_DISK)
+	./artifacts.sh download $(KERNEL) $(ARTIFACT_KERNEL)
+	./artifacts.sh download $(TEST_CLIENT) $(ARTIFACT_CLIENT)
+	./artifacts.sh download-disk $(BASE_DISK) $(ARTIFACT_DISK)
 
 
 
@@ -175,11 +175,11 @@ download-resources:
 test-emu:
 	echo "Perform emulator test..."
 	$(MAKE) -f ${ROOT}/test/emu_test.Makefile dep_install
-	KERNEL=$(RESRC_KERNEL) DISK=$(RESRC_BASE_DISK) TEST_CLIENT=$(RESRC_CLIENT) \
+	KERNEL=$(KERNEL) DISK=$(BASE_DISK) TEST_CLIENT=$(TEST_CLIENT) \
 	$(MAKE) -f ${ROOT}/test/emu_test.Makefile build
 	$(MAKE) -f ${ROOT}/test/emu_test.Makefile run_test
 	$(MAKE) -f ${ROOT}/test/emu_test.Makefile check
-	OUTPUT=$(RESRC_DISK) $(MAKE) -f ${ROOT}/test/emu_test.Makefile save_output
+	OUTPUT=$(DISK) $(MAKE) -f ${ROOT}/test/emu_test.Makefile save_output
 
 
 test-release-resources: test-emu
@@ -191,8 +191,8 @@ ARTIFACT_KERNEL 	:= vmlinux-$(ARCH)
 ARTIFACT_DISK 		:= test-disk-image-$(ARCH)
 ARTIFACT_CLIENT 	:= test-client-$(ARCH)
 
-## Upload artifacts to release ##
 
+## Upload artifacts to release ##
 GITHUB_TOKEN ?=
 RELEASE_ID ?= 68604631
 UPLOAD_URL ?= https://uploads.github.com/repos/ease-lab/vSwarm-u/releases/$(RELEASE_ID)
@@ -213,9 +213,9 @@ endef
 
 
 upload_all_artifacts:
-	./artifacts.sh upload $(RESRC_KERNEL) $(ARTIFACT_KERNEL).new2
-	./artifacts.sh upload $(RESRC_CLIENT) $(ARTIFACT_CLIENT).new2
-	./artifacts.sh upload-disk $(RESRC_DISK) $(ARTIFACT_DISK).new2
+	./artifacts.sh upload $(KERNEL) $(ARTIFACT_KERNEL)
+	./artifacts.sh upload $(TEST_CLIENT) $(ARTIFACT_CLIENT)
+	./artifacts.sh upload-disk $(DISK) $(ARTIFACT_DISK)
 
 
 upload_base:
@@ -325,10 +325,10 @@ define download_artifact
 endef
 
 download_all_artifact:
-	$(call download_artifact,$(ARTIFACT_KERNEL),$(RESRC_KERNEL))
+	$(call download_artifact,$(ARTIFACT_KERNEL),$(KERNEL))
 	$(call download_artifact,$(ARTIFACT_DISK),$(ARTIFACT_DISK))
 	$(call uncompress,$(ARTIFACT_DISK))
-	$(call download_artifact,$(ARTIFACT_CLIENT),$(RESRC_CLIENT))
+	$(call download_artifact,$(ARTIFACT_CLIENT),$(TEST_CLIENT))
 
 
 
@@ -337,18 +337,21 @@ download_all_artifact:
 
 ### ------ RELEASE ------- ###
 
+get-resoures-from-artifact-cache:
+	cp $(ROOT)/artifacts/kernel $(KERNEL)
+	cp $(ROOT)/artifacts/disk.img $(DISK)
+	cp $(ROOT)/artifacts/test-client $(TEST_CLIENT)
+
 check-release:
-	$(call check_file, $(RESRC_KERNEL))
-	$(call check_file, $(RESRC_DISK))
-	$(call check_file, $(RESRC_CLIENT))
-
-
+	$(call check_file, $(KERNEL))
+	$(call check_file, $(DISK))
+	$(call check_file, $(TEST_CLIENT))
 
 
 release-artifacts:
-	@echo '::set-output name=KERNEL::$(RESRC_KERNEL)'
-	@echo '::set-output name=DISK_IMAGE::$(RESRC_DISK)'
-	@echo '::set-output name=TEST_CLIENT::$(RESRC_CLIENT)'
+	@echo '::set-output name=KERNEL::$(KERNEL)'
+	@echo '::set-output name=DISK_IMAGE::$(DISK)'
+	@echo '::set-output name=TEST_CLIENT::$(TEST_CLIENT)'
 	@echo '::set-output name=VERSION::$(VERSION)'
 	@echo '::set-output name=TAG::$(TAG)'
 
@@ -386,8 +389,6 @@ endef
 test_upload:
 	$(call upload_artifact,kernel,kernel-test,$(GITHUB_TOKEN))
 
-
-upload_all_artifact:
 
 
 test_all:
