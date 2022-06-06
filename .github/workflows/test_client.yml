@@ -1,5 +1,3 @@
-#!/bin/bash
-
 # MIT License
 #
 # Copyright (c) 2022 EASE lab, University of Edinburgh
@@ -24,63 +22,52 @@
 #
 # Authors: David Schall
 
-MKFILE := $(abspath $(lastword $(MAKEFILE_LIST)))
-ROOT 		:= $(abspath $(dir $(MKFILE))/../../)
-OUTPUT ?= test-client
+
+name: Build Test client
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 7 * * 1"
+
+  push:
+    branches: [main]
+    paths:
+      - "tools/**"
+
+  pull_request:
+    branches: [main]
+    paths:
+      - "test/**"
+
+env:
+  GOOS: linux
+  GO111MODULE: on
 
 
-# Go parameters
-GOCMD=$(shell which go)
-GOCMD=/usr/local/go/bin/go
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v3
+        with:
+          go-version: '1.16'
 
-.PHONY: m5ops
-
-SRC=m5ops.go
-BIN=client
-
-test: build
-		$(GOCMD) test
-
-
-_CGO_LDFLAGS="-g -O2 -no-pie"
-
-$(BIN): main.go version.go m5lib
-	CGO_LDFLAGS=$(_CGO_LDFLAGS) go build -o $@ -v .
-
-all: $(BIN)
-
-libclean:
-	rm $(DIR)/*.o
-	rm $(DIR)/*.a
-
-clean: libclean
-	go clean
+      - name: Build client
+        working-directory: tools/client
+        run: make all
 
 
-save_output: all
-	cp $(BIN) $(OUTPUT)
+      - name: Save the client
+        working-directory: tools/client
+        env:
+          OUTPUT: test-client
+        run: make save_output
 
-
-
-## m5 ops library -------------------------
-CC = gcc
-CFLAGS = -g -fPIC
-DIR = m5
-
-CFILES  := $(wildcard $(DIR)/*.c)
-SFILES := $(wildcard  $(DIR)/*.S)
-OBJFILES := $(CFILES:.c=.o) $(SFILES:.S=.o)
-
-
-%.o : %.S
-		$(CC) -o $@ $< -c -g -fPIC
-
-%.o : %.c
-		$(CC) -o $@ $< -c -g -fPIC
-
-m5ops: $(OBJFILES)
-		ar rc -o $(DIR)/lib$@.a $^
-		ranlib $(DIR)/lib$@.a
-
-m5lib: m5ops
-## ----------------------------------------
+      - name: Upload the artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-client
+          path: tools/client/test-client

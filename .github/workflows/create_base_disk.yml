@@ -23,9 +23,12 @@
 name: Create base disk image
 
 env:
-  WORKDIR: setup/
-  MAKEFILE: setup/disk.Makefile
-  BUILD_DIR: wkdir/
+  ARTIFACTS_DIR: artifacts/
+  KERNEL: artifacts/kernel
+  DISK_PRE_TEST: artifacts/base-disk.img
+  DISK_FINAL: artifacts/disk.img
+  CHECKSUMS: artifacts/checksums
+  CLIENT: artifacts/test-client
 
 on:
   # Allows you to run this workflow manually from the Actions tab
@@ -36,20 +39,55 @@ on:
   push:
     branches: [main]
     paths:
+      - "test/**"
       - "setup/disk.Makefile"
       - "configs/disk-image-configs/**"
 
+  pull_request:
+    branches: [main]
+    paths:
+      - "test/**"
+      - "setup/disk.Makefile"
+      - "configs/disk-image-configs/**"
 
 jobs:
-  build-x86-64:
-    name: Build disk image for x86
+
+#########################################
+### Install the OS on the new disk image
+
+
+
+  install-base-image:
+    name: Build Base image with Ubuntu
     runs-on: ubuntu-20.04
     strategy:
       fail-fast: true
+    env:
+      WORKDIR: setup/
+      MAKEFILE: setup/disk.Makefile
+      BUILD_DIR: wkdir/
 
     steps:
       - name: Check out code
         uses: actions/checkout@v2
+
+
+      - name: Cache base disk installation
+        id: base-disk
+        uses: actions/cache@v3
+        with:
+          path: artifacts/
+          key: ${{ runner.os }}-${{ github.sha }}-base-disk
+
+      - name: Setup the artifacts dir
+        if: steps.base-disk.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p ${{ env.ARTIFACTS_DIR }}
+
+      # ./resources/artifacts.sh download-disk ${{ env.DISK_PRE_TEST }} test-disk-image-amd64
+      # mkdir wkdir
+      # cp ${{ env.DISK_PRE_TEST }} wkdir/disk.img
+
 
       - name: Install dependencies
         shell: bash
@@ -61,6 +99,11 @@ jobs:
         run: |
           make -f ${{ env.MAKEFILE }} download
 
+      - name: Settup the working directory
+        shell: bash
+        run: |
+          make -f ${{ env.MAKEFILE }} build
+
       - name: Install ubuntu on the disk
         shell: bash
         run: |
@@ -69,7 +112,7 @@ jobs:
       - name: Save the image as base image
         shell: bash
         env:
-          OUTPUT: disk.img
+          OUTPUT: ${{ env.DISK_PRE_TEST }}
         run: |
           make -f ${{ env.MAKEFILE }} save_output
 
@@ -78,8 +121,225 @@ jobs:
         run: |
           make -f ${{ env.MAKEFILE }} clean
 
+  ## Upload the artifact.
+  # We do this in a separate job as it can be done parallel to the test
+  upload-base-image-artifact:
+    name: Upload Base Image separatelly
+    runs-on: ubuntu-latest
+    needs: install-base-image
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+      ## Get the cached base disk
+      - name: Cache Base disk from install job
+        id: base-disk
+        uses: actions/cache@v3
+        with:
+          path: artifacts/
+          key: ${{ runner.os }}-${{ github.sha }}-base-disk
+          # key: ${{ runner.os }}-base-disk
+
+      - name: Compress and split
+        # if: ${{ matrix.compress == true }}
+        run: |
+          mkdir temp
+          cp ${{ env.DISK_PRE_TEST }} temp/
+          ./resources/artifacts.sh compress-split temp/*
+          rm temp/base-disk.img
+
       - name: Upload Base Image Artifact
         uses: actions/upload-artifact@v3
         with:
-          name: Base Image pre test
-          path: disk.img
+          name: base-disk-pre-test
+          path: temp
+
+
+
+#####################################
+### Test and Finalize Base disk image
+
+
+  base-image-test:
+    name: Test and Finalize Base Image
+    runs-on: ubuntu-20.04
+    needs: install-base-image
+    env:
+      FUNCTIONS_UNDER_TEST: "fibonacci-go"
+      MAKEFILE: test/emu_test.Makefile
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+
+      ## Use the cached base disk
+      - name: Use base disk cache from install job
+        id: base-disk
+        uses: actions/cache@v3
+        with:
+          path: artifacts/
+          key: ${{ runner.os }}-${{ github.sha }}-base-disk
+
+
+
+
+
+      ## Download and cache the other artifacts for the test
+      - name: Cache Build Artifacts after test
+        id: build-artifacts
+        uses: actions/cache@v3
+        with:
+          path: artifacts/
+          key: ${{ runner.os }}-${{ github.sha }}-base-disk-tested
+
+      - name: Download latest kernel
+        uses: dawidd6/action-download-artifact@v2
+        with:
+          workflow: build_kernel.yml
+          name: vmlinux-amd64
+          path: tmp
+
+      - name: Download latest test client
+        uses: dawidd6/action-download-artifact@v2
+        with:
+          workflow: test_client.yml
+          name: test-client
+          path: tmp
+
+      - name: Copy artifacts
+        run: |
+          mkdir -p ${{ env.ARTIFACTS_DIR }}
+          cp tmp/kernel ${{ env.KERNEL }}
+          cp tmp/test-client ${{ env.CLIENT }}
+
+
+
+
+
+
+      ##### Setup Test #####
+      - name: Install dependencies
+        run: |
+          make -f ${{ env.MAKEFILE }} dep_install
+
+
+      - name: Create the working directory to run the test.
+        env:
+          KERNEL: ${{ env.KERNEL }}
+          DISK: ${{ env.DISK_PRE_TEST }}
+          TEST_CLIENT: ${{ env.CLIENT }}
+        run: |
+          make -f ${{ env.MAKEFILE }} build
+
+
+      - name: Run the actual test of the emulator.
+        timeout-minutes: 10
+        run: |
+          make -f ${{ env.MAKEFILE }} run_test
+
+
+      - name: Check the results file.
+        run: |
+          make -f ${{ env.MAKEFILE }} check
+
+
+      - name: Save the final disk image
+        shell: bash
+        env:
+          OUTPUT: ${{ env.DISK_FINAL }}
+        run: |
+          make -f ${{ env.MAKEFILE }} save_output
+
+
+      - name: Create checksums of the artifacts
+        shell: bash
+        run: |
+          shasum ${{ env.DISK_FINAL }} > ${{ env.CHECKSUMS }}
+          shasum ${{ env.KERNEL }} >> ${{ env.CHECKSUMS }}
+          shasum ${{ env.CLIENT }} >> ${{ env.CHECKSUMS }}
+
+
+      - name: Clean everything.
+        if: ${{ always() }}
+        run: |
+          make -f ${{ env.MAKEFILE }} clean
+
+
+
+
+# [
+#   {
+#     "name": "vmlinux-amd64",
+#     "path": ${{ env.KERNEL }}
+#   },
+#   {
+#     "name": "disk-image-amd64",
+#     "path": ${{ env.DISK_FINAL }}
+#   },
+#   {
+#     "name": "disk-image-amd64.sums",
+#     "path": ${{ env.CHECKSUMS }}
+#   },
+#   {
+#     "name": "test-client",
+#     "path": ${{ env.CLIENT }}
+#   },
+# ]
+
+# [{ "name": "vmlinux-amd64","path": ${{ env.KERNEL }}},{"name": "disk-image-amd64","path": ${{ env.DISK_FINAL }}},{ "name": "disk-image-amd64.sums", "path": ${{ env.CHECKSUMS }}},{"name": "test-client","path": ${{ env.CLIENT }}}]
+
+
+
+  upload-artifacts:
+    runs-on: ubuntu-latest
+    # if: needs.build-x86-64.outputs.ansible-matrix
+    needs: base-image-test
+    strategy:
+      fail-fast: false
+      # max-parallel: 2
+      matrix:
+        include:
+          - name: vmlinux-amd64
+            path: artifacts/kernel
+          - name: disk-image-amd64
+            path: artifacts/disk.img
+            compress: true
+          - name: test-client-amd64
+            path: artifacts/test-client
+          - name: checksums
+            path: artifacts/checksums
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Cache Build Artifacts after test
+        uses: actions/cache@v3
+        with:
+          path: artifacts/
+          key: ${{ runner.os }}-${{ github.sha }}-base-disk-tested
+
+      - name: Compress and split
+        if: ${{ matrix.compress == true }}
+        run: |
+          mkdir temp
+          cp artifacts/disk.img temp/
+          ./resources/artifacts.sh compress-split temp/*
+          rm temp/disk.img
+
+
+      - name: Upload compressed artifact
+        if: ${{ matrix.compress == true }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.name }}
+          path: temp
+
+
+      - name: Upload artifact
+        if: ${{ matrix.compress != true }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.name }}
+          path: ${{ matrix.path }}
+
