@@ -20,7 +20,13 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-name: Build Linux Kernel
+name: Create base disk image
+
+env:
+  WORKDIR: setup/
+  MAKEFILE: setup/disk.Makefile
+  BUILD_DIR: wkdir/
+  DISK_PRE_TEST: disk.img
 
 on:
   # Allows you to run this workflow manually from the Actions tab
@@ -31,28 +37,14 @@ on:
   push:
     branches: [main]
     paths:
-      - "setup/kernel.Makefile"
-      - "configs/linux-configs/**"
+      - "setup/disk.Makefile"
+      - "configs/disk-image-configs/**"
 
-  pull_request:
-    branches: [main]
-    paths:
-      - "setup/kernel.Makefile"
-      - "configs/linux-configs/**"
-
-env:
-  WORKDIR: setup/
-  MAKEFILE: setup/kernel.Makefile
-  KERNEL: kernel
 
 jobs:
   build-x86-64:
-    name: Build kernel for x86
-    # Building the kernel works also on the github runners.
-    # However, they only offer building on one core therefor it take a while
-    # Using self hosted is faster
+    name: Build disk image for x86
     runs-on: ubuntu-20.04
-    # runs-on: [self-hosted, gem5-build]
     strategy:
       fail-fast: true
 
@@ -65,20 +57,30 @@ jobs:
         run: |
           make -f ${{ env.MAKEFILE }} dep_install
 
-      - name: Configure and build the Linux kernel
+      - name: Download the iso file
         shell: bash
         run: |
-          make -f ${{ env.MAKEFILE }} build
+          make -f ${{ env.MAKEFILE }} download
 
-      - name: Save the outup binary
+      - name: Install ubuntu on the disk
+        shell: bash
+        run: |
+          make -f ${{ env.MAKEFILE }} install_no_kvm
+
+      - name: Save the image as base image
         shell: bash
         env:
-          OUTPUT: ${{ env.KERNEL }}
+          OUTPUT: ${{ env.DISK_PRE_TEST }}
         run: |
           make -f ${{ env.MAKEFILE }} save_output
 
-      - name: Upload Kernel Artifact
+      - name: Clean everything
+        if: ${{ always() }}
+        run: |
+          make -f ${{ env.MAKEFILE }} clean
+
+      - name: Upload Base Image Artifact
         uses: actions/upload-artifact@v3
         with:
-          name: vmlinux-amd64
-          path: ${{ env.KERNEL }}
+          name: base-disk-pre-test
+          path: ${{ env.DISK_PRE_TEST }}
