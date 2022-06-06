@@ -31,6 +31,120 @@ on:
     tags:
       - 'v*'
 
+  pull_request:
+    branches: [main]
+
+# jobs:
+#   build_release:
+#     name: Build Release
+#     strategy:
+#       matrix:
+#         include:
+#           - os: ubuntu-20.04
+#             arch: amd64
+#     runs-on: ${{ matrix.os }}
+#     steps:
+#       - uses: actions/checkout@v3
+
+#       ## Build resources
+#       - name: Build Resources
+#         working-directory: resources
+#         run: make build-release-resources
+
+#       # ## Download resources
+#       # - name: Download Resources
+#       #   working-directory: resources
+#       #   run: make download-resources
+
+#       ## Test resources
+#       - name: Test Resources
+#         working-directory: resources
+#         run: make test-release-resources
+
+
+#       # - name: Build release
+#       #   working-directory: resources
+#       #   run: make build-release
+#       # # - name: Get the version
+#       # #   id: get_version
+#       # #   run: |
+#       # #     echo ::set-output name=TAG::${GITHUB_REF/refs\/tags\//}
+
+#       - name: Check Release
+#         working-directory: resources
+#         run: make check-release
+
+#       - name: Get Release artifacts
+#         id: artifacts
+#         working-directory: resources
+#         run: make release-artifacts
+
+#       # - name: Get the version
+#       #   id: version
+#       #   working-directory: resources
+#       #   run: make release-version
+
+
+
+#       ## Create the release
+#       - name: Create Release
+#         uses: actions/create-release@v1
+#         id: create_release
+#         with:
+#           draft: false
+#           prerelease: true
+#           tag_name: ${{ github.ref }}
+#           release_name: Release ${{ steps.artifacts.outputs.VERSION }}
+#           # body_path: CHANGELOG.md
+#         env:
+#           GITHUB_TOKEN: ${{ github.token }}
+
+
+#       # ## Upload the artifacts
+#       # - name: Upload Kernel artifact
+#       #   uses: actions/upload-release-asset@v1
+#       #   env:
+#       #     GITHUB_TOKEN: ${{ github.token }}
+#       #   with:
+#       #     upload_url: ${{ steps.create_release.outputs.upload_url }}
+#       #     asset_path: ${{ steps.artifacts.outputs.KERNEL }}
+#       #     asset_name: vmlinux-${{ matrix.arch }}
+#       #     asset_content_type: application
+
+#       # - name: Upload Disk image artifact
+#       #   uses: actions/upload-release-asset@v1
+#       #   env:
+#       #     GITHUB_TOKEN: ${{ github.token }}
+#       #   with:
+#       #     upload_url: ${{ steps.create_release.outputs.upload_url }}
+#       #     asset_path: ${{ steps.artifacts.outputs.DISK_IMAGE }}
+#       #     asset_name: base-image-${{ matrix.arch }}
+#       #     asset_content_type: image
+
+#       # - name: Upload Disk image artifact
+#       #   uses: actions/upload-release-asset@v1
+#       #   env:
+#       #     GITHUB_TOKEN: ${{ github.token }}
+#       #   with:
+#       #     upload_url: ${{ steps.create_release.outputs.upload_url }}
+#       #     asset_path: ${{ steps.artifacts.outputs.TEST_CLIENT }}
+#       #     asset_name: test-client-${{ matrix.arch }}
+#       #     asset_content_type: application
+
+#       - name: Upload Artifacts
+#         working-directory: resources
+#         env:
+#           GITHUB_TOKEN: ${{ github.token }}
+#           RELEASE_ID: ${{ steps.create_release.outputs.id }}
+#         id: upload
+#         run: make upload_all_artifacts
+
+
+
+
+
+
+
 
 
 env:
@@ -95,6 +209,20 @@ jobs:
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   release:
     name: Release
     needs: prepare-artifacts
@@ -119,7 +247,31 @@ jobs:
           path: artifacts/
           key: ${{ runner.os }}-${{ github.sha }}-base-disk-tested
 
+      # ## Download resources
+      # - name: Download Resources
+      #   working-directory: resources
+      #   run: |
+      #     mkdir -p ${{ env.ARTIFACTS_DIR }}
+      #     make download-resources
 
+      # ## Test resources
+      # - name: Test Resources
+      #   working-directory: resources
+      #   run: make test-release-resources
+
+
+      # - name: Build release
+      #   working-directory: resources
+      #   run: make build-release
+      # # - name: Get the version
+      # #   id: get_version
+      # #   run: |
+      # #     echo ::set-output name=TAG::${GITHUB_REF/refs\/tags\//}
+
+
+      # - name: Get Resources from artifacts cache
+      #   working-directory: resources
+      #   run: make get-resoures-from-artifact-cache
 
       - name: Check Release
         working-directory: resources
@@ -157,6 +309,51 @@ jobs:
           RELEASE_ID: ${{ steps.create_release.outputs.id }}
         id: upload
         run: make upload_all_artifacts
+
+
+
+  # download-latest:
+  #   runs-on: ubuntu-latest
+  #   needs: wait
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v3
+  #     - name: Download
+  #       uses: ./
+  #       with:
+  #         workflow: upload.yml
+  #         name: artifact
+  #         path: artifact
+  #     - name: Test
+  #       run: cat artifact/sha | grep $GITHUB_SHA
+  # download-branch:
+  #   runs-on: ubuntu-latest
+  #   needs: wait
+  #   if: github.ref == 'refs/heads/master'
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v3
+  #     - name: Download
+  #       uses: ./
+  #       with:
+  #         workflow: upload.yml
+  #         name: artifact
+  #         path: artifact
+  #         branch: master
+  #     - name: Test
+  #       run: cat artifact/sha | grep $GITHUB_SHA
+  # download-pr:
+
+
+      # - name: Upload Disk image artifact
+      #   uses: actions/upload-release-asset@v1
+      #   env:
+      #     GITHUB_TOKEN: ${{ github.token }}
+      #   with:
+      #     upload_url: ${{ steps.create_release.outputs.upload_url }}
+      #     asset_path: ${{ steps.artifacts.outputs.TEST_CLIENT }}
+      #     asset_name: test-client-${{ matrix.arch }}
+      #     asset_content_type: application
 
 
 
