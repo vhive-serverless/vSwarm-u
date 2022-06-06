@@ -23,12 +23,10 @@
 name: Create base disk image
 
 env:
-  ARTIFACTS_DIR: artifacts/
-  KERNEL: artifacts/kernel
-  DISK_PRE_TEST: artifacts/base-disk.img
-  DISK_FINAL: artifacts/disk.img
-  CHECKSUMS: artifacts/checksums
-  CLIENT: artifacts/test-client
+  WORKDIR: setup/
+  MAKEFILE: setup/disk.Makefile
+  BUILD_DIR: wkdir/
+  DISK_PRE_TEST: disk.img
 
 on:
   # Allows you to run this workflow manually from the Actions tab
@@ -43,63 +41,31 @@ on:
       - "configs/disk-image-configs/**"
 
 
-  pull_request:
-    branches: [main]
-    paths:
-      - "test/**"
-      - "gem5utils/**"
-
-
 jobs:
-  install-base-image:
-    name: Build Base image with Ubuntu
+  build-x86-64:
+    name: Build disk image for x86
     runs-on: ubuntu-20.04
     strategy:
       fail-fast: true
-    env:
-      WORKDIR: setup/
-      MAKEFILE: setup/disk.Makefile
-      BUILD_DIR: wkdir/
 
     steps:
       - name: Check out code
         uses: actions/checkout@v2
 
-
-      - name: Cache Base disk Artifacts
-        id: base-disk
-        uses: actions/cache@v3
-        with:
-          path: artifacts/
-          key: ${{ runner.os }}-${{ github.sha }}-base-disk
-
-      - name: Setup the artifacts dir
-        if: steps.base-disk.outputs.cache-hit != 'true'
+      - name: Install dependencies
+        shell: bash
         run: |
-          mkdir -p ${{ env.ARTIFACTS_DIR }}
-          ./resources/artifacts.sh download-disk ${{ env.DISK_PRE_TEST }} test-disk-image-amd64
-          mkdir wkdir
-          cp ${{ env.DISK_PRE_TEST }} wkdir/disk.img
+          make -f ${{ env.MAKEFILE }} dep_install
 
-      # - name: Install dependencies
-      #   shell: bash
-      #   run: |
-      #     make -f ${{ env.MAKEFILE }} dep_install
+      - name: Download the iso file
+        shell: bash
+        run: |
+          make -f ${{ env.MAKEFILE }} download
 
-      # - name: Download the iso file
-      #   shell: bash
-      #   run: |
-      #     make -f ${{ env.MAKEFILE }} download
-
-      # - name: Settup the working directory
-      #   shell: bash
-      #   run: |
-      #     make -f ${{ env.MAKEFILE }} build
-
-      # - name: Install ubuntu on the disk
-      #   shell: bash
-      #   run: |
-      #     make -f ${{ env.MAKEFILE }} install_no_kvm
+      - name: Install ubuntu on the disk
+        shell: bash
+        run: |
+          make -f ${{ env.MAKEFILE }} install_no_kvm
 
       - name: Save the image as base image
         shell: bash
@@ -113,210 +79,8 @@ jobs:
         run: |
           make -f ${{ env.MAKEFILE }} clean
 
-
-
-
-#####################################
-### Test and Finalize Base disk image
-
-
-  base-image-test:
-    name: Test and Finalize Base Image
-    runs-on: ubuntu-20.04
-    needs: install-base-image
-    env:
-      FUNCTIONS_UNDER_TEST: "fibonacci-go"
-      MAKEFILE: test/emu_test.Makefile
-
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v2
-
-      ## Get the cached base disk
-      - name: Cache Base disk from install job
-        id: base-disk
-        uses: actions/cache@v3
-        with:
-          path: artifacts/
-          key: ${{ runner.os }}-${{ github.sha }}-base-disk
-
-      - name: Download Base disk
-        if: steps.base-disk.outputs.cache-hit != 'true'
-        uses: dawidd6/action-download-artifact@v2
-        with:
-          name: base-disk-pre-test
-          path: ${{ env.ARTIFACTS_DIR }}
-
-
-
-
-
-      - name: Cache Build Artifacts after test
-        uses: actions/cache@v3
-        with:
-          path: artifacts/
-          key: ${{ runner.os }}-${{ github.sha }}-base-disk-tested
-
-
-      ## Download the other artifacts for the test
-      - name: Download Last Kernel
-        if: steps.build-artifacts.outputs.cache-hit != 'true'
-        uses: dawidd6/action-download-artifact@v2
-        with:
-          workflow: build_kernel.yml
-          name: vmlinux-amd64
-          path: tmp
-
-      - name: Copy Artifacts
-        if: steps.build-artifacts.outputs.cache-hit != 'true'
-        run: |
-          mkdir -p ${{ env.ARTIFACTS_DIR }}
-          cp tmp/kernel ${{ env.KERNEL }}
-
-
-      - name: Download Artifacts
-        if: steps.build-artifacts.outputs.cache-hit != 'true'
-        run: |
-          ./resources/artifacts.sh download ${{ env.CLIENT }} test-client-amd64
-
-
-
-
-
-
-
-      ##### Setup Test #####
-      - name: Install dependencies
-        run: |
-          make -f ${{ env.MAKEFILE }} dep_install
-
-
-      - name: Create the working directory to run the test.
-        env:
-          KERNEL: ${{ env.KERNEL }}
-          DISK: ${{ env.DISK_PRE_TEST }}
-          TEST_CLIENT: ${{ env.CLIENT }}
-        run: |
-          make -f ${{ env.MAKEFILE }} build
-
-
-      - name: Run the actual test of the emulator.
-        timeout-minutes: 5
-        run: |
-          make -f ${{ env.MAKEFILE }} run_test
-
-
-      - name: Check the results file.
-        run: |
-          make -f ${{ env.MAKEFILE }} check
-
-
-      - name: Save the final disk image
-        shell: bash
-        env:
-          OUTPUT: ${{ env.DISK_FINAL }}
-        run: |
-          make -f ${{ env.MAKEFILE }} save_output
-
-
-      - name: Create checksums of artifacts
-        shell: bash
-        run: |
-          shasum ${{ env.DISK_FINAL }} > ${{ env.CHECKSUMS }}
-          shasum ${{ env.KERNEL }} >> ${{ env.CHECKSUMS }}
-          shasum ${{ env.CLIENT }} >> ${{ env.CHECKSUMS }}
-
-
-      - name: Clean everything.
-        if: ${{ always() }}
-        run: |
-          make -f ${{ env.MAKEFILE }} clean
-
-
-
-
-# [
-#   {
-#     "name": "vmlinux-amd64",
-#     "path": ${{ env.KERNEL }}
-#   },
-#   {
-#     "name": "disk-image-amd64",
-#     "path": ${{ env.DISK_FINAL }}
-#   },
-#   {
-#     "name": "disk-image-amd64.sums",
-#     "path": ${{ env.CHECKSUMS }}
-#   },
-#   {
-#     "name": "test-client",
-#     "path": ${{ env.CLIENT }}
-#   },
-# ]
-
-# [{ "name": "vmlinux-amd64","path": ${{ env.KERNEL }}},{"name": "disk-image-amd64","path": ${{ env.DISK_FINAL }}},{ "name": "disk-image-amd64.sums", "path": ${{ env.CHECKSUMS }}},{"name": "test-client","path": ${{ env.CLIENT }}}]
-
-
-
-  upload-base-image-artifact:
-    name: Upload Base Image separatelly
-    runs-on: ubuntu-latest
-    needs: install-base-image
-
-    steps:
-      ## Get the cached base disk
-      - name: Cache Base disk from install job
-        id: base-disk
-        uses: actions/cache@v3
-        with:
-          path: artifacts/
-          key: ${{ runner.os }}-${{ github.sha }}-base-disk
-
       - name: Upload Base Image Artifact
         uses: actions/upload-artifact@v3
         with:
           name: base-disk-pre-test
           path: ${{ env.DISK_PRE_TEST }}
-
-
-  upload-artifacts:
-    runs-on: ubuntu-latest
-    # if: needs.build-x86-64.outputs.ansible-matrix
-    needs: base-image-test
-    strategy:
-      fail-fast: false
-      # max-parallel: 2
-      matrix:
-        include:
-          - name: vmlinux-amd64
-            path: artifacts/kernel
-          - name: disk-image-amd64
-            path: artifacts/disk.img
-          - name: test-client-amd64
-            path: artifacts/test-client
-          - name: checksums
-            path: artifacts/checksums
-          # - name: vmlinux-amd64
-          #   path: ${{ env.KERNEL }}
-          # - name: disk-image-amd64
-          #   path: ${{ env.DISK_FINAL }}
-          # - name: test-client
-          #   path: ${{ env.CLIENT }}
-          # - name: checksums
-          #   path: ${{ env.CHECKSUMS }}
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-
-      - name: Cache Build Artifacts after test
-        uses: actions/cache@v3
-        with:
-          path: artifacts/
-          key: ${{ runner.os }}-${{ github.sha }}-base-disk-tested
-
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: ${{ matrix.name }}
-          path: ${{ matrix.path }}
