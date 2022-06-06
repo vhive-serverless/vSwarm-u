@@ -43,7 +43,7 @@ on:
 jobs:
   build-x86-64:
     name: Build disk image for x86
-    runs-on: ubuntu-20.04
+    runs-on: [self-hosted, gem5-build]
     strategy:
       fail-fast: true
 
@@ -64,22 +64,14 @@ jobs:
       - name: Install ubuntu on the disk
         shell: bash
         run: |
-          make -f ${{ env.MAKEFILE }} install_no_kvm
+          make -f ${{ env.MAKEFILE }} install
 
-      - name: Save the image as base image
-        shell: bash
-        env:
-          OUTPUT: disk.img
-        run: |
-          make -f ${{ env.MAKEFILE }} save_output
+      # - name: Save the image as base image
+      #   shell: bash
+      #   run: |
+      #     make -f ${{ env.MAKEFILE }} save
 
       - name: Clean everything
         if: ${{ always() }}
         run: |
           make -f ${{ env.MAKEFILE }} clean
-
-      - name: Upload Base Image Artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: Base Image pre test
-          path: disk.img

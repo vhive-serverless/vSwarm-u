@@ -181,9 +181,9 @@ function download-disk {
 	done
 
 	decompress-split $asset_name
-	popd > /dev/null
-	cp tmpdn/$asset_name $disk
+	cp $asset_name $disk
 
+	popd > /dev/null
 	rm -r tmpdn
 }
 
