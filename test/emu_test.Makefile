@@ -93,7 +93,7 @@ run_kvm:
 		-append 'console=ttyS0 root=/dev/hda2'
 
 
-run_no_kvm:
+run_emulator:
 	sudo qemu-system-x86_64 \
 		-nographic \
 		-smp ${CPUS} \
@@ -102,13 +102,13 @@ run_no_kvm:
 		-kernel $(WK_KERNEL) \
 		-append 'console=ttyS0 root=/dev/hda2'
 
-run_emulator: run_no_kvm
+
 run: run_emulator
 
 install_finalize:
 	cp $(ROOT)/configs/disk-image-configs/finalize.sh $(WORKING_DIR)/run.sh
 	$(MAKE) -f $(MKFILE) serve_start
-	$(MAKE) -f $(MKFILE) run
+	$(MAKE) -f $(MKFILE) run_emulator
 	$(MAKE) -f $(MKFILE) serve_stop
 	rm $(BUILD_DIR)/run.sh
 

@@ -32,7 +32,7 @@ ROOT 		:= $(abspath $(dir $(mkfile_path))/../)
 RESOURCES 	?=$(ROOT)/resources/
 
 
-VERSION := v0.0.3
+VERSION := v0.0.2
 TAG 	:= $(VERSION)-$(shell git rev-parse --short HEAD)
 ARCH	:= amd64
 
@@ -97,20 +97,20 @@ RESRC_BASE_DISK	:= $(RESOURCES)/base-disk-image.qcow2
 RESRC_DISK 		:= $(RESOURCES)/disk-image.qcow2
 RESRC_CLIENT 	:= $(RESOURCES)/test-client
 
-## Build fresh kernel
-build-kernel:
-	@echo "\nBuild Kernel..."
-	$(MAKE) -f ${ROOT}/setup/kernel.Makefile dep_install
-	$(MAKE) -f ${ROOT}/setup/kernel.Makefile build
-	OUTPUT=$(RESRC_KERNEL) $(MAKE) -f ${ROOT}/setup/kernel.Makefile save_output
+# ## Build fresh kernel
+# build-kernel:
+# 	@echo "\nBuild Kernel..."
+# 	$(MAKE) -f ${ROOT}/setup/kernel.Makefile dep_install
+# 	$(MAKE) -f ${ROOT}/setup/kernel.Makefile build
+# 	OUTPUT=$(RESRC_KERNEL) $(MAKE) -f ${ROOT}/setup/kernel.Makefile save_output
 
-## Bake new base disk image
-build-disk:
-	@echo "\nBuild Disk ..."
-	make -f ${ROOT}/setup/disk.Makefile dep_install
-	make -f ${ROOT}/setup/disk.Makefile download
-	make -f ${ROOT}/setup/disk.Makefile install_no_kvm
-	OUTPUT=$(RESRC_BASE_DISK) make -f ${ROOT}/setup/disk.Makefile save_output
+# ## Bake new base disk image
+# build-disk:
+# 	@echo "\nBuild Disk ..."
+# 	make -f ${ROOT}/setup/disk.Makefile dep_install
+# 	make -f ${ROOT}/setup/disk.Makefile download
+# 	echo make -f ${ROOT}/setup/disk.Makefile install
+# 	OUTPUT=$(RESRC_BASE_DISK) make -f ${ROOT}/setup/disk.Makefile save_output
 
 # Build client from source
 build-client:
@@ -120,15 +120,15 @@ build-client:
 	cp client $(RESRC_CLIENT)
 
 
-# ## Build fresh kernel
-# build-kernel:
-# 	@echo "Build Kernel..."
-# 	echo "Test kernel" > $(RESRC_KERNEL)
+## Build fresh kernel
+build-kernel:
+	@echo "Build Kernel..."
+	echo "Test kernel" > $(RESRC_KERNEL)
 
-# ## Bake new base disk image
-# build-disk:
-# 	@echo "Build Disk ..."
-# 	echo "Test Disk" > $(RESRC_DISK)
+## Bake new base disk image
+build-disk:
+	@echo "Build Disk ..."
+	echo "Test Disk" > $(RESRC_DISK)
 
 
 # ## Bake new base disk image
