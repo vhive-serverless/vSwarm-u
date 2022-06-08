@@ -236,4 +236,5 @@ cython_debug/
 resources/*
 !resources/Makefile
 !resources/artifacts*
+!resources/release*
 

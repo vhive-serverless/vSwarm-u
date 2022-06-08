@@ -26,7 +26,7 @@
 set -e
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-ROOT="$( cd $DIR && cd ../.. && pwd)"
+ROOT="$( cd $DIR && cd .. && pwd)"
 
 
 ## Set the path to the directory where
@@ -39,7 +39,6 @@ if [[ -z "${RESOURCES}" ]]; then
   echo "Warning: RESOURCES environmental variable is not set."
   echo "Warning: Will be set to default `resources/`"
   RESOURCES=$ROOT/resources/
-  mkdir -p $RESOURCES
   export RESOURCES=$RESOURCES
   sudo sh -c  "echo 'export RESOURCES=${RESOURCES}' >> /etc/profile"
   sudo sh -c  "echo 'export RESOURCES=${RESOURCES}' >> ${HOME}/.bashrc"
@@ -50,7 +49,6 @@ echo "Install all resources to: ${RESOURCES}"
 sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
 sudo apt-get update >> /dev/null
 sudo apt-get -y upgrade
-
 
 
 # Install docker
@@ -80,37 +78,22 @@ wget --continue --quiet https://golang.org/dl/go1.16.4.linux-amd64.tar.gz
 sudo tar -C /usr/local -xzf go1.16.4.linux-amd64.tar.gz
 export PATH=$PATH:/usr/local/go/bin
 sudo sh -c  "echo 'export PATH=\$PATH:/usr/local/go/bin' >> /etc/profile"
+sudo sh -c  "echo 'export PATH=\$PATH:/usr/local/go/bin' >> ${HOME}/.bashrc"
 
-source /etc/profile
+source ${HOME}/.bashrc
 
 ## Now prepare the base setup to run the functions.
-
-echo "Build Kernel..."
-make -f ${ROOT}/setup/kernel.Makefile dep_install
-make -f ${ROOT}/setup/kernel.Makefile build
-make -f ${ROOT}/setup/kernel.Makefile save
-
 echo "Build gem5..."
 make -f ${ROOT}/setup/gem5.Makefile dep_install
 make -f ${ROOT}/setup/gem5.Makefile all
 
-echo "Build disk image..."
-make -f ${ROOT}/setup/disk.Makefile dep_install
-make -f ${ROOT}/setup/disk.Makefile download
-make -f ${ROOT}/setup/disk.Makefile install
-make -f ${ROOT}/setup/disk.Makefile save
 
-make -f ${ROOT}/setup/disk.Makefile clean
+## Download the most recent release artifacts
+echo "Download Release artifacts from: "
+${ROOT}/resources/artifacts.py \
+    --file ${ROOT}/resources/release.json \
+    --version
 
-# # Download the newest the test client
-# # from the proto repo.
-# curl -L https://github.com/ease-lab/vSwarm-proto/releases/download/v0.1.3-e9087ac/client-linux-amd64 \
-#     -o ${RESOURCES}/test-client
-# chmod +x ${RESOURCES}/test-client
-
-# Build client from source
-pushd ${ROOT}/tools/client/
-make all
-cp client ${RESOURCES}/test-client
-popd
-
+${ROOT}/resources/artifacts.py \
+    --file ${ROOT}/resources/release.json \
+    --download --output ${ROOT}/resources/
