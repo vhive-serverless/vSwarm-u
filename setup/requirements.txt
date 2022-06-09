@@ -7,4 +7,5 @@ seaborn
 docker-compose
 uploadserver
 niet
+tqdm
 #mlpd3

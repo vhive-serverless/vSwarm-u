@@ -30,6 +30,9 @@ import tarfile
 import sys
 from tqdm import tqdm
 import os
+import io
+import tarfile
+import shutil
 
 import argparse
 def parse_arguments():
@@ -62,8 +65,7 @@ def download(f,url):
         print("ERROR, something went wrong")
 
 
-import io
-import tarfile
+
 
 ## Download disk
 def downloadDiskImage(release_assets):
@@ -79,7 +81,7 @@ def downloadDiskImage(release_assets):
 
     print("Extract Disk: ")
     my_tar = tarfile.open(tmpfile,"r:gz")
-    my_tar.extractall(args.output) # specify which folder to extract to
+    my_tar.extractall("") # specify which folder to extract to
     my_tar.close()
     os.remove(tmpfile)
 
@@ -87,7 +89,7 @@ def downloadDiskImage(release_assets):
 def downloadAsset(asset_url):
     name = asset_url.split("/")[-1]
     print("Download: " + name)
-    with open(args.output + name,"wb") as f:
+    with open(name,"wb") as f:
         download(f,asset_url)
 
 
@@ -102,6 +104,20 @@ def downloadAssets():
     print("Download Disk image.. This could take a few minutes")
     downloadDiskImage(artifacts)
 
+def moveAssets():
+    with open(args.file) as f:
+        artifacts = json.load(f)
+
+    ## Move assets to destination
+    print("Copy artifacts to: " + args.output)
+    name, artifact_name = "kernel", artifacts["kernel"].split("/")[-1]
+    shutil.move(artifact_name, args.output + name)
+    name, artifact_name = "client", artifacts["client"].split("/")[-1]
+    shutil.move(artifact_name, args.output + name)
+    name, artifact_name = "disk-image", artifacts["disk-image"][0].split("/")[-1].split(".")[0]
+    shutil.move(artifact_name, args.output + name)
+
+
 def getVersion():
     with open(args.file) as f:
         artifacts = json.load(f)
@@ -113,3 +129,4 @@ if __name__ == '__main__':
         getVersion()
     if args.download:
         downloadAssets()
+        moveAssets()
