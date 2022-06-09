@@ -12,6 +12,11 @@ has_children: true
 > {: .label .label-red }
 >*<font color="red">vSwarm-u is still in beta state but will be released soon for the ISCA'22 conference.</font>*
 
+[Serverless computing represent new challenges for modern CPUs!](https://ease-lab.github.io/ease_website/pubs/JUKEBOX_ISCA22.pdf)
+With vSwarm-&mu we want to enable microarchitectural research for serverless
+{: .fs-6 .fw-300 }
+
+
 ## Mission
 
 Serverless computing has emerged as a widely used paradigm for deploying services in the cloud. In serverless, developers organize their application as a set of functions, which are invoked on-demand in response to a trigger, such as user request or an invocation by another function.
@@ -34,21 +39,28 @@ advice for potential extensions of vSwarm-&mu; and always open for collaboration
 
 Please cite our [paper](https://ease-lab.github.io/ease_website/pubs/JUKEBOX_ISCA22.pdf) that has been recently accepted to ICSA 2022:
 
-<!--
+
 ```
 @inproceedings{schall:lukewarm,
-  author    = {David Schall and
-               Artemiy Margaritov and
-               Dmitrii Ustiugov and
-               Andreas Sandberg and
-               Boris Grot},
+  author    = {Schall, David and
+               Margaritov, Artemiy and
+               Ustiugov, Dmitrii and
+               Sandberg, Andreas and
+               Grot, Boris},
   title     = {Lukewarm Serverless Functions: Characterization and Optimization},
-  booktitle = {2022 ACM/IEEE 49th Annual International Symposium on Computer Architecture (ISCA)},
-  publisher = {{ACM}},
   year      = {2022},
+  isbn      = {9781450386104},
+  publisher = {Association for Computing Machinery},
+  address   = {New York, NY, USA},
   doi       = {10.1145/3470496.3527390},
+  booktitle = {Proceedings of the 49th Annual International Symposium on Computer Architecture},
+  pages     = {757–770},
+  numpages  = {14},
+  keywords  = {characterization, instruction prefetching, microarchitecture, serverless},
+  location  = {New York, New York},
+  series    = {ISCA '22}
 }
-``` -->
+```
 
 
 ## Getting started with vSwarm-&mu;

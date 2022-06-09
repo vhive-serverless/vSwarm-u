@@ -28,6 +28,7 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 ROOT="$( cd $DIR && cd .. && pwd)"
 
+START=$(date +%s.%N)
 
 ## Set the path to the directory where
 ## all resources should be placed
@@ -50,6 +51,8 @@ sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
 sudo apt-get update >> /dev/null
 sudo apt-get -y upgrade
 
+END=$(date +%s.%N)
+echo "Took now:" $(echo "$END - $START" | bc)
 
 # Install docker
 sudo apt-get install -y \
@@ -64,14 +67,12 @@ sudo add-apt-repository \
     "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
     $(lsb_release -cs) \
     stable" \
-&& sudo apt-get update \
+&& sudo apt-get update >> /dev/null \
 && sudo apt-get install -y docker-ce docker-ce-cli containerd.io
 
 ## Install also docker compose
-sudo apt install python3-pip
+sudo apt install -y python3-pip
 sudo pip3 install -r ${ROOT}/setup/requirements.txt
-
-
 
 # Install golang
 wget --continue --quiet https://golang.org/dl/go1.16.4.linux-amd64.tar.gz
@@ -82,13 +83,23 @@ sudo sh -c  "echo 'export PATH=\$PATH:/usr/local/go/bin' >> ${HOME}/.bashrc"
 
 source ${HOME}/.bashrc
 
+END=$(date +%s.%N)
+printf "\nInstalling dependencies completed successfully after: $(echo "$END - $START" | bc) sec.\n"
+
+
+
 ## Now prepare the base setup to run the functions.
+START=$(date +%s.%N)
 echo "Build gem5..."
 make -f ${ROOT}/setup/gem5.Makefile dep_install
 make -f ${ROOT}/setup/gem5.Makefile all
 
+END=$(date +%s.%N)
+printf "\nBuilding gem5 completed after: $(echo "$END - $START" | bc) sec.\n"
+
 
 ## Download the most recent release artifacts
+START=$(date +%s.%N)
 echo "Download Release artifacts from: "
 ${ROOT}/resources/artifacts.py \
     --file ${ROOT}/resources/release.json \
@@ -97,3 +108,6 @@ ${ROOT}/resources/artifacts.py \
 ${ROOT}/resources/artifacts.py \
     --file ${ROOT}/resources/release.json \
     --download --output ${ROOT}/resources/
+
+END=$(date +%s.%N)
+printf "\Download artifacts complete. Took: $(echo "$END - $START" | bc) sec.\n"
