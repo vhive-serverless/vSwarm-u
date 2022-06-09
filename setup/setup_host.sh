@@ -38,11 +38,20 @@ START=$(date +%s.%N)
 
 if [[ -z "${RESOURCES}" ]]; then
   echo "Warning: RESOURCES environmental variable is not set."
-  echo "Warning: Will be set to default `resources/`"
+  echo "Warning: Will be set to the default `resources/` in this repo"
   RESOURCES=$ROOT/resources/
   export RESOURCES=$RESOURCES
   sudo sh -c  "echo 'export RESOURCES=${RESOURCES}' >> /etc/profile"
   sudo sh -c  "echo 'export RESOURCES=${RESOURCES}' >> ${HOME}/.bashrc"
+fi
+
+if [[ -z "${GEM5_DIR}" ]]; then
+  echo "Warning: GEM5_DIR environmental variable is not set."
+  echo "Warning: Will be set to the default `resources/` in this repo"
+  GEM5_DIR=$ROOT/resources/gem5/
+  export GEM5_DIR=$GEM5_DIR
+  sudo sh -c  "echo 'export GEM5_DIR=${GEM5_DIR}' >> /etc/profile"
+  sudo sh -c  "echo 'export GEM5_DIR=${GEM5_DIR}' >> ${HOME}/.bashrc"
 fi
 
 echo "Install all resources to: ${RESOURCES}"
@@ -73,6 +82,10 @@ sudo add-apt-repository \
 ## Install also docker compose
 sudo apt install -y python3-pip
 sudo pip3 install -r ${ROOT}/setup/requirements.txt
+
+## Install qemu
+make -f ${ROOT}/setup/disk.Makefile dep_install
+
 
 # Install golang
 wget --continue --quiet https://golang.org/dl/go1.16.4.linux-amd64.tar.gz
@@ -110,4 +123,4 @@ ${ROOT}/resources/artifacts.py \
     --download --output ${ROOT}/resources/
 
 END=$(date +%s.%N)
-printf "\Download artifacts complete. Took: $(echo "$END - $START" | bc) sec.\n"
+printf "\nDownload artifacts complete. Took: $(echo "$END - $START" | bc) sec.\n"

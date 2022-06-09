@@ -40,9 +40,9 @@ CPUS    := 2
 
 
 ## Required resources
-KERNEL 		?= $(RESOURCES)/vmlinux
-DISK 		?= $(RESOURCES)/base-disk-image.qcow2
-TEST_CLIENT	?= $(RESOURCES)/test-client
+KERNEL 		?= $(RESOURCES)/kernel
+DISK 		?= $(RESOURCES)/base-image.img
+TEST_CLIENT	?= $(RESOURCES)/client
 
 OUTPUT		?=
 
@@ -69,7 +69,7 @@ dep_install:
 
 dep_check_qemu:
 	$(call check_file, $(KERNEL))
-	$(call check_file, $(BASE_IMAGE))
+	$(call check_file, $(DISK))
 	$(call check_file, $(TEST_CLIENT))
 	$(call check_dep, qemu-kvm)
 	$(call check_dep, lsof)
@@ -128,14 +128,22 @@ delete_run_script: $(WORKING_DIR)/run.sh
 	rm $(WORKING_DIR)/run.sh
 
 
+
+run_test_no_kvm:
+	if [ -f $(LOGFILE) ]; then rm $(LOGFILE); fi
+	$(MAKE) -f $(MKFILE) create_run_script
+	$(MAKE) -f $(MKFILE) serve_start
+	$(MAKE) -f $(MKFILE) run_no_kvm
+	$(MAKE) -f $(MKFILE) serve_stop
+	$(MAKE) -f $(MKFILE) delete_run_script
+
 run_test:
 	if [ -f $(LOGFILE) ]; then rm $(LOGFILE); fi
 	$(MAKE) -f $(MKFILE) create_run_script
 	$(MAKE) -f $(MKFILE) serve_start
-	$(MAKE) -f $(MKFILE) run_emulator
+	$(MAKE) -f $(MKFILE) run_kvm
 	$(MAKE) -f $(MKFILE) serve_stop
 	$(MAKE) -f $(MKFILE) delete_run_script
-
 
 
 ## Test the log file
@@ -153,6 +161,7 @@ check: $(LOGFILE)
 		printf "==================${NC}\n"; \
 		exit 1; \
 	fi
+
 
 
 save_disk:
@@ -202,6 +211,11 @@ $(WK_CLIENT): $(TEST_CLIENT)
 # 	chmod +x $@
 
 
+all:
+	$(MAKE) -f $(MKFILE) build
+	$(MAKE) -f $(MKFILE) run_test
+	$(MAKE) -f $(MKFILE) check
+	$(MAKE) -f $(MKFILE) clean
 
 
 ######################################
