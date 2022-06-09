@@ -64,7 +64,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: artifacts/
-          key: ${{ runner.os }}-${{ github.sha }}-base-disk-tested
+          key: ${{ runner.os }}-${{ github.sha }}-func-ci-base
 
       - name: Download latest kernel
         if: steps.build-artifacts.outputs.cache-hit != 'true'
@@ -107,7 +107,8 @@ jobs:
   emulator-function-test:
     name: Test functions on emulator
     # For running the qe
-    runs-on: ubuntu-20.04
+    # runs-on: ubuntu-20.04
+    runs-on: [self-hosted, gem5-test]
     needs: prepare-artifacts
     strategy:
       fail-fast: true
@@ -125,7 +126,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: artifacts/
-          key: ${{ runner.os }}-${{ github.sha }}-base-disk-tested
+          key: ${{ runner.os }}-${{ github.sha }}-func-ci-base
 
 
       ##### Setup Test #####
@@ -161,7 +162,7 @@ jobs:
           path: artifacts/
           key: ${{ runner.os }}-${{ github.run_number }}-func-ci-test
 
-      - name: Save the image as for simulator tests
+      - name: Save the image for simulator tests
         shell: bash
         env:
           OUTPUT: ${{ env.DISK2 }}
@@ -201,7 +202,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: artifacts/
-          key: ${{ runner.os }}-${{ github.sha }}-base-disk-tested
+          key: ${{ runner.os }}-${{ github.run_number }}-func-ci-test
 
       - name: Create the working directory to run the test.
         env:

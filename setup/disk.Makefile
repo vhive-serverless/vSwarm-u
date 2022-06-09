@@ -35,7 +35,7 @@ BUILD_DIR   ?= wkdir/
 RESOURCES 	?=$(ROOT)/resources/
 OUTPUT		?=
 
-DISK_SIZE   := 8G
+DISK_SIZE   := 16G
 MEMORY      := 8G
 CPUS        := 4
 
@@ -121,7 +121,7 @@ install_no_kvm: build
 	$(MAKE) -f $(MKFILE) serve_stop
 
 
-install:
+install: install_kvm
 
 # ## Finalize installation.
 # # First boot will do the final step of cloud-init
@@ -161,10 +161,9 @@ run_emulator:
 
 run: run_emulator
 
-run_emulator_install_kernel:
+run_emulator_shipped_kernel:
 	sudo qemu-system-x86_64 \
 		-nographic \
-		-cpu host -enable-kvm \
 		-smp ${CPUS} \
 		-m ${MEMORY} \
 		-drive file=$(DISK_IMAGE_FILE),format=qcow2
@@ -180,7 +179,7 @@ run_emulator_install_kernel:
 install_finalize:
 	cp $(CONFIGS_DIR)/finalize.sh $(BUILD_DIR)/run.sh
 	$(MAKE) -f $(MKFILE) serve_start
-	$(MAKE) -f $(MKFILE) run_emulator_install_kernel
+	$(MAKE) -f $(MKFILE) run_emulator_shipped_kernel
 	$(MAKE) -f $(MKFILE) serve_stop
 	rm $(BUILD_DIR)/run.sh
 

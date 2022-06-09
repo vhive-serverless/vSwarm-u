@@ -27,24 +27,27 @@
 import requests
 import json
 import tarfile
-import sys
 from tqdm import tqdm
 import os
-import io
 import tarfile
 import shutil
+import logging as log
+
+RESOURCES = os.environ['RESOURCES']
+if RESOURCES == "":
+    log.warning(" 'RESOURCES' variable not set!!")
 
 import argparse
-def parse_arguments():
-    parser = argparse.ArgumentParser(description="Script to up and download release assets")
-    parser.add_argument("--file", default="release.json",help="Path to the release file")
-    parser.add_argument("--download","-d", default=False, action="store_true", help = "Download release assets")
-    parser.add_argument("--upload","-u", default=False, action="store_true", help = "Upload release assets")
-    parser.add_argument("--version", "-v", default=False, action="store_true",help="Get release version")
-    parser.add_argument("--output", "-o", type=str, default="", help="Output directory")
-    return parser.parse_args()
 
-args = parse_arguments()
+parser = argparse.ArgumentParser(description="Script to up and download release assets")
+parser.add_argument("--file", default=f"{RESOURCES}/release.json",
+                    help="Path to the release file. Default 'resources/release.json'")
+parser.add_argument("--download","-d", default=False, action="store_true", help = "Download release assets")
+# parser.add_argument("--upload","-u", default=False, action="store_true", help = "Upload release assets")
+parser.add_argument("--version", "-v", default=False, action="store_true",help="Get release version")
+parser.add_argument("--output", "-o", type=str, default=f"{RESOURCES}/",
+                    help="Output directory to store the assets to. Default: 'resources/'")
+args = parser.parse_args()
 
 
 def download(f,url):
@@ -62,7 +65,7 @@ def download(f,url):
 
     progress_bar.close()
     if total_size_in_bytes != 0 and progress_bar.n != total_size_in_bytes:
-        print("ERROR, something went wrong")
+        log.error("ERROR, something went wrong")
 
 
 
@@ -114,7 +117,7 @@ def moveAssets():
     shutil.move(artifact_name, args.output + name)
     name, artifact_name = "client", artifacts["client"].split("/")[-1]
     shutil.move(artifact_name, args.output + name)
-    name, artifact_name = "disk-image", artifacts["disk-image"][0].split("/")[-1].split(".")[0]
+    name, artifact_name = "disk-image.img", artifacts["disk-image"][0].split("/")[-1].split(".")[0]
     shutil.move(artifact_name, args.output + name)
 
 
@@ -127,6 +130,9 @@ def getVersion():
 if __name__ == '__main__':
     if args.version:
         getVersion()
-    if args.download:
+    elif args.download:
         downloadAssets()
         moveAssets()
+    else:
+        log.warning(" You don't want me to do something?")
+        parser.print_help()

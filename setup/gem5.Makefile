@@ -31,8 +31,8 @@ RESOURCES 	?=$(ROOT)/resources/
 ARCH		:= X86
 VERSION     := v21.2.1.0
 
-GEM5_DIR 	:= $(RESOURCES)/gem5/
-GEM5 		:= $(RESOURCES)/build/$(ARCH)/gem5.opt
+GEM5_DIR 	?= $(RESOURCES)/gem5/
+GEM5 		:= $(GEM5_DIR)/build/$(ARCH)/gem5.opt
 
 
 .PONY: all gem5 term m5

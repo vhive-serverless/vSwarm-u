@@ -53,7 +53,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: artifacts/
-          key: ${{ runner.os }}-${{ github.sha }}-base-disk-tested
+          key: ${{ runner.os }}-${{ github.sha }}-release
 
       - name: Download latest kernel
         if: steps.build-artifacts.outputs.cache-hit != 'true'
@@ -117,7 +117,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: artifacts/
-          key: ${{ runner.os }}-${{ github.sha }}-base-disk-tested
+          key: ${{ runner.os }}-${{ github.sha }}-release
 
 
 
