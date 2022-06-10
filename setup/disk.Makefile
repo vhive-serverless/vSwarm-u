@@ -30,7 +30,6 @@ MKFILE := $(abspath $(lastword $(MAKEFILE_LIST)))
 ROOT 		:= $(abspath $(dir $(MKFILE))/../)
 
 ## User specific inputs
-IMAGE_NAME  := gem5-disk-image
 BUILD_DIR   ?= wkdir/
 RESOURCES 	?=$(ROOT)/resources/
 OUTPUT		?=
@@ -63,7 +62,7 @@ INITRD 				:= $(BUILD_DIR)/initrd
 SERVE 				:= $(BUILD_DIR)/server.pid
 
 # Resource files
-RESRC_BASE_IMAGE 	:= $(RESOURCES)/base-disk-image.img
+RESRC_BASE_IMAGE 	:= $(RESOURCES)/disk-image.qcow2
 
 ## Dependencies -------------------------------------------------
 ## Check and install all dependencies necessary to perform function
