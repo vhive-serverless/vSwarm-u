@@ -36,7 +36,7 @@ on:
 env:
   ARTIFACTS_DIR: ${{ github.workspace }}/artifacts/
   KERNEL: ${{ github.workspace }}/artifacts/kernel
-  DISK: ${{ github.workspace }}/artifacts/disk.img
+  DISK: ${{ github.workspace }}/artifacts/disk-image.qcow2
   TEST_CLIENT: ${{ github.workspace }}/artifacts/test-client
 
 jobs:
@@ -77,8 +77,8 @@ jobs:
         with:
           workflow: create_base_image.yml
           name: disk-image-amd64
-          # workflow_conclusion: "completed"
-          run_id: 2449076375
+          # workflow_conclusion: success
+          run_id: 2477855216
           path: disktmp
 
 
@@ -87,9 +87,9 @@ jobs:
         run: |
           mkdir -p ${{ env.ARTIFACTS_DIR }}
           cp tmp/kernel ${{ env.KERNEL }}
-          cp tmp/test-client ${{ env.TEST_CLIENT }}
-          ./resources/artifacts.sh decompress-split disktmp/disk.img
-          cp temp/disk.img ${{ env.DISK }}
+          cp tmp/test-client ${{ env.CLIENT }}
+          ./resources/artifacts.sh decompress-split disktmp/disk-image.qcow2
+          cp temp/disk-image.qcow2 ${{ env.DISK }}
 
 
 

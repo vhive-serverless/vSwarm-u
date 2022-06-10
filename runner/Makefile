@@ -63,7 +63,7 @@ stop-test-runners: stop-qemu-test-runner stop-gem5-test-runner
 
 start-%-test-runner:
 	@$(eval runner := $(subst start-,,$@))
-	@$(eval runner_name := "$(runner)-$(shell echo $$RANDOM | md5sum | head -c 10; echo;)")
+	@$(eval runner_name := "$(runner)-$(shell date +%s%N | cut -b10-19)")
 	echo $(runner_name)
 	docker run --name $(runner_name) -d \
 		--privileged --cap-add=ALL \
@@ -82,7 +82,7 @@ stop-build-runners: stop-gem5-build-runner
 
 start-gem5-build-runner:
 	@$(eval runner := gem5-build-runner)
-	@$(eval runner_name := "$(runner)-$(shell echo $$RANDOM | md5sum | head -c 10; echo;)")
+	@$(eval runner_name := "$(runner)-$(shell date +%s%N | cut -b10-19)")
 	echo $(runner_name)
 	docker run --name $(runner_name) -d \
 		--privileged --cap-add=ALL \

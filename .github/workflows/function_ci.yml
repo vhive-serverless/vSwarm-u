@@ -47,10 +47,10 @@ env:
   MAKEFILE: test/Makefile
   ARTIFACTS_DIR: artifacts/
   KERNEL: artifacts/kernel
-  # DISK: artifacts/disk-image.qcow2
-  # DISK2: artifacts/disk.qcow2
-  DISK: artifacts/disk.img
-  DISK2: artifacts/disk2.img
+  DISK: artifacts/disk-image.qcow2
+  DISK2: artifacts/disk.qcow2
+  # DISK: artifacts/disk.img
+  # DISK2: artifacts/disk2.img
   CLIENT: artifacts/test-client
 
 jobs:
@@ -92,7 +92,7 @@ jobs:
           workflow: create_base_image.yml
           name: disk-image-amd64
           # workflow_conclusion: success
-          run_id: 2447779005
+          run_id: 2477855216
           path: disktmp
 
 
@@ -102,8 +102,8 @@ jobs:
           mkdir -p ${{ env.ARTIFACTS_DIR }}
           cp tmp/kernel ${{ env.KERNEL }}
           cp tmp/test-client ${{ env.CLIENT }}
-          ./resources/artifacts.sh decompress-split disktmp/disk.img
-          cp temp/disk.img ${{ env.DISK }}
+          ./resources/artifacts.sh decompress-split disktmp/disk-image.qcow2
+          cp temp/disk-image.qcow2 ${{ env.DISK }}
 
 
 
@@ -116,12 +116,25 @@ jobs:
     strategy:
       fail-fast: true
 
-    env:
-      FUNCTIONS_UNDER_TEST: "fibonacci-go fibonacci-nodejs fibonacci-python aes-go aes-nodejs aes-python auth-go auth-nodejs auth-python"
-
+    # env:
+    #   FUNCTIONS_UNDER_TEST: "fibonacci-go fibonacci-nodejs fibonacci-python aes-go aes-nodejs aes-python auth-go auth-nodejs auth-python"
+    outputs:
+      function_matrix: ${{ steps.set-matrix.outputs.function_matrix }}
     steps:
+
       - name: Check out code
         uses: actions/checkout@v2
+      - name: Setup Functions for testing
+        id: set-matrix
+        shell: bash
+        run: |
+          FUTS=$(cat .github/config/functions-under-test.txt)
+          FUTS=${FUTS//$'\n'/ }
+          echo "$FUTS"
+          matrix=$(printf '%s\n' $(cat .github/config/functions-under-test.txt) | jq -ncR [inputs])
+          echo $matrix
+          echo "FUNCTIONS_UNDER_TEST=$FUTS" >> $GITHUB_ENV
+          echo "::set-output name=function_matrix::$matrix"
 
       ## Use the artifact cache from the build stage
       - name: Cache Build Artifacts
@@ -191,13 +204,10 @@ jobs:
     runs-on: [self-hosted, gem5-test]
     needs: emulator-function-test
     strategy:
-      fail-fast: true
       matrix:
-        function: [fibonacci-go, fibonacci-nodejs, fibonacci-python, aes-go]
-
+        function: ${{ fromJson(needs.emulator-function-test.outputs.function_matrix) }}
     env:
       FUNCTION: ${{ matrix.function }}
-      # MAKEFILE: test/sim_test.Makefile
 
     steps:
       - name: Check out code
@@ -211,10 +221,8 @@ jobs:
           key: ${{ runner.os }}-${{ github.run_number }}-func-ci-test
 
       - name: Check dependencies of the simulator.
-        timeout-minutes: 5
         run: |
           make -f ${{ env.MAKEFILE }} dep_check_gem5
-          ls -la ${{ env.WORKING_DIR }}
 
       # - name: Create the working directory to run the test.
       #   env:
@@ -225,7 +233,7 @@ jobs:
       #     make -f ${{ env.MAKEFILE }} build
 
       - name: Run the actual test of the simulator.
-        timeout-minutes: 5
+        timeout-minutes: 10
         run: |
           make -f ${{ env.MAKEFILE }} run_sim_test
 
