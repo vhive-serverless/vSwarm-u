@@ -25,8 +25,8 @@ name: Create base disk image
 env:
   ARTIFACTS_DIR: artifacts/
   KERNEL: artifacts/kernel
-  DISK_PRE_TEST: artifacts/base-disk.img
-  DISK_FINAL: artifacts/disk.img
+  DISK_PRE_TEST: artifacts/disk-image.qcow2
+  DISK_FINAL: artifacts/disk.qcow2
   CHECKSUMS: artifacts/checksums
   CLIENT: artifacts/test-client
 
@@ -152,12 +152,12 @@ jobs:
           mkdir temp
           cp ${{ env.DISK_PRE_TEST }} temp/
           ./resources/artifacts.sh compress-split temp/*
-          rm temp/base-disk.img
+          rm temp/disk-image.qcow2
 
       - name: Upload Base Image Artifact
         uses: actions/upload-artifact@v3
         with:
-          name: base-disk-pre-test
+          name: disk-image-amd64
           path: temp
 
 
@@ -260,7 +260,7 @@ jobs:
       - name: Create checksums of the artifacts
         shell: bash
         run: |
-          shasum ${{ env.DISK_FINAL }} > ${{ env.CHECKSUMS }}
+          shasum ${{ env.DISK_PRE_TEST }} > ${{ env.CHECKSUMS }}
           shasum ${{ env.KERNEL }} >> ${{ env.CHECKSUMS }}
           shasum ${{ env.CLIENT }} >> ${{ env.CHECKSUMS }}
 
@@ -307,8 +307,8 @@ jobs:
         include:
           - name: vmlinux-amd64
             path: artifacts/kernel
-          - name: disk-image-amd64
-            path: artifacts/disk.img
+          - name: disk-image-amd64-tested
+            path: artifacts/disk.qcow2
             compress: true
           - name: test-client-amd64
             path: artifacts/test-client
@@ -329,9 +329,9 @@ jobs:
         if: ${{ matrix.compress == true }}
         run: |
           mkdir temp
-          cp artifacts/disk.img temp/
+          cp artifacts/disk.qcow2 temp/
           ./resources/artifacts.sh compress-split temp/*
-          rm temp/disk.img
+          rm temp/disk.qcow2
 
 
       - name: Upload compressed artifact

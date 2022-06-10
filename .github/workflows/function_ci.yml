@@ -44,8 +44,11 @@ on:
 
 env:
   WORKING_DIR: wkdir/test/
+  MAKEFILE: test/Makefile
   ARTIFACTS_DIR: artifacts/
   KERNEL: artifacts/kernel
+  # DISK: artifacts/disk-image.qcow2
+  # DISK2: artifacts/disk.qcow2
   DISK: artifacts/disk.img
   DISK2: artifacts/disk2.img
   CLIENT: artifacts/test-client
@@ -115,7 +118,6 @@ jobs:
 
     env:
       FUNCTIONS_UNDER_TEST: "fibonacci-go fibonacci-nodejs fibonacci-python aes-go aes-nodejs aes-python auth-go auth-nodejs auth-python"
-      MAKEFILE: test/emu_test.Makefile
 
     steps:
       - name: Check out code
@@ -130,9 +132,13 @@ jobs:
 
 
       ##### Setup Test #####
+      # - name: Install dependencies
+      #   run: |
+      #     make -f ${{ env.MAKEFILE }} dep_install
+
       - name: Install dependencies
         run: |
-          make -f ${{ env.MAKEFILE }} dep_install
+          make -f ${{ env.MAKEFILE }} dep_check_qemu
 
       - name: Create the working directory to run the test.
         env:
@@ -145,35 +151,35 @@ jobs:
       - name: Run the actual test of the emulator.
         timeout-minutes: 30
         run: |
-          make -f ${{ env.MAKEFILE }} run_test
+          make -f ${{ env.MAKEFILE }} run_emu_test
 
       - name: Check the results file.
         run: |
-          make -f ${{ env.MAKEFILE }} check
+          make -f ${{ env.MAKEFILE }} check_emu
 
 
 
       ## Once the Test completed successfully
-      ## cache the test image for the later simulator test jobs
+      ## cache the working directory for the later simulator test jobs
       - name: Cache test disk image
-        id: test-disk
+        id: wkdir-cache
         uses: actions/cache@v3
         with:
-          path: artifacts/
+          path: ${{ env.WORKING_DIR }}
           key: ${{ runner.os }}-${{ github.run_number }}-func-ci-test
 
-      - name: Save the image for simulator tests
-        shell: bash
-        env:
-          OUTPUT: ${{ env.DISK2 }}
-        run: |
-          make -f ${{ env.MAKEFILE }} save_output
+      # - name: Save the image for simulator tests
+      #   shell: bash
+      #   env:
+      #     OUTPUT: ${{ env.DISK2 }}
+      #   run: |
+      #     make -f ${{ env.MAKEFILE }} save_output
 
 
-      - name: Clean everything.
-        if: ${{ always() }}
-        run: |
-          make -f ${{ env.MAKEFILE }} clean
+      # - name: Clean everything.
+      #   if: ${{ always() }}
+      #   run: |
+      #     make -f ${{ env.MAKEFILE }} clean
 
 
 
@@ -191,7 +197,7 @@ jobs:
 
     env:
       FUNCTION: ${{ matrix.function }}
-      MAKEFILE: test/sim_test.Makefile
+      # MAKEFILE: test/sim_test.Makefile
 
     steps:
       - name: Check out code
@@ -201,25 +207,31 @@ jobs:
       - name: Cache Build Artifacts
         uses: actions/cache@v3
         with:
-          path: artifacts/
+          path: ${{ env.WORKING_DIR }}
           key: ${{ runner.os }}-${{ github.run_number }}-func-ci-test
 
-      - name: Create the working directory to run the test.
-        env:
-          KERNEL: ${{ env.KERNEL }}
-          DISK: ${{ env.DISK }}
-          TEST_CLIENT: ${{ env.CLIENT }}
+      - name: Check dependencies of the simulator.
+        timeout-minutes: 5
         run: |
-          make -f ${{ env.MAKEFILE }} build
+          make -f ${{ env.MAKEFILE }} dep_check_gem5
+          ls -la ${{ env.WORKING_DIR }}
+
+      # - name: Create the working directory to run the test.
+      #   env:
+      #     KERNEL: ${{ env.KERNEL }}
+      #     DISK: ${{ env.DISK }}
+      #     TEST_CLIENT: ${{ env.CLIENT }}
+      #   run: |
+      #     make -f ${{ env.MAKEFILE }} build
 
       - name: Run the actual test of the simulator.
         timeout-minutes: 5
         run: |
-          make -f ${{ env.MAKEFILE }} run_test
+          make -f ${{ env.MAKEFILE }} run_sim_test
 
       - name: Check the results file.
         run: |
-          make -f ${{ env.MAKEFILE }} check
+          make -f ${{ env.MAKEFILE }} check_sim
 
       # - name: Clean everything.
       #   if: ${{ always() }}
