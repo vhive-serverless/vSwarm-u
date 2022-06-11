@@ -5,7 +5,9 @@ nav_order: 1
 has_children: true
 ---
 
-# vSwarm-&mu; Documentation
+![vSwarm-u Header](figures/vSwarm-u-hdr.png)
+
+<!-- # vSwarm-&mu; Documentation -->
 
 
 > **Warning**
@@ -13,7 +15,7 @@ has_children: true
 >*<font color="red">vSwarm-u is still in beta state but will be released soon for the ISCA'22 conference.</font>*
 
 [Serverless computing represent new challenges for modern CPUs!](https://ease-lab.github.io/ease_website/pubs/JUKEBOX_ISCA22.pdf)
-With vSwarm-&mu we want to enable microarchitectural research for serverless
+With vSwarm-&mu we aim to enable microarchitectural research for serverless
 {: .fs-6 .fw-300 }
 
 
