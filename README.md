@@ -1,10 +1,19 @@
-# **vSwarm-&mu;:** Microarchitectural Research for Serverless
+<!-- # **vSwarm-&mu;:** Microarchitectural Research for Serverless -->
+![vSwarm-u Header](docs/figures/vSwarm-u-hdr.png)
 
-## Build tests
+
 [![Build Linux Kernel](https://github.com/ease-lab/vSwarm-u/actions/workflows/build_kernel.yml/badge.svg)](https://github.com/ease-lab/vSwarm-u/actions/workflows/build_kernel.yml)
 [![Build Gem5](https://github.com/ease-lab/vSwarm-u/actions/workflows/build_gem5.yml/badge.svg)](https://github.com/ease-lab/vSwarm-u/actions/workflows/build_gem5.yml)
 [![Build base disk image](https://github.com/ease-lab/vSwarm-u/actions/workflows/create_base_disk.yml/badge.svg)](https://github.com/ease-lab/vSwarm-u/actions/workflows/create_base_disk.yml)
 [![Function CI for gem5 Simulator](https://github.com/ease-lab/vSwarm-u/actions/workflows/function_ci.yml/badge.svg)](https://github.com/ease-lab/vSwarm-u/actions/workflows/function_ci.yml)
+
+[![](https://img.shields.io/badge/doc-latest-green)](https://ease-lab.github.io/vSwarm-u/)
+<!-- ![](https://img.shields.io/static/v1?label=&message=documentation&color=green) -->
+![GitHub release (latest by date)](https://img.shields.io/github/v/release/ease-lab/vSwarm-u)
+
+
+
+<!-- ![GitHub Workflow Status](https://img.shields.io/github/workflow/status/ease-lab/vSwarm-u/function_ci.yml?logo=Build%20kernel) -->
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 <a href="https://twitter.com/intent/follow?screen_name=ease_lab" target="_blank">
@@ -38,21 +47,27 @@ advice for potential extensions of vSwarm-&mu; and always open for collaboration
 
 Please cite our [paper](https://ease-lab.github.io/ease_website/pubs/JUKEBOX_ISCA22.pdf) that has been recently accepted to ICSA 2022:
 
-<!--
 ```
 @inproceedings{schall:lukewarm,
-  author    = {David Schall and
-               Artemiy Margaritov and
-               Dmitrii Ustiugov and
-               Andreas Sandberg and
-               Boris Grot},
+  author    = {Schall, David and
+               Margaritov, Artemiy and
+               Ustiugov, Dmitrii and
+               Sandberg, Andreas and
+               Grot, Boris},
   title     = {Lukewarm Serverless Functions: Characterization and Optimization},
-  booktitle = {2022 ACM/IEEE 49th Annual International Symposium on Computer Architecture (ISCA)},
-  publisher = {{ACM}},
   year      = {2022},
+  isbn      = {9781450386104},
+  publisher = {Association for Computing Machinery},
+  address   = {New York, NY, USA},
   doi       = {10.1145/3470496.3527390},
+  booktitle = {Proceedings of the 49th Annual International Symposium on Computer Architecture},
+  pages     = {757–770},
+  numpages  = {14},
+  keywords  = {characterization, instruction prefetching, microarchitecture, serverless},
+  location  = {New York, New York},
+  series    = {ISCA '22}
 }
-``` -->
+```
 
 
 ## Getting started with vSwarm-&mu;

@@ -21,11 +21,13 @@ Brew yourself a coffee in the meantime. ;-) It can take its time to to set every
 
    *Note the compile time can vary a lot depending on your machine. The stated compile times are with a 10 core, 20 hyper threads machine using 64GiB memory and a two core machine using 7GB memory respectively.*
 
-3. **Download latest release artifacts** *(~4 min)*
+3. **Download latest release artifacts** *(~3 min)*
 
-   With vSwarm-u we distribute a compiled kernel, client and ready to use and tested disk image. Refer to the release page in the github repo. Use the
+   With vSwarm-u we distribute a compiled kernel, client and ready to use and tested disk image. You can find the latest release of those resources on the [release page](https://github.com/ease-lab/vSwarm-u/releases) of the repo. Refer to the [resources](setup/setup.md#get-resources) section in the documentation for more details how to download and use them.
 
-   For more details refer to the [setup](setup/) section in the documentation.
+
+## Test Downloads
+In case you want to test the download
 
 ## Setup working directory
 Once the setup pr
