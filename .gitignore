@@ -237,4 +237,5 @@ resources/*
 !resources/Makefile
 !resources/artifacts*
 !resources/release*
+!resources/**.py
 

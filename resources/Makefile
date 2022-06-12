@@ -32,7 +32,7 @@ ROOT 		:= $(abspath $(dir $(mkfile_path))/../)
 RESOURCES 	?=$(ROOT)/resources/
 
 
-VERSION := v0.0.6
+VERSION := v0.0.7
 TAG 	:= $(VERSION)-$(shell git rev-parse --short HEAD)
 ARCH	:= amd64
 
@@ -120,28 +120,6 @@ build-client:
 	cp client $(TEST_CLIENT)
 
 
-# ## Build fresh kernel
-# build-kernel:
-# 	@echo "Build Kernel..."
-# 	echo "Test kernel" > $(KERNEL)
-
-# ## Bake new base disk image
-# build-disk:
-# 	@echo "Build Disk ..."
-# 	echo "Test Disk" > $(DISK)
-
-
-# ## Bake new base disk image
-# build-disk:
-# 	@echo "\nBuild Disk ..."
-# 	cp ../wkdir/disk.img.bak $(DISK)
-
-# # Build client from source
-# build-client:
-# 	echo "Build Test client ..."
-# 	echo "Test Disk" > $(TEST_CLIENT)
-
-
 clean-build:
 	$(MAKE) -f ${ROOT}/setup/kernel.Makefile clean
 	$(MAKE) -f ${ROOT}/setup/disk.Makefile clean
@@ -164,11 +142,6 @@ clean-release:
 # # 	$(call decompress,$(ARTIFACT_DISK))
 # # 	$(call download_artifact,$(ARTIFACT_CLIENT),$(TEST_CLIENT))
 
-download-resources:
-	./artifacts.sh download $(KERNEL) $(ARTIFACT_KERNEL)
-	./artifacts.sh download $(TEST_CLIENT) $(ARTIFACT_CLIENT)
-	./artifacts.sh download-disk $(BASE_DISK) $(ARTIFACT_DISK)
-
 
 
 ### ----- TEST RESOURCES ----- ###
@@ -177,7 +150,7 @@ test-emu:
 	$(MAKE) -f ${ROOT}/test/emu_test.Makefile dep_install
 	KERNEL=$(KERNEL) DISK=$(BASE_DISK) TEST_CLIENT=$(TEST_CLIENT) \
 	$(MAKE) -f ${ROOT}/test/emu_test.Makefile build
-	$(MAKE) -f ${ROOT}/test/emu_test.Makefile run_test
+	$(MAKE) -f ${ROOT}/test/emu_test.Makefile run_test_nokvm
 	$(MAKE) -f ${ROOT}/test/emu_test.Makefile check
 	OUTPUT=$(DISK) $(MAKE) -f ${ROOT}/test/emu_test.Makefile save_output
 
@@ -188,8 +161,16 @@ test-release-resources: test-emu
 
 ## ARTIFACTS ---------------------- ###
 ARTIFACT_KERNEL 	:= vmlinux-$(ARCH)
-ARTIFACT_DISK 		:= test-disk-image-$(ARCH)
-ARTIFACT_CLIENT 	:= test-client-$(ARCH)
+ARTIFACT_DISK 		:= disk-image-$(ARCH)
+ARTIFACT_CLIENT 	:= client-$(ARCH)
+
+
+download-resources:
+	./artifacts.sh download $(KERNEL) $(ARTIFACT_KERNEL)
+	./artifacts.sh download $(TEST_CLIENT) $(ARTIFACT_CLIENT)
+	./artifacts.sh download-disk $(BASE_DISK) $(ARTIFACT_DISK)
+
+
 
 
 ## Upload artifacts to release ##
@@ -218,104 +199,9 @@ upload_all_artifacts:
 	./artifacts.sh upload-disk $(DISK) $(ARTIFACT_DISK)
 
 
-upload_base:
-	$(call upload_artifact,disk.zip,$(ARTIFACT_DISK))
-
-
-## Compress and decompress artifacts
-# define compress
-# 	tar -cJf $1.tar.xz $1
-# endef
-
-# define decompress
-# 	tar -xvf $1.tar.xz
-# endef
-
-# define compress
-# 	tar -czf $1.tar.gz $1
-# endef
-
-# define decompress
-# 	tar -xvf $1.tar.gz
-# endef
-
-# define compress
-# 	zip -9 $2 $1
-# endef
-
-# define decompress
-# 	unzip $1
-# endef
-
-# test-compress:
-# 	$(call compress,test,$(ARTIFACT_DISK))
-# 	$(call decompress,$(ARTIFACT_DISK))
-
-
-
-
-
-# # define compress-split
-# # 	shasum -a 256 $1 > $2.sums
-# # 	zip -4 tmp.zip $1
-# # 	zip tmp.zip --out $2.zip -s 2m
-# # endef
-
-
-# # define decompress-split
-# # 	zip -s0 $1.zip --out existing.zip
-# # 	unzip existing.zip
-# # 	shasum -a 256 -c $2.sums
-# # endef
-
-
-# define compress-split
-# 	shasum -a 256 $1 > $2.sums
-# 	tar cvzf tmp.tar.gz $1
-# 	split -b 1m tmp.tar.gz $2.tar.gz.
-# endef
-
-
-# define decompress-split
-# 	cat $1.tar.gz.* > tmp2.tar.gz
-# 	tar xzvf tmp2.tar.gz
-# 	shasum -a 256 -c $1.sums
-# endef
-
-# # define upload_all
-# # 	for f in $1.tar.gz.*; do \
-# # 	echo Upload $$f; \
-# # 	$(eval $(call upload_artifact,$$f,$$f)); \
-# # 	done
-# # endef
-
-
-
-# define upload_all
-# 	$(eval $(files := $(wildcard $1.tar.gz.*)))
-# 	echo $(files)
-# 	$(foreach f,$(files),echo $(f))
-# endef
-
-
-
-
-# test-disk:
-# 	cp vmlinux vmtest
-# 	$(call compress-split,vmtest,vmart)
-# 	$(call upload_all,vmart)
-# 	rm vmtest
-# 	$(call decompress-split,vmart,vmtest)
-
-
-
-
-
-
 
 
 ## Download Artifacts ---------------------
-
 RELEASE_URL := https://github.com/ease-lab/vSwarm-u/releases/download/$(VERSION)
 RELEASE_URL := https://github.com/ease-lab/vSwarm-u/releases/download/v0.0.1
 

@@ -49,8 +49,6 @@ env:
   KERNEL: artifacts/kernel
   DISK: artifacts/disk-image.qcow2
   DISK2: artifacts/disk.qcow2
-  # DISK: artifacts/disk.img
-  # DISK2: artifacts/disk2.img
   CLIENT: artifacts/test-client
 
 jobs:
@@ -113,15 +111,10 @@ jobs:
     # runs-on: ubuntu-20.04
     runs-on: [self-hosted, gem5-test]
     needs: prepare-artifacts
-    strategy:
-      fail-fast: true
-
-    # env:
-    #   FUNCTIONS_UNDER_TEST: "fibonacci-go fibonacci-nodejs fibonacci-python aes-go aes-nodejs aes-python auth-go auth-nodejs auth-python"
     outputs:
       function_matrix: ${{ steps.set-matrix.outputs.function_matrix }}
-    steps:
 
+    steps:
       - name: Check out code
         uses: actions/checkout@v2
       - name: Setup Functions for testing
@@ -181,19 +174,6 @@ jobs:
           path: ${{ env.WORKING_DIR }}
           key: ${{ runner.os }}-${{ github.run_number }}-func-ci-test
 
-      # - name: Save the image for simulator tests
-      #   shell: bash
-      #   env:
-      #     OUTPUT: ${{ env.DISK2 }}
-      #   run: |
-      #     make -f ${{ env.MAKEFILE }} save_output
-
-
-      # - name: Clean everything.
-      #   if: ${{ always() }}
-      #   run: |
-      #     make -f ${{ env.MAKEFILE }} clean
-
 
 
 
@@ -224,24 +204,14 @@ jobs:
         run: |
           make -f ${{ env.MAKEFILE }} dep_check_gem5
 
-      # - name: Create the working directory to run the test.
-      #   env:
-      #     KERNEL: ${{ env.KERNEL }}
-      #     DISK: ${{ env.DISK }}
-      #     TEST_CLIENT: ${{ env.CLIENT }}
-      #   run: |
-      #     make -f ${{ env.MAKEFILE }} build
 
       - name: Run the actual test of the simulator.
         timeout-minutes: 10
         run: |
           make -f ${{ env.MAKEFILE }} run_sim_test
 
+
       - name: Check the results file.
         run: |
           make -f ${{ env.MAKEFILE }} check_sim
 
-      # - name: Clean everything.
-      #   if: ${{ always() }}
-      #   run: |
-      #     make -f ${{ env.MAKEFILE }} clean

@@ -1,6 +1,6 @@
 # MIT License
 #
-# Copyright (c) 2022 EASE lab
+# Copyright (c) 2022 EASE lab, University of Edinburgh
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -19,7 +19,8 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-
+#
+# Authors: David Schall
 
 name: Release
 
@@ -87,7 +88,7 @@ jobs:
         run: |
           mkdir -p ${{ env.ARTIFACTS_DIR }}
           cp tmp/kernel ${{ env.KERNEL }}
-          cp tmp/test-client ${{ env.CLIENT }}
+          cp tmp/test-client ${{ env.TEST_CLIENT }}
           ./resources/artifacts.sh decompress-split disktmp/disk-image.qcow2
           cp temp/disk-image.qcow2 ${{ env.DISK }}
 
@@ -156,142 +157,42 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
           RELEASE_ID: ${{ steps.create_release.outputs.id }}
         id: upload
-        run: make upload_all_artifacts
+        run: |
+          make upload_all_artifacts
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# jobs:
-#   build_release_resources:
-#     name: build_release
-#     runs-on: ubuntu-20.04
-#     steps:
-#       - uses: actions/checkout@v3
-
-#       ## Build resources
-#       - name: Build Resources
-#         working-directory: resources
-#         run: make build-release-resources
-
-#       # ## Test resources
-#       # - name: Test Resources
-#       #   working-directory: resources
-#       #   run: make test-resources
-
-
-#       # - name: Build release
-#       #   working-directory: resources
-#       #   run: make build-release
-#       # # - name: Get the version
-#       # #   id: get_version
-#       # #   run: |
-#       # #     echo ::set-output name=TAG::${GITHUB_REF/refs\/tags\//}
-
-#       - name: Check Release
-#         working-directory: resources
-#         run: make check-release
-
-
-
-
-
-  # build_release:
-  #   name: build_release
-  #   runs-on: ubuntu-20.04
-  #   needs: build_release_resources
-  #   steps:
-  #     - uses: actions/checkout@v3
-
-  #     ## Build resources
-  #     - name: Build Resources
-  #       working-directory: resources
-  #       run: make build-release-resources
-
-  #     # ## Test resources
-  #     # - name: Test Resources
-  #     #   working-directory: resources
-  #     #   run: make test-resources
-
-
-  #     # - name: Build release
-  #     #   working-directory: resources
-  #     #   run: make build-release
-  #     # # - name: Get the version
-  #     # #   id: get_version
-  #     # #   run: |
-  #     # #     echo ::set-output name=TAG::${GITHUB_REF/refs\/tags\//}
-
-  #     - name: Check Release
-  #       working-directory: resources
-  #       run: make check-release
-
-  #     - name: Get the version
-  #       id: version
-  #       working-directory: resources
-  #       run: make release-version
-
-
-      # ## Create the release
-      # - name: release
-      #   uses: actions/create-release@v1
-      #   id: create_release
+      # - uses: actions/setup-python@v4
       #   with:
-      #     draft: true
-      #     prerelease: true
-      #     release_name: ${{ steps.version.outputs.version }}
-      #     tag_name: ${{ github.ref }}
-      #     # body_path: CHANGELOG.md
+      #     python-version: '3.8'
+      # - run: pip install tqdm requests
+      # # - uses: BSFishy/pip-action@v1
+      # #   with:
+      # #     packages: |
+      # #       tqdm
+      # #       requests
+      # #       tarfile
+
+      # - name: Upload Artifacts
+      #   working-directory: resources
       #   env:
       #     GITHUB_TOKEN: ${{ github.token }}
+      #     RELEASE_ID: ${{ steps.create_release.outputs.id }}
+      #   id: upload
+      #   run: |
+      #     python ./upload_assets.py \
+      #           --kernel ${{ env.KERNEL }} \
+      #           --disk-image ${{ env.DISK }} \
+      #           --client ${{ env.TEST_CLIENT }} \
+      #           --release-id ${{ steps.create_release.outputs.id }}
 
-      # ## Upload the artifacts
-      # - name: Upload Kernel artifact
-      #   uses: actions/upload-release-asset@v1
-      #   env:
-      #     GITHUB_TOKEN: ${{ github.token }}
-      #   with:
-      #     upload_url: ${{ steps.create_release.outputs.upload_url }}
-      #     asset_path: ./resources/vmlinux
-      #     asset_name: vmlinux-amd64
-      #     asset_content_type: application
 
-      # - name: Upload disk image artifact
-      #   uses: actions/upload-release-asset@v1
-      #   env:
-      #     GITHUB_TOKEN: ${{ github.token }}
-      #   with:
-      #     upload_url: ${{ steps.create_release.outputs.upload_url }}
-      #     asset_path: ./resources/vmlinux
-      #     asset_name: base-image-amd64
-      #     asset_content_type: application
 
-#         uses: alexellis/upload-assets@0.2.2
-#         env:
-#           GITHUB_TOKEN: ${{ github.token }}
-#         with:
-#           asset_paths: '["./resources/vmlinux"]'
-# #          asset_paths: '["./bin/release-it-darwin", "./bin/release-it-amd64", "./bin/release-it-arm", "./bin/release-it-arm64", "./bin/release-it.exe"]'
+
+
+
+
+
+
+
+
+
