@@ -117,7 +117,7 @@ def moveAssets():
     shutil.move(artifact_name, args.output + name)
     name, artifact_name = "client", artifacts["client"].split("/")[-1]
     shutil.move(artifact_name, args.output + name)
-    name, artifact_name = "disk-image.img", artifacts["disk-image"][0].split("/")[-1].split(".")[0]
+    name, artifact_name = "disk-image.qcow2", artifacts["disk-image"][0].split("/")[-1].split(".")[0]
     shutil.move(artifact_name, args.output + name)
 
 
