@@ -1,0 +1,42 @@
+---
+layout: default
+title: Resources
+parent: Setup
+nav_order: 1
+---
+
+
+# Required Resources
+
+In order to run serverless simulations with gem5 you will need we will need a few more ingredients apart of gem5 and vSwarm-u. First of all a compiled linux kernel configured for gem5 and containers. Secondly a disk image with a root file system and all components installed to run serverless workloads. Finally a client we will use to drive the functions during simulation.
+
+Setting up and building all those resources from scratch can be tricky to get it right and is also quite time consuming therefore we distribute together with vSwarm-u an up to date and pre-configured disk image as well as a compiled kernel and test client. For quickly ramping up your system follow the easy steps [here](#download-resources-artifacts) to download those resources. For more advanced use and customization find out all the details how we build and configure the resources yourself in related documentation ([kernel](./kernel.md), [disk-image](./disk-image.md))
+
+
+## Environmental variables
+We use the `RESOURCES` environmental variable in all our scripts to define where they can find the resources: kernel, base disk image and the client. Furthermore we `GEM5_DIR` to define where gem5 will be downloaded and installed. If you want to specify your own paths set and expose this variables before running one of the scripts.
+```bash
+export RESOURCES=<your/resources/dir>
+echo 'export RESOURCES=${RESOURCES}' >> ${HOME}/.bashrc
+```
+The default paths are `resources/` and `${RESOURCES}/gem5` for `RESOURCES` and `GEM5_DIR` respectively.
+
+
+## Download Resources Artifacts.
+
+In the resources folder you will find a `release.json` file that contains all information about the latest release and its the artifacts we distribute. This file is always in sync with the latest release.
+The `artifacts.py` script will use this information to fetch the latest artifacts. Run:
+```bash
+./resources/artifacts.py --download
+```
+to fetch the latest kernel, disk-image and client from github.
+Note that the size of the disk image is a few GiB. Furthermore, Github has a limit of 2GiB per asset. We compress and split the disk image. But no worries the script will do everything for you ;). Downloading merging and decompression. *Usually it took about three minutes. (2.5min for download and 30s for decompressing)*
+
+By default the resources will be stored in the `resources/`
+
+#### Disk format qcow2 and raw
+We distribute the disk image in qemu's [`qcow2` compressed format](https://qemu.readthedocs.io/en/latest/system/images.html#disk-image-file-formats). This has the advantage that the disk image is smaller. However gem5 cannot use qcow2 but only raw. Therefore, after downloading and decompression you will need to convert the disk image before using it with gem5. The scripts does all the work from you in the back however you can use:
+```bash
+# Convert disk image from qcow2 -> raw format
+qemu-img convert <src/disk/path> <tgt/disk/path>
+```

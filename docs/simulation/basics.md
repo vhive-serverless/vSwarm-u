@@ -1,12 +1,11 @@
 ---
 layout: default
-title: Simulation
-nav_order: 10
-has_children: false
+title: First Simulation
+parent: Simulation
+nav_order: 1
 ---
 
-# Simulate Serverless Functions with gem5
-
+# First simulation with gem5 and Serverless
 {: .no_toc }
 
 <details open markdown="block">
@@ -18,6 +17,14 @@ has_children: false
 {:toc}
 </details>
 
+<!-- ## Table of contents
+{: .no_toc .text-delta }
+
+1. TOC
+{:toc} -->
+
+
+
 ---
 
 Here we describe the basics of how to run experiments with gem5 and serverless functions.
@@ -28,13 +35,16 @@ Once you have build all required resources ([gem5](./setup.md#build-gem5-resourc
 make -f simulation/Makefile build-wkdir
 ```
 By default it will create the new folder `wkdir/` and copies a bunch of files into it which you need or might find useful to start experimenting including:
+
 1. Kernel and base disk image
 2. Templates of `function.yaml` and `function.list` to define your functions.
 3. A `sim_function.sh` script for running simulation for a particular function.
 4. A `sim_all_functions.sh` script for starting a simulation of each function defined in the `functions.list` file.
 5. A basic gem5 config script.
 6. ...
+
 In the following the files and their usage will be described in more detail.
+> Note: In case you want to don't want to use the default location you can use the `WORKING_DIR` environmental variable to change the location.
 
 
 ## Defining Function Benchmarks
@@ -63,17 +73,22 @@ In addition to the config file we use a second file `functions.list` to control 
 > - Each time you changed the functions.yaml file you need to run `make install_functions`. Only then the updated yaml file will be downloaded on the disk. To ensure the the config worked you can check the `install.log` once the command has completed.
 
 
-### Install Function images on disk
+## Install Function images on disk
 
 In your initial working directory you will find a raw base disk image. On this base image all necessary packages i.e. docker, python,.. are preinstalled. However, the disk image does not contain the container images of the benchmarks we want to run. Therefore, before starting simulation the base image need to be augmented with the container images. Furthermore we need to bring the `functions.yaml` config on this image.
 
 To do this we use the qemu emulator as it has access to the internet for pulling the most recent images.
-We provide a make recepie to automatically install all functions defined in the `functions.list/yaml` files. Run:
+We provide a make recipe to automatically install all functions defined in the `functions.list/yaml` files. Run:
 ```bash
 make -f simulation/Makefile install_functions
 ```
-It will take a while depending on how many functions and how large the images are.
-> **Warning**: the base disk image has a size of 8GB with XXGB already used. Make sure that all container images will not exceed the total size available on the disk. If you need a larger disk you can extend the disk image with `qemu image resize`. Note you also need to [extend the root file system](https://computingforgeeks.com/extending-root-filesystem-using-lvm-linux/) afterwards.
+
+It may take a while depending on how many functions and how large the images are that need to be pulled.
+
+> **Warning**: the base disk image has a size of 8GB with XXGB already used. Make sure that all container images will not exceed the total size available on the disk. In case a larger disk is required the size can be increased with `qemu image resize`. Note that afterwards the file system need to be [extended](https://computingforgeeks.com/extending-root-filesystem-using-lvm-linux/).
+
+### Test Installation
+The installation will generate a log file of the installation process. Use the recipe `install_check` to verify that everything was installed successfully.
 
 
 
@@ -160,59 +175,4 @@ When you realize that the simulator got stuck at some point. Which is quite like
 
 ## Analysis
 
-
-@Harshit would be nice if you can add stuff here.
-
-
-
-
-
-
-
-
-
-## Manual installation
-1. Make a copy of the disk image in your working directory
-
-2. Start the emulator with the following command:
-```bash
-sudo qemu-system-x86_64 \
-    -nographic \
-    -cpu host -enable-kvm \
-    -smp 4 -m 8GB \
-    -device e1000,netdev=net0 \
-    -netdev type=user,id=net0,hostfwd=tcp:127.0.0.1:5555-:22  \
-    -drive format=raw,file=<path/to/disk/image> \
-    -kernel <path/to/kernel> \
-    -append 'earlyprintk=ttyS0 console=ttyS0 lpj=7999923 root=/dev/hda2'
-```
-Qemu will boot linux from the disk image you specified. Once booted login as `root` (password `root`).
-
-Now you are able to pull function images onto base disk image. We will use the the `vhiveease/fibonacci-go` function image as example:
-```bash
-# Pull your containerized function image
-docker pull  vhiveease/fibonacci-go
-```
-Pull all images you want to benchmark.
-
-Once all images are installed you can shutdown qemu with `shutdown -h now`. However, to make sure that the disk image is properly installed and works from a software perspective the `test-client` we put onto the image to perform a quick test.
-   > Note you can find the source code of the client together with your hands out material.
-
-```bash
-# 1. Start your function container
-# -d detaches the process and we can continue in the same console.
-# -p must be set to export the ports
-docker run -d --name mycontainer -p 50051:50051 vhiveease/fibonacci-go
-
-# run the client with the port you export in docker as well as the number of invocations you want to run.
-# -addr is the address and port we where exporting with the docker command
-# -n is the number of invocations the client should perform
-./client -addr localhost:50051 -n 100
-```
-The client should print its progress after every 10 invocations.
-Now the disk image is ready for the Gem5 simulator. Stop the container and shutdown qemu.
-```
-docker stop mycontainer && docker rm mycontainer
-shutdown -h now
-```
-> Note: Qemu breaks the line wrapping you might want to reset the console by executing `reset`.
+TBD

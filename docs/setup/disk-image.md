@@ -10,7 +10,7 @@ As we will run linux in gem5 we need to provide it with a disk with a root files
 
 We recommend to follow the instructions in option 3) and use `qemu` to create your first disk images. Using `qemu` enables you to configure your disk image with your serverless function play around a bit and test all your setup from the software side before switching to the actual simulation.
 
-> *Note: Setting up a disk image from scratch can be tricky to get it right and also installation costs a lot of time. To get around this we distribute ready to use disk-images with every vSwarm-u release. Refer to the [download](./setup.md#download-resources-artifacts) section in the setup guide.*
+> *Note: Setting up a disk image from scratch can be tricky to get it right and also installation costs a lot of time. To get around this we distribute ready to use disk-images with every vSwarm-u release. Refer to the [download](./resources.md) section in the setup guide.*
 
 
 ## Install OS and packages

@@ -54,8 +54,12 @@ TST=$(which jq || sudo apt install jq)
 
 
 ## Get release info
-curl -s https://api.github.com/repos/$owner/$repo/releases | jq '.[] | select(.id=='$RELEASE_ID')' > info.json
-TAG_NAME=$(cat info.json | jq -r '.tag_name')
+if [[ -z "{TAG_NAME}" ]]; then
+	curl -s https://api.github.com/repos/$owner/$repo/releases | jq '.[] | select(.id=='$RELEASE_ID')' > info.json
+	TAG_NAME=$(cat info.json | jq -r '.tag_name')
+fi;
+
+
 
 # DOWNLOAD_URL=$(dirname $(cat info.json | jq -r '.assets[0].browser_download_url'))
 DOWNLOAD_URL="https://github.com/$owner/$repo/releases/download/$TAG_NAME"
@@ -63,11 +67,13 @@ UPLOAD_URL="https://uploads.github.com/repos/$owner/$repo/releases/$RELEASE_ID"
 
 
 
-
 function upload {
 	file=$1
 	asset_name=$1
 	[ $# == 2 ] && asset_name=$2
+
+	UPLOAD_URL="https://uploads.github.com/repos/$owner/$repo/releases/$RELEASE_ID"
+
 	curl -X POST \
 		-H "Content-Type: $(file -b --mime-type $file)" \
     	-T "$1" \
@@ -91,6 +97,8 @@ function download {
 	file=$1
 	asset_name=$1
 	[ $# == 2 ] && asset_name=$2
+
+	DOWNLOAD_URL="https://github.com/$owner/$repo/releases/download/$TAG_NAME"
 
 	curl -L $DOWNLOAD_URL/$asset_name \
     -o $file
@@ -184,7 +192,9 @@ function download-disk {
 	asset_name=$1
 	[ $# == 2 ] && asset_name=$2
 
+	curl -s https://api.github.com/repos/$owner/$repo/releases | jq '.[] | select(.tag_name=="'$TAG_NAME'")' > info.json
 	FILES=$(jq -r '.assets[] | select(.name | match("'$asset_name'")) | .browser_download_url' info.json)
+
 	mkdir -p tmpdn
 	pushd tmpdn > /dev/null
 
