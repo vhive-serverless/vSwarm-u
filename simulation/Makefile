@@ -22,13 +22,15 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-MKFILE := $(abspath $(lastword $(MAKEFILE_LIST)))
+MKFILE 		:= $(abspath $(lastword $(MAKEFILE_LIST)))
 ROOT 		:= $(abspath $(dir $(MKFILE))/../)
 
 
 ## User specific inputs
-RESOURCES 			?=$(ROOT)/resources/
-WORKING_DIR 		?=$(ROOT)/wkdir/
+RESOURCES 	?= $(ROOT)/resources/
+WORKING_DIR ?= $(ROOT)/wkdir/
+GEM5_DIR	?= $(RESOURCES)/gem5/
+
 
 ## Machine parameter
 MEMORY 	:= 2G
@@ -36,9 +38,9 @@ CPUS    := 2
 
 
 ## Required resources
-RESRC_KERNEL 		:= $(RESOURCES)/vmlinux
-RESRC_BASE_IMAGE 	:= $(RESOURCES)/base-disk-image.img
-GEM5				:= $(RESOURCES)/gem5/build/X86/gem5.opt
+KERNEL 		?= $(RESOURCES)/kernel
+DISK		?= $(RESOURCES)/disk-image.qcow2
+GEM5		?= $(RESOURCES)/gem5/build/X86/gem5.opt
 
 
 
@@ -49,103 +51,35 @@ GEM5				:= $(RESOURCES)/gem5/build/X86/gem5.opt
 dep_install:
 	sudo pip install -U niet
 
-## Run Emulator -------------------------------------------------
-# Do the actual emulation run
-# The command will boot an instance.
-# Then it will listen to port 3003 to retive a run script
-# This run script will be the one we provided.
-run_emulator:
-	sudo qemu-system-x86_64 \
-		-nographic \
-		-cpu host -enable-kvm \
-		-smp ${CPUS} \
-		-m ${MEMORY} \
-		-drive file=$(DISK_IMAGE),format=raw \
-		-kernel $(KERNEL) \
-		-append 'console=ttyS0 root=/dev/hda2'
-
-run: run_emulator
-
-
-## Run Simulator -------------------------------------------------
-# Do the actual emulation run
-# The command will boot an instance.
-# Then check if for a run script using a magic instruction
-# This run script will be the one we provided.
-
-run_simulator:
-	sudo $(GEM5) \
-		--outdir=$(WORKING_DIR) \
-			$(GEM5_CONFIG) \
-				--kernel $(KERNEL) \
-				--disk $(DISK_IMAGE)
 
 
 
-
-
-## Install functions --------------------------------------
-#
-LOGFILE    := $(WORKING_DIR)/install.log
-
-create_install_script: $(ROOT)/simulation/install_functions.sh
-	cp $< $(WORKING_DIR)/run.sh
-
-delete_run_script: $(WORKING_DIR)/run.sh
-	rm $(WORKING_DIR)/run.sh
-
-
-install_functions: build-wkdir
-	if [ -f $(LOGFILE) ]; then rm $(LOGFILE); fi
-	$(MAKE) -f $(MKFILE) create_install_script
-	$(MAKE) -f $(MKFILE) serve_start
-	$(MAKE) -f $(MKFILE) run_emulator
-	$(MAKE) -f $(MKFILE) serve_stop
-	$(MAKE) -f $(MKFILE) delete_run_script
-
-
-## Test the results file
-install_check: $(LOGFILE)
-	$(eval fn_inst := $(shell cat $(FUNCTIONS_LIST) | sed '/^\s*#/d;/^\s*$$/d' | wc -l))
-	$(eval fn_res := $(shell grep -c "SUCCESS" $< ))
-	echo "Tryed to install $(fn_inst) functions. $(fn_res) installed and tested successful"
-	@if [ $(fn_inst) -eq $(fn_res) ] ; then \
-		printf "${GREEN}==================\n Install successful\n==================${NC}\n"; \
-	else \
-		printf "${RED}==================\n"; \
-		printf "Install failed\n"; \
-		printf "Check $<\n"; \
-		printf "==================${NC}\n"; \
-		exit 1; \
-	fi
-
-
-#
+##################################################################
 ## Build the working directory ----------------------------
 #
-KERNEL 				:= $(WORKING_DIR)/kernel
-DISK_IMAGE 			:= $(WORKING_DIR)/disk.img
-TEST_CLIENT			:= $(WORKING_DIR)/test-client
+WK_KERNEL 	:= $(WORKING_DIR)/kernel
+WK_DISK 	:= $(WORKING_DIR)/disk.img
+WK_CLIENT	:= $(WORKING_DIR)/test-client
 
 build-wkdir: $(WORKING_DIR) \
-			$(DISK_IMAGE) $(KERNEL) $(TEST_CLIENT) \
-			templates
+		$(WK_DISK) $(WK_KERNEL) $(WK_CLIENT) \
+		templates
 
 
 $(WORKING_DIR):
 	@echo "Create folder: $(WORKING_DIR)"
 	mkdir -p $@
 
-$(KERNEL): $(RESRC_KERNEL)
+$(WK_KERNEL): $(KERNEL)
 	cp $< $@
 
 # Create the disk image from the base image
-$(DISK_IMAGE): $(RESRC_BASE_IMAGE)
-	cp $< $@
+$(WK_DISK): $(DISK)
+	qemu-img convert $< $@
 
 
 ## Build test client from sources
-$(TEST_CLIENT):
+$(WK_CLIENT):
 	cd $(ROOT)/tools/client/ &&	$(MAKE) all
 	cp $(ROOT)/tools/client/client $@
 
@@ -186,6 +120,83 @@ $(WORKING_DIR)/%.sh: $(TEMPLATES_DIR)/%.tmpl.sh
 	sed 's|<__GEM5__>|$(GEM5)|g' \
 	> $@
 	chmod +x $@
+
+
+
+
+
+
+
+
+## Run Emulator -------------------------------------------------
+# Do the actual emulation run
+# The command will boot an instance.
+# Then it will listen to port 3003 to retive a run script
+# This run script will be the one we provided.
+run_emulator:
+	sudo qemu-system-x86_64 \
+		-nographic \
+		-cpu host -enable-kvm \
+		-smp ${CPUS} \
+		-m ${MEMORY} \
+		-drive file=$(WK_DISK),format=raw \
+		-kernel $(WK_KERNEL) \
+		-append 'console=ttyS0 root=/dev/hda2'
+
+run: run_emulator
+
+
+## Run Simulator -------------------------------------------------
+# Do the actual emulation run
+# The command will boot an instance.
+# Then check if for a run script using a magic instruction
+# This run script will be the one we provided.
+
+run_simulator:
+	sudo $(GEM5) \
+		--outdir=$(WORKING_DIR) \
+			$(GEM5_CONFIG) \
+				--kernel $(WK_KERNEL) \
+				--disk $(WK_DISK)
+
+
+
+
+
+## Install functions --------------------------------------
+#
+LOGFILE    := $(WORKING_DIR)/install.log
+
+create_install_script: $(ROOT)/simulation/install_functions.sh
+	cp $< $(WORKING_DIR)/run.sh
+
+delete_run_script: $(WORKING_DIR)/run.sh
+	rm $(WORKING_DIR)/run.sh
+
+
+install_functions: build-wkdir
+	if [ -f $(LOGFILE) ]; then rm $(LOGFILE); fi
+	$(MAKE) -f $(MKFILE) create_install_script
+	$(MAKE) -f $(MKFILE) serve_start
+	$(MAKE) -f $(MKFILE) run_emulator
+	$(MAKE) -f $(MKFILE) serve_stop
+	$(MAKE) -f $(MKFILE) delete_run_script
+
+
+## Test the results file
+install_check: $(LOGFILE)
+	$(eval fn_inst := $(shell cat $(FUNCTIONS_LIST) | sed '/^\s*#/d;/^\s*$$/d' | wc -l))
+	$(eval fn_res := $(shell grep -c "SUCCESS" $< ))
+	echo "Tryed to install $(fn_inst) functions. $(fn_res) installed and tested successful"
+	@if [ $(fn_inst) -eq $(fn_res) ] ; then \
+		printf "${GREEN}==================\n Install successful\n==================${NC}\n"; \
+	else \
+		printf "${RED}==================\n"; \
+		printf "Install failed\n"; \
+		printf "Check $<\n"; \
+		printf "==================${NC}\n"; \
+		exit 1; \
+	fi
 
 
 

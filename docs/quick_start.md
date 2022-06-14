@@ -26,16 +26,52 @@ Brew yourself a coffee in the meantime. ;-) It can take its time to to set every
    With vSwarm-u we distribute a compiled kernel, client and ready to use and tested disk image. You can find the latest release of those resources on the [release page](https://github.com/ease-lab/vSwarm-u/releases) of the repo. Refer to the [resources](setup/setup.md#get-resources) section in the documentation for more details how to download and use them.
 
 
-## Test Downloads
-In case you want to test the download
+### Test Downloads
+In case you want to make sure and check the downloads you can quickly use our test setups to perform a small test run with
+```bash
+# Perform test run with wit emulator.
+make -f test/Makefile all_emu
+# Clean everything afterwards
+make -f test/Makefile clean
+```
 
-## Setup working directory
-Once the setup pr
+For more information about the test setups refer to our [ci testing](./test/function_test.md#function-integration-test)
+
+## Perform simulations
+Once the setup has completed you are ready to perform the first simulations.
+Here we just show the basic steps to be done. Please refer to [simulation](./simulation/basics.md#first-simulation-with-gem5-and-serverless) section for more details and customization.
 
 
-The following describes the setup process in more detail. For a quick start use `setup_host.sh` script to install everything at once.
+#### 1. Setup working directory
 
+The first step is to create and setup a initial working directory. Use the `Makefile` in `simulation/` with:
+```bash
+make -f simulation/Makefile build-wkdir
+```
+to create the directory `wkdir/` and copy all necessary things into this directory.
 
+#### 2. Install functions on disk
 
+The disk image we provide does not contain any function image so we need to pull an image from a registry. Use the `install_functions` and `install_check` recipe to pull the images and verify the that the installation was successful. By default we install the three functions `fibonacci-go`, `fibonacci-nodejs`, `fibonacci-python`. Refer to [here](./simulation/basics.md) to find out how to install others.
+```bash
+## Pull, and test function containers on empty disk image
+make -f simulation/Makefile install_functions
+## Verify installation
+make -f simulation/Makefile install_check
+```
+The installation will happen using the qemu simulator and will take a few minutes to complete. *(~ 2min)*
 
+#### 3. Simulate function
 
+Finally the simulation can be started. For convenience we generate a script with all the parameters set for gem5 in you working directory. Use it to simulate one of the functions we just installed:
+```bash
+cd wkdir
+./sim_function.sh <function> <results/dir>
+```
+Use for example `fibonacci-go` and `results/` as parameters.
+Once started you can attach to the simulator with the [m5 terminal](https://www.gem5.org/documentation/general_docs/fullsystem/m5term) `$GEM5_DIR/util/term/m5term localhost 3456`. The simulator will boot linux, start the container and invoke the function. After 10 invocations simulator exit. Check [here](./simulation/basics.md#simulations) for more details.
+
+#### 4. Analyze Results
+After the simulation you can find results and statistics in the `results/` folder.
+
+Hurray :-) you have done it. Your first simulation of a serverless function with gem5. Please go to our [simulation basics](./simulation/basics.md) page to find out how everything works.

@@ -1,12 +1,13 @@
 ---
 layout: default
 title: Integration test
-nav_order: 2
+nav_order: 20
 has_children: false
+permalink: /docs/test
 ---
 
-# Function Integration test
 
+# Function Integration test
 {: .no_toc }
 
 <details open markdown="block">
@@ -27,8 +28,8 @@ The functionalities in the `test/` folder aim to test if functions can run on th
 ## Test setup
 To order to perform tests several requirements need to be fulfilled:
 - Our custom **linux kernel**
-- Our **base disk image**
-> Both of these files can be build in advance by following the instructions [here](./setup.md#build-linux-kernel) and [here](./setup.md#create-base-di).
+- Our **disk image**
+> Both of these files can be build in advance by following the instructions [here](./../setup/setup.md) and [here](./../).
 
 The environmental variable `RESOURCES` is used to let the tests find all required base files. After building the resources place them into the default `resources` folder or setting the path of this variable accordingly.
 

@@ -1,12 +1,12 @@
 ---
 layout: default
-title: Setup
-nav_order: 3
+title: Simulation
+nav_order: 10
 has_children: true
-permalink: /docs/setup
+permalink: /docs/simulation
 ---
 
-# Setup Infrastructure
+# Simulate Serverless Functions with gem5
 
 To perform simulations of serverless functions with gem5 the infrastructure need to be setup in advance.
 {: .fs-6 .fw-300 }

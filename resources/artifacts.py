@@ -29,6 +29,7 @@ import json
 import tarfile
 from tqdm import tqdm
 import os
+import sys
 import tarfile
 import shutil
 import logging as log
@@ -69,23 +70,47 @@ def download(f,url):
 
 
 
+def spinning_cursor():
+    while True:
+        for cursor in '|/-\\':
+            yield cursor
+
+# pigz -cd tmp2.tar.gz | tar xf -
+# rm tmp2.tar.gz
+import subprocess
+import time
+
+def decompressParallel(tar_file):
+    print(f"Decompress file: {tar_file}")
+    # args = ["tar", "--use-compress-program=pigz", "xf" "-cf", tar_file, file]
+    # subprocess.call(args=args)
+    # p = subprocess.Popen(args)
+    ps = subprocess.Popen(["pigz", "-cd", tar_file], stdout=subprocess.PIPE)
+    ps2 = subprocess.Popen(['tar', 'xf', '-'], stdin=ps.stdout)
+
+    spinner = spinning_cursor()
+    while ps.poll() is None and ps2.poll() is None:
+        sys.stdout.write('\r')
+        sys.stdout.write("Decompressing... " + next(spinner))
+        sys.stdout.flush()
+        time.sleep(0.2)
 
 ## Download disk
-def downloadDiskImage(release_assets):
-    urls = release_assets["disk-image"]
+def downloadDiskImage(asset_urls):
     tmpfile="disk.tmp"
     # progress = tqdm(range(len(urls)+1))
     with open(tmpfile,'wb') as f:
-        for i,url in enumerate(urls):
+        for i,url in enumerate(asset_urls):
             name = url.split("/")[-1]
-            print(f"Download: {i+1}/{len(urls)} " + name)
+            print(f"Download: {i+1}/{len(asset_urls)} " + name)
             # progress.set_description("Download %s: %s" % (i, name))
             download(f,url)
 
-    print("Extract Disk: ")
-    my_tar = tarfile.open(tmpfile,"r:gz")
-    my_tar.extractall("") # specify which folder to extract to
-    my_tar.close()
+    # print("Extract Disk: ")
+    # my_tar = tarfile.open(tmpfile,"r:gz")
+    # my_tar.extractall("") # specify which folder to extract to
+    # my_tar.close()
+    decompressParallel(tmpfile)
     os.remove(tmpfile)
 
 
@@ -96,16 +121,129 @@ def downloadAsset(asset_url):
         download(f,asset_url)
 
 
+## Get the release info
+def get_latest_release():
+    RELEASES_API = "https://api.github.com/repos/ease-lab/vSwarm-u/releases/latest"
+
+    print("Releases API: " + RELEASES_API)
+    headers = {}
+    response = requests.get(RELEASES_API, headers=headers)
+
+    print("debug: " + str(response.status_code))
+
+    RELEASE = response.json()
+    with open("rel.json", "w") as f:
+        json.dump(RELEASE, f)
+    RELEASES_LEN = len(RELEASE)
+    print(RELEASES_LEN)
+    return RELEASE
+
+def get_release(tag_name="latest"):
+    if tag_name =="latest":
+        return get_latest_release()
+
+    RELEASES_API = "https://api.github.com/repos/ease-lab/vSwarm-u/releases"
+    print("Releases API: " + RELEASES_API)
+    headers = {}
+    response = requests.get(RELEASES_API, headers=headers)
+
+    print("debug: " + str(response.status_code))
+
+    RELEASES = response.json()
+    with open("rel.json", "w") as f:
+        json.dump(RELEASES, f)
+    RELEASES_LEN = len(RELEASES)
+
+    for i in range(0, RELEASES_LEN):
+        if RELEASES[i]["tag_name"] == tag_name:
+            RELEASES_NUMBER = i
+            break
+    try:
+        print(
+            f"Found the target tagname '{tag_name}', " + str(RELEASES_NUMBER))
+    except:
+        print(f"Can't found the target tagname '{tag_name}'")
+        sys.exit(1)
+
+    return RELEASES[RELEASES_NUMBER]
+
+
+def get_assets(release):
+    # print(release["assets"])
+    assets = []
+    for a in release["assets"]:
+        assets += [{"name": a["name"], "url": a["browser_download_url"]}]
+
+    return assets
+
+
+def get_version(release):
+    return release["tag_name"]
+
+
+def get_url(release, name):
+    for a in release["assets"]:
+        if name in a["name"]:
+            return a["browser_download_url"]
+    return None
+
+
+def get_urls(release, name=""):
+    urls = []
+    for a in release["assets"]:
+        if name in a["name"]:
+            urls += [a["browser_download_url"]]
+    return urls
+
+
+
+
+def downloadLatestMoveAssets():
+
+    release=get_latest_release()
+    print("Download Artifacts")
+    name = "vmlinux"
+    kernel_url = get_url(release=release,name=name)
+    downloadAsset(kernel_url)
+
+    name = "client"
+    client_url = get_url(release=release,name=name)
+    downloadAsset(client_url)
+
+    name = "disk-image-amd64.tar.gz"
+    disk_urls = get_urls(release=release,name=name)
+
+    print("Download Disk image.. This could take a few minutes")
+    downloadDiskImage(disk_urls)
+
+    ## Move assets to destination
+    print("Copy artifacts to: " + args.output)
+    name, artifact_name = "kernel", kernel_url.split("/")[-1]
+    shutil.move(artifact_name, args.output + name)
+    name, artifact_name = "client", client_url.split("/")[-1]
+    shutil.move(artifact_name, args.output + name)
+    name, artifact_name = "disk-image.qcow2", disk_urls[0].split("/")[-1].split(".")[0]
+    # name, artifact_name = "disk-image.qcow2", "test-disk-image-amd64"
+    shutil.move(artifact_name, args.output + name)
+
 def downloadAssets():
     with open(args.file) as f:
         artifacts = json.load(f)
 
+    release=get_latest_release()
     print("Download Artifacts")
-    downloadAsset(artifacts["kernel"])
-    downloadAsset(artifacts["client"])
+    name = "vmlinux"
+    url = get_url(release=release,name=name)
+    downloadAsset(url)
 
+    name = "client"
+    url = get_url(release=release,name=name)
+    downloadAsset(url)
+
+    name = "disk-image"
+    urls = get_urls(release=release,name=name)
     print("Download Disk image.. This could take a few minutes")
-    downloadDiskImage(artifacts)
+    downloadDiskImage(urls)
 
 def moveAssets():
     with open(args.file) as f:
@@ -131,8 +269,7 @@ if __name__ == '__main__':
     if args.version:
         getVersion()
     elif args.download:
-        downloadAssets()
-        moveAssets()
+        downloadLatestMoveAssets()
     else:
         log.warning(" You don't want me to do something?")
         parser.print_help()
