@@ -1,11 +1,11 @@
 ---
 layout: default
-title: First Simulation
+title: Methodology
 parent: Simulation
 nav_order: 1
 ---
 
-# First simulation with gem5 and Serverless
+# Simulation Methodology
 {: .no_toc }
 
 <details open markdown="block">
@@ -24,10 +24,9 @@ nav_order: 1
 {:toc} -->
 
 
-
 ---
 
-Here we describe the basics of how to run experiments with gem5 and serverless functions.
+Here we describe the basic methodology of simulations with gem5 and serverless functions.
 
 ## Build initial working directory
 For doing the simulations we use a separate working directory. A initial working directory can be setup with the `Makefile` in `simulation/`.
@@ -64,7 +63,7 @@ The functions to be benchmarked need to be defined in the `function.yaml` in you
    ```
     With this simulation script is able to pin this container to an isolated core during the simulation.
 
-The initial working directory contains a template of this config file. Use it as a reference and quick start guide. Furthermore we predefined the correct config of all functions supported in gem5 from our benchmarks suite [vSwarm](https://github.com/ease-lab/vSwarm/ in `simulation/functions/all_vswarm_functions.yaml`. Use it as a reference or simply copy the config to the `functions.yaml` file in your working directory.
+The initial working directory contains a template of this config file. Use it as a reference and quick start guide. Furthermore we predefined the correct config of all functions supported in gem5 from our benchmarks suite [vSwarm](https://github.com/ease-lab/vSwarm) in `simulation/functions/all_vswarm_functions.yaml`. Use it as a reference or simply copy the config to the `functions.yaml` file in your working directory.
 
 In addition to the config file we use a second file `functions.list` to control which functions to benchmark in a particular run. You might not always benchmark all function at once. You can comment out functions in this list and the scripts will not spawn a simulation for this one.
 
@@ -85,9 +84,9 @@ make -f simulation/Makefile install_functions
 
 It may take a while depending on how many functions and how large the images are that need to be pulled.
 
-> **Warning**: the base disk image has a size of 8GB with XXGB already used. Make sure that all container images will not exceed the total size available on the disk. In case a larger disk is required the size can be increased with `qemu image resize`. Note that afterwards the file system need to be [extended](https://computingforgeeks.com/extending-root-filesystem-using-lvm-linux).
+> **Warning**: the base disk image has a size of 16GiB with 6GiB already used. Make sure that all container images will not exceed the total size available on the disk. In case a larger disk is required the size can be increased with `qemu image resize`. Note that afterwards the file system need to be [extended](https://computingforgeeks.com/extending-root-filesystem-using-lvm-linux/).
 
-### Test Installation
+### Verify Installation success
 The installation will generate a log file of the installation process. Use the recipe `install_check` to verify that everything was installed successfully.
 
 
@@ -149,9 +148,7 @@ The different systems we use to run these simulations on are is defined `gem5-co
 <!-- TODO: we need to add here more -->
 | | Parameters |
 |---|---|
-| <img src="figures/simple_system.jpg" title="Simple system" height="200"/>| **Core:** TimingSimpleCPU<br> **L1-I/D:** 36KB <br>**LLC:** 128KB<br>**Memory:** 2GB
-
-
+| <img src="../figures/simple_system.jpg" title="Simple system" height="200"/>| **Core:** TimingSimpleCPU<br> **L1-I/D:** 36KB <br>**LLC:** 128KB<br>**Memory:** 2GB
 
 
 ### Start Simulation
@@ -170,9 +167,11 @@ The results of simulation as well as the log files will be written to `results/f
 If everything goes right the simulation will end by itself with `Simulation done`
 > Note: In case you use the second script to run more simulations in the background the gem5 log is redirected as `gem5.log` in the specific directory.
 
-When you realize that the simulator got stuck at some point. Which is quite likely you need to kill and restart the simulation.
+When you realize that the simulator got stuck at some point. Which is not very unlikely, you need to kill and restart the simulation.
 > Note: In order to run the kvm core the simulator runs with `sudo`. So you also need to kill the process as sudo.
 
-## Analysis
+You can check if the simulations completed successfully using the script `analysis/check_simulations.py`. I.e. use `python ../analysis/check_simulations.py <results/dir>` to check your results folder.
+The script will also create a `rerun.sh` script for you with that will contain the shell commands to rerun the experiments that fail.
 
-TBD
+### Analyzing Results
+The folder `results/function/` will contain the results of the simulation. Please refer to the [gem5 documentation](https://www.gem5.org/documentation/learning_gem5/part1/gem5_stats/) or the [analysis](./../analysis/analysis.md) section to find out how you can process the results.
