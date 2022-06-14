@@ -56,7 +56,7 @@ def parse_arguments():
 
 
 def writeRunScript(dir, function_name):
-    n_invocations=20
+    n_invocations=5
     n_warming=5000
     FN_NAME=function_name
     tmpl = f"""
@@ -81,26 +81,22 @@ sleep 5
 m5 fail 3 ## 3: Pinned container
 
 
-## Now start the warming of the function
+
+m5 fail 10 ## 10: Start client
+
+## The client will perform some functional warming
+# and then send a fail code before invoking the
+# function again for the actual measurement.
 /root/test-client \
     -function-name {FN_NAME} \
     -url localhost \
     -port 50000 \
-    -n {n_warming} -input 10
+    -n {n_invocations} \
+    -w {n_warming} \
+    -m5ops \
+    -input 10
 
-m5 fail 4 ## 4: Warming done
-
-# -------------------------------------------
-m5 fail 10 ## 10: Start invoking
-
-## Now start the actual measurement of the function
-/root/test-client \
-    -function-name {FN_NAME} \
-    -url localhost \
-    -port 50000 \
-    -n {n_invocations} -input 10
-
-m5 fail 11 ## 11: Stop invoking
+m5 fail 11 ## 11: Stop client
 # -------------------------------------------
 
 
@@ -130,10 +126,21 @@ FAIL_CODES = {
     3:"3: Pinned container",
     4:"4: Warming done",
     6:"6: Container stop",
-    10: "10: Start invoking",
-    11: "11: Stop invoking",
+    10: "10: Start client",
+    11: "11: Stop client",
+    21: "21: Send request  ->",
+    22: "22: Recv response <-",
+    31: "31: Start warming",
+    32: "32: Stop warming",
     -1: "Exit simulation",
 }
+
+def workitem(begin, id):
+    id -= 100
+    if begin:
+        prYellow(f"Start invokation: {id}")
+    else:
+        prYellow(f"End invokation: {id}")
 
 
 def executeM5FailCode(code):
@@ -143,8 +150,10 @@ def executeM5FailCode(code):
 
     prYellow(FAIL_CODES[code])
 
-    # Before invoking we switch to detailed core
-    if code == 10:
+    # After warming but before invoking
+    # we switch to detailed core
+    #
+    if code == 32:
         print("Switch detailed core")
         system.switchToDetailedCpus()
         m5.stats.reset()
@@ -176,6 +185,11 @@ def simulate():
         if exit_event.getCause() == "m5_fail instruction encountered":
             executeM5FailCode(exit_event.getCode())
 
+        elif exit_event.getCause() == "workbegin":
+            workitem(True,exit_event.getCode())
+        elif exit_event.getCause() == "workend":
+            workitem(False,exit_event.getCode())
+
         elif exit_event.getCause() == "user interrupt received":
             print("Received user interrupt. Exit simulation")
             exit(1)
@@ -195,6 +209,13 @@ if __name__ == "__m5_main__":
     else:
         system = SimpleSystem(args.kernel, args.disk, CPUModel=TimingSimpleCPU)
 
+    # For workitems to work correctly
+    # This will cause the simulator to exit simulation when the first work
+    # item is reached and when the first work item is finished.
+    system.exit_on_work_items = True
+    # system.work_item_id = 2
+    # system.work_begin_exit_count = 1
+    # system.work_end_exit_count = 1
 
     # Gem5 will automatically start a run script once booted.
     # The script is retrieved from `readfile`.

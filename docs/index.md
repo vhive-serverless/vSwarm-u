@@ -100,8 +100,6 @@ The software is maintained at the [EASE lab](https://easelab.inf.ed.ac.uk/) as p
 
 
 
-
-
 ## Known problems
 
 Sometimes the simulator get stuck during while running with the detailed core model. We are working on it and try to make the setup more stable.

@@ -48,9 +48,8 @@ GEM5		?= $(RESOURCES)/gem5/build/X86/gem5.opt
 ## Dependencies -------------------------------------------------
 ## Check and install all dependencies necessary to perform function
 ##
-dep_install:
-	sudo pip install -U niet
-
+# dep_install:
+# 	sudo pip install -U niet
 
 
 
