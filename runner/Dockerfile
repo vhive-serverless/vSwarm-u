@@ -151,7 +151,11 @@ RUN  apt-get update \
       build-essential git m4 scons zlib1g zlib1g-dev \
     	libprotobuf-dev protobuf-compiler libprotoc-dev libgoogle-perftools-dev \
     	python3-dev python3-six python-is-python3 libboost-all-dev pkg-config \
-      qemu-kvm bridge-utils \
+  && apt-get install -y \
+        python3-pip \
+        curl \
+        lsof \
+        qemu-kvm bridge-utils \
   && rm -rf /var/lib/apt/lists/*
 
 ENTRYPOINT ["/entrypoint.sh"]

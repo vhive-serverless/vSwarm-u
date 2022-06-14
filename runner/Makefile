@@ -24,7 +24,7 @@
 RESOURCES 	?=$(ROOT)/resources/
 ACCESS_TOKEN :=${GH_ACCESS_TOKEN}
 
-RUNNERS := gem5-build-runner qemu-test-runner gem5-test-runner
+RUNNERS := gem5-test-runner
 
 
 #### Build the runner images
@@ -37,8 +37,8 @@ RUNNERS := gem5-build-runner qemu-test-runner gem5-test-runner
 
 build: $(RUNNERS)
 
-start-all: start-test-runners start-build-runners
-stop-all: stop-test-runners stop-build-runners
+start-all: start-gem5-test-runner
+stop-all: start-gem5-test-runner
 
 
 
@@ -58,8 +58,8 @@ pull:
 
 ##### Start and stop runners ####
 # Test runners
-start-test-runners: start-qemu-test-runner start-gem5-test-runner
-stop-test-runners: stop-qemu-test-runner stop-gem5-test-runner
+start-test-runners: start-gem5-test-runner
+stop-test-runners: stop-gem5-test-runner
 
 start-%-test-runner:
 	@$(eval runner := $(subst start-,,$@))
