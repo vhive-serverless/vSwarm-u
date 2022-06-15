@@ -121,10 +121,10 @@ jobs:
         id: set-matrix
         shell: bash
         run: |
-          FUTS=$(cat .github/config/functions-under-test.txt)
+          FUTS=$(cat .github/configs/functions-under-test.txt)
           FUTS=${FUTS//$'\n'/ }
           echo "$FUTS"
-          matrix=$(printf '%s\n' $(cat .github/config/functions-under-test.txt) | jq -ncR [inputs])
+          matrix=$(printf '%s\n' $(cat .github/configs/functions-under-test.txt) | jq -ncR [inputs])
           echo $matrix
           echo "FUNCTIONS_UNDER_TEST=$FUTS" >> $GITHUB_ENV
           echo "::set-output name=function_matrix::$matrix"

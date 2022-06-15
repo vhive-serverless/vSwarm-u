@@ -67,10 +67,8 @@ Please cite our [paper](https://ease-lab.github.io/ease_website/pubs/JUKEBOX_ISC
 
 ## Getting started with vSwarm-&mu;
 
-vSwarm-&mu; can be deployed on premises or in the cloud, with support for nested virtualization. We provide [a quick-start guide](docs/quickstart_guide.md)
+vSwarm-&mu; can be deployed on premises or in the cloud, with support for nested virtualization. We provide [a quick-start guide](./quick_start.md)
 that describes the initial setup, as well as how to set up benchmarking experiments.
-
-You can view the vSwarm-&mu; documentation [here](docs/).
 
 
 ### Getting help and contributing
