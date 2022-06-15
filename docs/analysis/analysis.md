@@ -3,7 +3,7 @@ layout: default
 title: Analysis
 nav_order: 15
 has_children: true
-permalink: /docs/simulation
+permalink: /docs/analysis
 ---
 
 # Analyze simulation results

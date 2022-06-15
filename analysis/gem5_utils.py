@@ -4,6 +4,7 @@ import csv
 import json
 
 import collections
+from numpy import dtype
 from objectpath import *
 from os import path, listdir, stat
 from pyparsing import Word, Optional, ParseException, printables, nums, restOfLine
@@ -121,6 +122,17 @@ def to_csv(output_file_name, results, fields):
 
         for result in results:
             writer.writerow([field[1](result) for field in fields])
+
+def to_pandas(results, fields):
+    columns = [field[0] for field in fields]
+    dtype = {s:t for s,t in zip([field[0] for field in fields],[field[2] for field in fields])}
+    data = []
+    for result in results:
+        try:
+            data += [[int(field[1](result)) for field in fields]]
+        except:
+            data += [[field[1](result) for field in fields]]
+    return pd.DataFrame(data=data, columns=columns).astype(dtype)
 
 
 def generate_plot(csv_file_name, plot_file_name, x, y, hue, y_title, xticklabels_rotation=90):
