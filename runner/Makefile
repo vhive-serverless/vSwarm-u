@@ -37,21 +37,24 @@ RUNNERS := gem5-test-runner
 
 build: $(RUNNERS)
 
-start-all: start-gem5-test-runner
-stop-all: start-gem5-test-runner
+start: start-gem5-test-runner
+stop: stop-gem5-test-runner
 
 
 
 ## Push and pull
-push-%:
-	docker push docker.io/vhiveease/$(subst push-,,$@):latest
+# push-%:
+# 	docker push docker.io/vhiveease/$(subst push-,,$@):latest
 
-push:
-	docker push $(RUNNERS)
+# push: $(addprefix push-, $(RUNNERS))
+
+# pull-%:
+# 	docker pull docker.io/vhiveease/$(subst pull-,,$@):latest
+
+# pull: $(addprefix pull-, $(RUNNERS))
 
 pull:
-	docker pull $(RUNNERS)
-
+	docker pull vhiveease/$(RUNNERS)
 
 
 #@$(eval runner_name := "$(runner)-$(shell echo $$RANDOM | md5sum | head -c 10; echo;)")
