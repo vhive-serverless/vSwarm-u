@@ -10,11 +10,12 @@ systemctl restart sshd
 # Do a full upgrade
 apt update
 # apt full-upgrade -y
+apt install -y net-tools
+# apt full-upgrade -y
 # sudo apt-get -y install \
 #     gcc \
 #     g++ \
 #     make
-
 
 ##### GEM5 specific setup #####
 ## Prepare gem5 utility tool
