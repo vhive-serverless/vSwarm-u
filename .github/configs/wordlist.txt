@@ -673,11 +673,13 @@ Qemu
 mycontainer
 GCP
 Ghz
+GiB
 interferences
 kB
 linux's
 HW
 IPC
+CI
 CPI
 cpi
 nav
@@ -700,3 +702,8 @@ img
 subcommands
 qemu's
 Harshit
+qcow
+qcow2
+permalink
+fs
+fw

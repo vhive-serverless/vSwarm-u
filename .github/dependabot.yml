@@ -10,3 +10,10 @@ updates:
     directory: "./tools/client"
     schedule:
       interval: "weekly"
+
+  # Enable version updates for Actions
+  - package-ecosystem: "github-actions"
+    # Look for `.github/workflows` in the `root` directory
+    directory: "/"
+    schedule:
+      interval: "weekly"

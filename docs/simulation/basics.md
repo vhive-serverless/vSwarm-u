@@ -30,13 +30,13 @@ nav_order: 1
 Here we describe the basics of how to run experiments with gem5 and serverless functions.
 
 ## Build initial working directory
-Once you have build all required resources ([gem5](./setup.md#build-gem5-resources), [kernel](./setup.md#build-linux-kernel), [base-disk-image](./setup.md#create-basic-ubuntu-disk-image)) you can setup a initial working directory using the `Makefile` in `simulation/`
+For doing the simulations we use a separate working directory. A initial working directory can be setup with the `Makefile` in `simulation/`.
 ```bash
 make -f simulation/Makefile build-wkdir
 ```
 By default it will create the new folder `wkdir/` and copies a bunch of files into it which you need or might find useful to start experimenting including:
 
-1. Kernel and base disk image
+1. Kernel and base disk image. *We make a copy that we always have a clean base image in case we mess up things*
 2. Templates of `function.yaml` and `function.list` to define your functions.
 3. A `sim_function.sh` script for running simulation for a particular function.
 4. A `sim_all_functions.sh` script for starting a simulation of each function defined in the `functions.list` file.
@@ -85,7 +85,7 @@ make -f simulation/Makefile install_functions
 
 It may take a while depending on how many functions and how large the images are that need to be pulled.
 
-> **Warning**: the base disk image has a size of 8GB with XXGB already used. Make sure that all container images will not exceed the total size available on the disk. In case a larger disk is required the size can be increased with `qemu image resize`. Note that afterwards the file system need to be [extended](https://computingforgeeks.com/extending-root-filesystem-using-lvm-linux/).
+> **Warning**: the base disk image has a size of 8GB with XXGB already used. Make sure that all container images will not exceed the total size available on the disk. In case a larger disk is required the size can be increased with `qemu image resize`. Note that afterwards the file system need to be [extended](https://computingforgeeks.com/extending-root-filesystem-using-lvm-linux).
 
 ### Test Installation
 The installation will generate a log file of the installation process. Use the recipe `install_check` to verify that everything was installed successfully.
@@ -98,7 +98,7 @@ As soon as the functions are installed on disk its finally time to turn our atte
 The initial working directory will contain gem5 config file `run_sim.py` that defines a system and a basic workflow to benchmark one serverless function.
 
 ### Workflow
-A workflow defines what is happening during the simulation. Remember that before the simulation the machine is shutdown so in before we can start measuring we need to boot and start the container. To do this automated we use [workflow automation concept](./function_test.md#workflow-automation).
+A workflow defines what is happening during the simulation. Remember that before the simulation the machine is shutdown so in before we can start measuring we need to boot and start the container. To do this automated we use [workflow automation concept](./../test/function_test.md#workflow-automation).
 
 Basically, what we need to do is to define a run script and send it to the simulator.
 

@@ -63,7 +63,7 @@ sudo qemu-system-x86_64 \
 ## Gem5 binary
 The `m5` binary is a useful tool to execute magic instructions from the running system. After installation you can use this tool in scripts or even in the command line to for example take a snapshot or exit the simulation. Type `m5 -h` for available subcommands. More information about the `m5` binary you will find [here](https://www.gem5.org/documentation/general_docs/m5ops/).
 
-Btw. by using the `gem5.Makefile` will already build the m5 utility tool for you.
+> Note: Using the `gem5.Makefile` will already build the m5 utility tool for you.
 
 ## Gem5 init service.
 The gem5 init service is a neat way to automatically start execution a workload as soon as linux is fully booted. This service is very general in that it uses the `m5` tool retrieve any script you can specify in your gem5-config file and execute it. Just check the `--run-script` argument in the `gem5-config/run.py` file to see how such a script is send to the simulator and the `config/gem5init` file to find out how the linux obtains and execute it.

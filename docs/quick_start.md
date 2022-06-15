@@ -13,7 +13,7 @@ This guide describes how to quickly setup your machine and run the first cycle a
 
 Before experimenting with gem5 and serverless functions several things need to be installed downloaded.
 For a quick start use the `setup/setup_host.sh` script to install everything.
-Brew yourself a coffee in the meantime. ;-) It can take its time to to set everything up for you. Four your notice the script will:
+Brew yourself a coffee ☕️😉 in the meantime. It can take its time to to set everything up for you. Four your notice the script will:
 
 1. **Install all dependencies** *(~5 min)*
 
@@ -35,7 +35,7 @@ make -f test/Makefile all_emu
 make -f test/Makefile clean
 ```
 
-For more information about the test setups refer to our [ci testing](./test/function_test.md#function-integration-test)
+For more information about the test setups refer to our [CI testing](./test/function_test.md#function-integration-test)
 
 ## Perform simulations
 Once the setup has completed you are ready to perform the first simulations.
@@ -74,4 +74,4 @@ Once started you can attach to the simulator with the [m5 terminal](https://www.
 #### 4. Analyze Results
 After the simulation you can find results and statistics in the `results/` folder.
 
-Hurray :-) you have done it. Your first simulation of a serverless function with gem5. Please go to our [simulation basics](./simulation/basics.md) page to find out how everything works.
+Yippee 😀 you have done it. Your first simulation of a serverless function with gem5. Please go to our [simulation basics](./simulation/basics.md) page to find out how everything works.
