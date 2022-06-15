@@ -109,8 +109,8 @@
       shell: "/wkdir/vSwarm-u/setup/setup_host.sh"
 
     - name: Build the gem5 runners
-      command: |
-        sudo make -f /wkdir/vSwarm-u/runner/Makefile build
+      shell: |
+        sudo make -f /wkdir/vSwarm-u/runner/Makefile pull
 
     # - name: Add cron entry to reboot at midnight
     #   become: yes

@@ -29,5 +29,5 @@
   tasks:
 
     - name: Stop the gem5 runners
-      command: |
-        GH_ACCESS_TOKEN={{ lookup('env', 'GH_ACCESS_TOKEN') }} sudo make -f /wkdir/vSwarm-u/runner/Makefile stop-all
+      shell: |
+        GH_ACCESS_TOKEN={{ lookup('env', 'GH_ACCESS_TOKEN') }} sudo make -f /wkdir/vSwarm-u/runner/Makefile stop

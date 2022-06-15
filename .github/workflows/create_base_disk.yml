@@ -55,8 +55,6 @@ jobs:
 #########################################
 ### Install the OS on the new disk image
 
-
-
   install-base-image:
     name: Build Base image with Ubuntu
     runs-on: ubuntu-20.04
@@ -182,7 +180,7 @@ jobs:
     needs: install-base-image
     env:
       FUNCTIONS_UNDER_TEST: "fibonacci-go"
-      MAKEFILE: test/emu_test.Makefile
+      MAKEFILE: test/Makefile
 
     steps:
       - name: Check out code
@@ -237,6 +235,7 @@ jobs:
       - name: Install dependencies
         run: |
           make -f ${{ env.MAKEFILE }} dep_install
+          make -f ${{ env.MAKEFILE }} dep_check_qemu
 
 
       - name: Create the working directory to run the test.
@@ -249,22 +248,22 @@ jobs:
 
 
       - name: Run the actual test of the emulator.
-        timeout-minutes: 10
+        timeout-minutes: 15
         run: |
           make -f ${{ env.MAKEFILE }} run_test_no_kvm
 
 
       - name: Check the results file.
         run: |
-          make -f ${{ env.MAKEFILE }} check
+          make -f ${{ env.MAKEFILE }} check_emu
 
 
-      - name: Save the final disk image
-        shell: bash
-        env:
-          OUTPUT: ${{ env.DISK_FINAL }}
-        run: |
-          make -f ${{ env.MAKEFILE }} save_output
+      # - name: Save the final disk image
+      #   shell: bash
+      #   env:
+      #     OUTPUT: ${{ env.DISK_FINAL }}
+      #   run: |
+      #     make -f ${{ env.MAKEFILE }} save_output
 
 
       - name: Create checksums of the artifacts

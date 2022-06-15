@@ -23,7 +23,7 @@
 # SOFTWARE.
 
 # Execute this script (on the local) as
-#   GH_ACCESS_TOKEN=... ./easy-create.sh <HOSTNAME> <N> [USER]
+#   GH_ACCESS_TOKEN=... ./easy-create.sh <HOSTNAME> <N> [USER] [PRIVATE KEY]
 #
 
 set -x
@@ -34,16 +34,17 @@ PWD="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 REMOTE=$1
 COUNT=$2
 AS_USER=${3:-`whoami`}
+KEY=${4:-~/.ssh/id_rsa}
 
 sudo apt update -qq
 sudo apt install software-properties-common
 sudo add-apt-repository --yes --update ppa:ansible/ansible
 sudo apt install -q ansible
 
-ansible-playbook -v -u $AS_USER -i ${REMOTE}, ${PWD}/setup-host.yaml
+ansible-playbook -v --private-key ${KEY} -u $AS_USER -i ${REMOTE}, ${PWD}/setup-host.yaml
 
-# ansible-playbook -u $AS_USER -i ${REMOTE}, ${PWD}/delete-runners.yaml
+ansible-playbook -u $AS_USER --private-key ${KEY} -i ${REMOTE}, ${PWD}/delete-runners.yaml
 
 for i in $(seq ${COUNT}); do
-    GH_ACCESS_TOKEN=${GH_ACCESS_TOKEN} ansible-playbook -u $AS_USER -i ${REMOTE}, ${PWD}/create-runner.yaml
+    GH_ACCESS_TOKEN=${GH_ACCESS_TOKEN} ansible-playbook --private-key ${KEY} -v -u $AS_USER -i ${REMOTE}, ${PWD}/create-runner.yaml
 done
