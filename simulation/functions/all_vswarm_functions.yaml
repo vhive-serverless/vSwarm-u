@@ -129,3 +129,207 @@ services:
     ports:
       - target: 50051
         published: 50000
+
+
+  ## Hotel App ---------------------------
+  # Functions #
+  geo:
+    image: vhiveease/hotel-app-geo:latest
+    container_name: function
+    entrypoint:
+      - /app/server
+      - --url=0.0.0.0
+      - --port=8083
+      - --db_addr=database:27017
+    ports:
+      - target: 8083
+        published: 50000
+    depends_on:
+      - database
+
+  profile:
+    image: vhiveease/hotel-app-profile:latest
+    container_name: function
+    entrypoint:
+      - /app/server
+      - --url=0.0.0.0
+      - --port=8083
+      - --db_addr=database:27017
+      - --memcached_addr=memcached:11211
+    ports:
+      - target: 8083
+        published: 50000
+    depends_on:
+      - database
+      - memcached
+
+  rate:
+    image: vhiveease/hotel-app-rate:latest
+    container_name: function
+    entrypoint:
+      - /app/server
+      - --url=0.0.0.0
+      - --port=8083
+      - --db_addr=database:27017
+      - --memcached_addr=memcached:11211
+    ports:
+      - target: 8083
+        published: 50000
+    depends_on:
+      - database
+      - memcached
+
+  recommendation:
+    image: vhiveease/hotel-app-recommendation:latest
+    container_name: function
+    entrypoint:
+      - /app/server
+      - --url=0.0.0.0
+      - --port=8083
+      - --db_addr=database:27017
+    ports:
+      - target: 8083
+        published: 50000
+    depends_on:
+      - database
+
+  reservation:
+    image: vhiveease/hotel-app-reservation:latest
+    container_name: function
+    entrypoint:
+      - /app/server
+      - --url=0.0.0.0
+      - --port=8083
+      - --db_addr=database:27017
+      - --memcached_addr=memcached:11211
+    ports:
+      - target: 8083
+        published: 50000
+    depends_on:
+      - database
+      - memcached
+
+  user:
+    image: vhiveease/hotel-app-user:latest
+    container_name: function
+    entrypoint:
+      - /app/server
+      - --url=0.0.0.0
+      - --port=8083
+      - --db_addr=database:27017
+    ports:
+      - target: 8083
+        published: 50000
+    depends_on:
+      - database
+
+
+  ## Database ##
+  database:
+    image: vhiveease/mongodb
+    container_name: db
+  ## Memcached ##
+  memcached:
+    image: vhiveease/memcached
+    container_name: mmc
+    environment:
+      - MEMCACHED_CACHE_SIZE=128
+      - MEMCACHED_THREADS=2
+    logging:
+      options:
+        max-size: 50m
+
+
+
+
+  ## Online Shop -------------------------
+  currencyservice:
+    image: vhiveease/onlineshop-currencyservice:latest
+    container_name: function
+    environment:
+      - PORT=7000
+      - DISABLE_PROFILER=true
+      - DISABLE_DEBUGGER=true
+      - DISABLE_TRACING=true
+    entrypoint: [ "node", "server.js" ]
+    ports:
+      - target: 7000
+        published: 50000
+
+
+  emailservice:
+    image: vhiveease/onlineshop-emailservice:latest
+    container_name: function
+    build:
+      context: ./../../emailservice/
+      dockerfile: ./Dockerfile
+    environment:
+      - PORT=8080
+      - DISABLE_PROFILER=true
+      - DISABLE_DEBUGGER=true
+      - DISABLE_TRACING=true
+    ports:
+      - target: 8080
+        published: 50000
+
+
+  paymentservice:
+    image: vhiveease/onlineshop-paymentservice:latest
+    container_name: function
+    environment:
+      - PORT=50051
+      - DISABLE_PROFILER=true
+      - DISABLE_DEBUGGER=true
+      - DISABLE_TRACING=true
+    ports:
+      - target: 50051
+        published: 50000
+
+  productcatalogservice:
+    image: vhiveease/onlineshop-productcatalogservice:latest
+    container_name: function
+    environment:
+      - PORT=3550
+      - DISABLE_PROFILER=true
+      - DISABLE_DEBUGGER=true
+      - DISABLE_TRACING=true
+    ports:
+      - target: 3550
+        published: 50000
+
+
+  recommendationservice:
+    image: vhiveease/onlineshop-recommendationservice:latest
+    container_name: function
+    environment:
+      - PORT=8080
+      - PRODUCT_CATALOG_SERVICE_ADDR=prod-cat-dependent:3550
+      - DISABLE_PROFILER=true
+      - DISABLE_DEBUGGER=true
+      - DISABLE_TRACING=true
+    ports:
+      - target: 8080
+        published: 50000
+    depends_on:
+      - prod-cat-dependent
+  prod-cat-dependent:
+    image: vhiveease/onlineshop-productcatalogservice:latest
+    container_name: prod-cat-dependent
+    environment:
+      - PORT=3550
+      - DISABLE_PROFILER=true
+      - DISABLE_DEBUGGER=true
+      - DISABLE_TRACING=true
+
+
+  shippingservice:
+    image: vhiveease/onlineshop-shippingservice:latest
+    container_name: function
+    environment:
+      - PORT=50051
+      - DISABLE_PROFILER=true
+      - DISABLE_DEBUGGER=true
+      - DISABLE_TRACING=true
+    ports:
+      - target: 50051
+        published: 50000
