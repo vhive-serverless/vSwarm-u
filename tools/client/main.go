@@ -26,6 +26,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"os"
@@ -85,11 +86,18 @@ func main() {
 		m5.Fail(0, 20) // 20: Connection established
 	}
 
+	// ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+	// defer cancel()
+	ctx := context.Background()
+
 	// Set up a connection to the function server.
 	serviceName := grpcClients.FindServiceName(*functionName)
 	client = grpcClients.FindGrpcClient(serviceName)
-	client.Init(*url, *port)
+
+	client.Init(ctx, *url, *port)
 	defer client.Close()
+
+	log.Printf("Greeting: %s")
 
 	// conn, err := grpc.Dial(*addr, grpc.WithInsecure())
 	// if err != nil {
@@ -99,39 +107,30 @@ func main() {
 	// c := pb.NewGreeterClient(conn)
 
 	// // // Contact the server and print out its response.
-	// ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	// defer cancel()
 
-	// Create packet to send to the function
-	// var pkt grpcClients.Input
-	// pkt.SetGenerator(grpcClients.Unique)
-	// pkt.SetValue(*input)
 	generator = client.GetGenerator()
 	generator.SetGenerator(grpcClients.Unique)
 	generator.SetValue(*input)
 	generator.SetMethod(*functionMethod)
 	pkt := generator.Next()
 
-	reply := client.Request(pkt)
+	log.Printf("Greeting: %s")
+	reply := client.Request(ctx, pkt)
 	// log.Debug(reply)
 
-	// r, err := c.SayHello(ctx, &pb.HelloRequest{Name: *name})
-	// if err != nil {
-	// 	log.Fatalf("FAIL: could not greet: %v", err)
-	// }
 	log.Printf("Greeting: %s", reply)
 
 	if *m5_enable {
-		invokeFunctionInstrumented(*n)
+		invokeFunctionInstrumented(ctx, *n)
 	} else {
-		invokeFunction(*n)
+		invokeFunction(ctx, *n)
 	}
 
 	log.Printf("Finished invoking: %s", reply)
 	log.Printf("SUCCESS: Calling functions for %d times", *n)
 }
 
-func invokeFunction(n int) {
+func invokeFunction(ctx context.Context, n int) {
 	// Print 5 times the progress
 	mod := 1
 	if n > 2*5 {
@@ -140,14 +139,14 @@ func invokeFunction(n int) {
 	for i := 0; i < n; i++ {
 
 		pkt := generator.Next()
-		client.Request(pkt)
+		client.Request(ctx, pkt)
 		if i%mod == 0 {
 			log.Printf("Invoked for %d times\n", i)
 		}
 	}
 }
 
-func invokeFunctionInstrumented(n int) {
+func invokeFunctionInstrumented(ctx context.Context, n int) {
 	// Print 5 times the progress
 	mod := 1
 	if n > 2*5 {
@@ -160,7 +159,7 @@ func invokeFunctionInstrumented(n int) {
 		m5.Fail(0, 21) // 21: Send Request
 
 		// c.SayHello(ctx, &pb.HelloRequest{Name: *name})
-		client.Request(pkt)
+		client.Request(ctx, pkt)
 
 		m5.Fail(0, 22) // 21: Send Request
 		if i%mod == 0 {

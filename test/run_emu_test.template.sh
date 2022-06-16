@@ -60,6 +60,7 @@ function pull_test_function {
     # /root/test-client -addr localhost:50051 -n 20 && INVOKER_RES=$?
     /root/test-client \
         -function-name ${FUNCTION_NAME} \
+        -function-method 0 \
         -url localhost \
         -port 50000 \
         -n 20 -input 1 \

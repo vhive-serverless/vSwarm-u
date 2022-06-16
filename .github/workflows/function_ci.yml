@@ -185,6 +185,7 @@ jobs:
     needs: emulator-function-test
     strategy:
       fail-fast: false
+      max-parallel: 7
       matrix:
         function: ${{ fromJson(needs.emulator-function-test.outputs.function_matrix) }}
     env:

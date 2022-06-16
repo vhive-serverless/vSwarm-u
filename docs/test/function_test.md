@@ -22,19 +22,16 @@ permalink: /docs/test
 ---
 
 
-The functionalities in the `test/` folder aim to test if functions can run on the base image in the qemu emulator and later in gem5.
+The folder `test/` implement the functionality to test function images on their compatibility with the base image and vSwarm-&mu;. The folder contains tests for the qemu emulator and the gem5 simulator. The tests are fully integrated with github action workflows and aim as continuous integration tests.
 
 
 ## Test setup
-To order to perform tests several requirements need to be fulfilled:
-- Our custom **linux kernel**
-- Our **disk image**
-> Both of these files can be build in advance by following the instructions [here](./../setup/setup.md) and [here](./../).
+To order to perform tests the host system need to be setup correctly with all requirements. Refer to the [setup](./../setup/setup.md) to get help with setting things up.
 
-The environmental variable `RESOURCES` is used to let the tests find all required base files. After building the resources place them into the default `resources` folder or setting the path of this variable accordingly.
+The environmental variable `RESOURCES` is used to let the tests find all all dependent resources like base-image, kernel and gem5. required base files. After building the resources place them into the default `resources` folder or setting the path of this variable accordingly.
 
 Futhermore for Emulator tests [qemu](https://www.qemu.org/docs/master/) need to be installed as well as the python uploadserver.
-> Use `make dep_check_qemu` to check if all requirements are fulfilled.
+> Use `make -f test/Makefile dep_check_qemu` to check if all requirements are fulfilled.
 
 ## Test flow
 The test is composed of the following steps
@@ -66,11 +63,11 @@ The underlying concept of the automation is the gem5.service. After boot this se
 ### Gem5 simulator
 In case `gem5.service` encounters the `M5 Simulator` as cpu model it will use the magic instruction `m5 readfile`. This instruction is the counter part of the `.readfile` parameter in the `m5.System` object.
 
-> Example how to set the script in the gem5 config
-> ```python
-> system = System()
-> system.readfile = <"path/to/your/run/script">
-> ```
+Example how to set the script in the gem5 config
+```python
+system = System()
+system.readfile = <"path/to/your/run/script">
+```
 
 
 ### Qemu Emulator
@@ -86,11 +83,11 @@ With this entry point (`run.sh`) any arbitrary complex workflow can be implement
 I.e. `python -m http.server 3003` will serve files from the current directory at port 3003. Use `-d` to defined another directory to be served.
 The folder can contain more files but the run script that can be downloaded if neccessary with `curl` or `wget`.
 
-> In oder to get feedback from the emulator one can use pythons [upload server](https://pypi.org/project/uploadserver/) to not just download but also upload files.
-> ```python
-> python3 -m uploadserver -d tmp/ 3003
-> ```
-> Will serve the directory `tmp` at port 3003 for GET and PUT request. The emulator can now not just download more files that remain in this folder. I.e. `curl  "http://10.0.2.2:3003/config.json" -f -o config.json` will download config.json from the host and save it as config.json at the guest. But also files can be uploaded from the guest to this tmp folder in the host. I.e. `curl  "http://10.0.2.2:3003/upload" -F 'files=@results.log'` will upload results.log.
+In oder to get feedback from the emulator one can use python's [upload server](https://pypi.org/project/uploadserver/) to not just download but also upload files.
+```python
+python3 -m uploadserver -d tmp/ 3003
+```
+Will serve the directory `tmp` at port 3003 for GET and PUT request. The emulator can now not just download more files that remain in this folder. I.e. `curl  "http://10.0.2.2:3003/config.json" -f -o config.json` will download config.json from the host and save it as config.json at the guest. But also files can be uploaded from the guest to this tmp folder in the host. I.e. `curl  "http://10.0.2.2:3003/upload" -F 'files=@results.log'` will upload results.log.
 
 
 
