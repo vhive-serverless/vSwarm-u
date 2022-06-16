@@ -2,7 +2,7 @@
 layout: default
 title: Home
 nav_order: 1
-has_children: true
+has_children: false
 ---
 
 ![vSwarm-u Header](figures/vSwarm-u-hdr.png)
@@ -15,7 +15,7 @@ has_children: true
 >*<font color="red">vSwarm-u is still in beta state but will be released soon for the ISCA'22 conference.</font>*
 
 [Serverless computing represent new challenges for modern CPUs!](https://ease-lab.github.io/ease_website/pubs/JUKEBOX_ISCA22.pdf)
-With vSwarm-&mu we aim to enable microarchitectural research for serverless
+With vSwarm-&mu; we aim to enable microarchitectural research for serverless
 {: .fs-6 .fw-300 }
 
 
@@ -32,7 +32,7 @@ With vSwarm-&mu; we are addressing the challenges of serverless host server simu
 Furthermore, vSwarm-u includes the infrastructure to drive function instances running on the simulated serverless host server without interfering or simplifying the complexity of the test system. The robust evaluation methodology allows benchmarking and microarchitecture analysis in a realistic scenario.
 
 ## vSwarm-u Design
-<img src="docs/figures/vswarm-u-design.jpg" title="vSwarm-u design" height="200"/>
+<img src="figures/vswarm-u-design.jpg" title="vSwarm-u design" height="200"/>
 
 ## Referencing our work
 
