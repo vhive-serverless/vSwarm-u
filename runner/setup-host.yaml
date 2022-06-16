@@ -72,30 +72,30 @@
         state: directory
         mode: '0777'
 
-    - name: Create The RESOURCES directory
-      become: yes
-      ansible.builtin.file:
-        path: "{{ RESOURCES }}"
-        state: directory
-        mode: '0777'
+    # - name: Create The RESOURCES directory
+    #   become: yes
+    #   ansible.builtin.file:
+    #     path: "{{ RESOURCES }}"
+    #     state: directory
+    #     mode: '0777'
 
-    - name: Export the RESOURCE path
-      become: yes
-      lineinfile:
-        path: "/etc/environment"
-        line: 'RESOURCES={{ RESOURCES }}'
-        insertafter: 'EOF'
-        state: present
+    # - name: Export the RESOURCE path
+    #   become: yes
+    #   lineinfile:
+    #     path: "/etc/environment"
+    #     line: 'RESOURCES={{ RESOURCES }}'
+    #     insertafter: 'EOF'
+    #     state: present
 
     # - name: Source the bashrc file
     #   shell: source {{ lookup('env', 'HOME') }}/.bashrc
 
-    - name: print env
-      # shell: echo {{ lookup('env', 'RESOURCES') }}
-      shell: env
+    # - name: print env
+    #   # shell: echo {{ lookup('env', 'RESOURCES') }}
+    #   shell: env
 
-    - name: print env
-      shell: cat /etc/environment
+    # - name: print env
+    #   shell: cat /etc/environment
 
 
     ## Clone vSwarm-u

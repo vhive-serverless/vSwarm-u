@@ -184,6 +184,7 @@ jobs:
     runs-on: [self-hosted, gem5-test]
     needs: emulator-function-test
     strategy:
+      fail-fast: false
       matrix:
         function: ${{ fromJson(needs.emulator-function-test.outputs.function_matrix) }}
     env:

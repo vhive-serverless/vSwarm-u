@@ -38,4 +38,6 @@
 
     - name: Start the gem5 runners
       shell: |
-        GH_ACCESS_TOKEN={{ lookup('env', 'GH_ACCESS_TOKEN') }} sudo make -f /wkdir/vSwarm-u/runner/Makefile start
+        GH_ACCESS_TOKEN={{ lookup('env', 'GH_ACCESS_TOKEN') }} \
+        RESOURCES=/wkdir/vSwarm-u/resources/ \
+            sudo make -f /wkdir/vSwarm-u/runner/Makefile start
