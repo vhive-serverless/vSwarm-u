@@ -45,7 +45,7 @@ parser.add_argument("--file", default=f"{RESOURCES}/release.json",
                     help="Path to the release file. Default 'resources/release.json'")
 parser.add_argument("--download","-d", default=False, action="store_true", help = "Download release assets")
 # parser.add_argument("--upload","-u", default=False, action="store_true", help = "Upload release assets")
-parser.add_argument("--version", "-v", default=False, action="store_true",help="Get release version")
+parser.add_argument("--version", "-v", type=str, default="latest", help="Set version from where to download")
 parser.add_argument("--output", "-o", type=str, default=f"{RESOURCES}/",
                     help="Output directory to store the assets to. Default: 'resources/'")
 args = parser.parse_args()
@@ -129,13 +129,12 @@ def get_latest_release():
     headers = {}
     response = requests.get(RELEASES_API, headers=headers)
 
-    print("debug: " + str(response.status_code))
+    # print("debug: " + str(response.status_code))
 
     RELEASE = response.json()
     with open("rel.json", "w") as f:
         json.dump(RELEASE, f)
     RELEASES_LEN = len(RELEASE)
-    print(RELEASES_LEN)
     return RELEASE
 
 def get_release(tag_name="latest"):
@@ -198,10 +197,14 @@ def get_urls(release, name=""):
 
 
 
-def downloadLatestMoveAssets():
+def downloadMoveAssets(version="latest"):
 
-    release=get_latest_release()
-    print("Download Artifacts")
+    if version == "latest":
+        release=get_latest_release()
+    else:
+        release=get_release(version)
+
+    print(f"Download Artifacts from version: {get_version(release)}")
     name = "vmlinux"
     kernel_url = get_url(release=release,name=name)
     downloadAsset(kernel_url)
@@ -266,10 +269,4 @@ def getVersion():
 
 
 if __name__ == '__main__':
-    if args.version:
-        getVersion()
-    elif args.download:
-        downloadLatestMoveAssets()
-    else:
-        log.warning(" You don't want me to do something?")
-        parser.print_help()
+    downloadMoveAssets(args.version)
