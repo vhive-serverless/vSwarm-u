@@ -30,7 +30,7 @@ To order to perform tests the host system need to be setup correctly with all re
 
 The environmental variable `RESOURCES` is used to let the tests find all all dependent resources like base-image, kernel and gem5. required base files. After building the resources place them into the default `resources` folder or setting the path of this variable accordingly.
 
-Futhermore for Emulator tests [qemu](https://www.qemu.org/docs/master/) need to be installed as well as the python uploadserver.
+Furthermore. for emulator tests [qemu](https://www.qemu.org/docs/master/) need to be installed as well as the python uploadserver.
 > Use `make -f test/Makefile dep_check_qemu` to check if all requirements are fulfilled.
 
 ## Test flow
@@ -83,7 +83,7 @@ With this entry point (`run.sh`) any arbitrary complex workflow can be implement
 I.e. `python -m http.server 3003` will serve files from the current directory at port 3003. Use `-d` to defined another directory to be served.
 The folder can contain more files but the run script that can be downloaded if necessary with `curl` or `wget`.
 
-In oder to get feedback from the emulator one can use python's [upload server](https://pypi.org/project/uploadserver/) to not just download but also upload files.
+In order to get feedback from the emulator one can use python's [upload server](https://pypi.org/project/uploadserver/) to not just download but also upload files.
 ```python
 python3 -m uploadserver -d tmp/ 3003
 ```

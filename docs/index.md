@@ -9,30 +9,29 @@ has_children: false
 
 <!-- # vSwarm-&mu; Documentation -->
 
-
-> **Warning**
-> {: .label .label-red }
->*<font color="red">vSwarm-u is still in beta state but will be released soon for the ISCA'22 conference.</font>*
-
-[Serverless computing represent new challenges for modern CPUs!](https://ease-lab.github.io/ease_website/pubs/JUKEBOX_ISCA22.pdf)
-With vSwarm-&mu; we aim to enable microarchitectural research for serverless
+Serverless computing represent a new class of workloads, challenging the microarchitecture of modern CPU's. The mission of vSwarm-&mu; is to provide microarchitect's with the tools they need to address those challenges in next generation CPU's.
 {: .fs-6 .fw-300 }
 
 
-## Mission
+## Challenges of Serverless Host Simulation
 
-Serverless computing has emerged as a widely used paradigm for deploying services in the cloud. In serverless, developers organize their application as a set of functions, which are invoked on-demand in response to a trigger, such as user request or an invocation by another function.
+Serverless computing has emerged as a widely used paradigm for deploying services in the cloud. However, with their unique characteristics of short execution times and infrequent invocation of function instances serverless workloads set new demands on both the microarchitecture of modern server CPU’s as well as the research tools built to design this microarchitecture.
 
-Recent studies of production data  reveal drastic differences in the characteristics of serverless workloads compared to conventional cloud workloads: short execution time and infrequent invocation of function instances. Performance studies  further finds that serverless workloads are inefficient when running on modern CPUs designed for traditional long-running workloads. To make serverless workload execution efficient, there is a strong need to understand more about the detailed implications serverless workload characteristics have on modern hardware.
+gem5 is the state-of-the-art research platform for system- and microarchitecture but does not support key layers of the serverless software stack in its reference setup. Moreover, the common way of ignoring large parts of the system stack and simplifying test scenarios in favour of simulation speed is not applicable to serverless. Due to its significant part faction of execution time spend in communication and system stack components such simplifications may result in wrong experimental data and, consequently, mislead research.
 
-However, existing platforms that support the required level of detail make significant simplifications in the test setup and the software stack to achieve feasible simulation times. Prior work often lacks the key layers of the serverless software stack, such as containerization and HTTP-level communication fabric, to simplify and increase the simulation speed. However, the short execution time of serverless functions leads to a significant fraction of execution time spent in system layers. Such simplifications may result in wrong experimental data and, consequently, mislead the systems researchers.
 
-With vSwarm-&mu; we are addressing the challenges of serverless host server simulation and allow researchers to conduct experiments with systems representative of a modern serverless cloud. To achieve this, the vSwarm-u framework integrates various serverless workloads packages as containerized functions and featuring the full communication stack with gem5, the state-of-the-art research platform for system- and microarchitecture. This allows researcher to perform cycles accurate simulation of the representative serverless software stack in gem5’s full system mode.
+## The vSwarm-&mu; Framework
 
-Furthermore, vSwarm-u includes the infrastructure to drive function instances running on the simulated serverless host server without interfering or simplifying the complexity of the test system. The robust evaluation methodology allows benchmarking and microarchitecture analysis in a realistic scenario.
+| Serverless software stack on gem5 | Serverless Test infrastructure |
+|---|---|
+| <img src="./figures/serverless-stack.jpg" title="Serverless Stack"/> | <img src="./figures/serverless-system.jpg" title="vSwarm-u design"/> |
 
-## vSwarm-u Design
-<img src="figures/vswarm-u-design.jpg" title="vSwarm-u design" height="200"/>
+vSwarm-&mu; offers two main components to address the challenges of serverless host simulation. A full serverless software stack including kernel, OS and packages compatible with gem5. Furthermore, the infrastructure to drive function instances running on the simulated serverless host server without interfering or simplifying the complexity of the test system.
+
+That will equip microarchitect's and researchers with the tools they need to identify the real bottlenecks in modern hardware when running serverless workloads.
+
+Interested? Find more information in the [methodology](./methodology.md) section and the remaining documentation.
+
 
 ## Referencing our work
 
@@ -93,7 +92,7 @@ The software is maintained at the [EASE lab](https://easelab.inf.ed.ac.uk/) as p
 ## Directory Structure
 
 - `simulation` contains everything related to run simulations.
-- `setup` contains all scripts and makefiles to setup vSwarm-u
+- `setup` contains all scripts and makefiles to setup vSwarm-&mu;
 - `tools` includes a client that can be instrumented for gem5
 - `runner` is for setting up self-hosted GitHub Actions runners.
 - `docs` contains the documentation on a number of relevant topics.

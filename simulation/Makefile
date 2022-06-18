@@ -61,8 +61,14 @@ WK_DISK 	:= $(WORKING_DIR)/disk.img
 WK_CLIENT	:= $(WORKING_DIR)/test-client
 
 build-wkdir: $(WORKING_DIR) \
-		$(WK_DISK) $(WK_KERNEL) $(WK_CLIENT) \
-		templates
+	$(WK_DISK) $(WK_KERNEL) $(WK_CLIENT) \
+	templates
+
+build-two-machine: build-wkdir
+	cat $(TEMPLATES_DIR)/run_sim_two_machine.tmpl.py | \
+	sed 's|<__ROOT__>|$(ROOT)|g' \
+	> $(GEM5_CONFIG)
+
 
 
 $(WORKING_DIR):
@@ -83,7 +89,7 @@ $(WK_CLIENT):
 	cp $(ROOT)/tools/client/client $@
 
 
-
+#
 ## Generate the scripts from templates -------
 # Templates
 TEMPLATES_DIR 		:= $(ROOT)/simulation/wkdir-tmpl
