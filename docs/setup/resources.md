@@ -34,7 +34,7 @@ Note that the size of the disk image is a few GiB. Furthermore, Github has a lim
 By default the resources will be stored in the `resources/`
 
 #### Disk format qcow2 and raw
-We distribute the disk image in qemu's [`qcow2` compressed format](https://qemu.readthedocs.io/en/latest/system/images.html#disk-image-file-formats). This has the advantage that the disk image is smaller. However gem5 cannot use qcow2 but only raw. Therefore, after downloading and decompression you will need to convert the disk image before using it with gem5. The scripts does all the work from you in the back however you can use:
+We distribute the disk image in qemu's [`qcow2` compressed format](https://qemu.readthedocs.io/en/latest/system/images.html#disk-image-file-formats). This has the advantage that the disk image is smaller. However gem5 cannot use qcow2 but only raw. Therefore, after downloading and decompression you will need to convert the disk image before using it with gem5. The scripts does all the work from you in the back however you can use `qemu-img` to convert the disk yourself:
 ```bash
 # Convert disk image from qcow2 -> raw format
 qemu-img convert <src/disk/path> <tgt/disk/path>

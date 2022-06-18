@@ -45,7 +45,7 @@ vSwarm-&mu; offers two main components to address the challenges of serverless h
 
 That will equip microarchitect's and researchers with the tools they need to identify the real bottlenecks in modern hardware when running serverless workloads.
 
-Interested? Find more information in the [methodology](./docs/methodology.md) section and the remaining documentation.
+Interested? Find more information in the [methodology](https://ease-lab.github.io/vSwarm-u/methodology/) section and the remaining documentation.
 
 
 ## Referencing our work
@@ -81,7 +81,7 @@ Please cite our [paper](https://ease-lab.github.io/ease_website/pubs/JUKEBOX_ISC
 
 ## Getting started with vSwarm-&mu;
 
-vSwarm-&mu; can be deployed on premises or in the cloud, with support for nested virtualization. We provide [a quick-start guide](./docs/quick_start.md)
+vSwarm-&mu; can be deployed on premises or in the cloud, with support for nested virtualization. We provide [a quick-start guide](https://ease-lab.github.io/vSwarm-u/quick_start/)
 that describes the initial setup, as well as how to set up benchmarking experiments.
 
 
