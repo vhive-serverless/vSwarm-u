@@ -33,7 +33,6 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	// pb "google.golang.org/grpc/examples/helloworld/helloworld"
 	m5ops "client/m5"
 
 	grpcClients "github.com/ease-lab/vSwarm-proto/grpcclient"
@@ -100,15 +99,6 @@ func main() {
 
 	log.Printf("Greeting: %s")
 
-	// conn, err := grpc.Dial(*addr, grpc.WithInsecure())
-	// if err != nil {
-	// 	log.Fatalf("FAIL: did not connect: %v", err)
-	// }
-	// defer conn.Close()
-	// c := pb.NewGreeterClient(conn)
-
-	// // // Contact the server and print out its response.
-
 	generator = client.GetGenerator()
 	generator.SetGenerator(grpcClients.Unique)
 	generator.SetValue(*input)
@@ -117,7 +107,6 @@ func main() {
 
 	log.Printf("Greeting: %s")
 	reply := client.Request(ctx, pkt)
-	// log.Debug(reply)
 
 	log.Printf("Greeting: %s", reply)
 

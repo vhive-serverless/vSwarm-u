@@ -5,7 +5,7 @@ nav_order: 2
 has_children: false
 ---
 
-# vSwarm-u: Quickstart with Serverless and gem5
+# vSwarm-&mu;: Quickstart with Serverless and gem5
 
 This guide describes how to quickly setup your machine and run the first cycle accurate simulations of serverless functions using gem5.
 
@@ -23,7 +23,7 @@ Brew yourself a coffee ☕️😉 in the meantime. It can take its time to to se
 
 3. **Download latest release artifacts** *(~3 min)*
 
-   With vSwarm-u we distribute a compiled kernel, client and ready to use and tested disk image. You can find the latest release of those resources on the [release page](https://github.com/ease-lab/vSwarm-u/releases) of the repo. Refer to the [resources](setup/setup.md#get-resources) section in the documentation for more details how to download and use them.
+   With vSwarm-&mu; we distribute a compiled kernel, client and ready to use and tested disk image. You can find the latest release of those resources on the [release page](https://github.com/ease-lab/vSwarm-u/releases) of the repo. Refer to the [resources](setup/setup.md#get-resources) section in the documentation for more details how to download and use them.
 
 
 ### Test Downloads

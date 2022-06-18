@@ -13,7 +13,7 @@ Currently we support and tested 21 functions from our benchmark suite vSwarm
 
 
 ## Standalone kernels
-The benchmark suite contains three functions that implement the same functionality in different runtime. With this the difference in the runtime's can be explored. The runtime's golang, nodejs, python are most common used for serverless and are representatives for a compiled, JIT-compiled and interpreted language. Details about the functions can be found in [vSwarm](https://github.com/ease-lab/vSwarm/tree/main/benchmarks)
+The benchmark suite contains three functions that implement the same functionality in different runtime. With this the difference in the runtimes can be explored. The runtimes golang, nodejs, python are most common used for serverless and are representatives for a compiled, JIT-compiled and interpreted language. Details about the functions can be found in [vSwarm](https://github.com/ease-lab/vSwarm/tree/main/benchmarks)
 
 
 | Benchmark      | Name | Languages implemented  | gem5 support |

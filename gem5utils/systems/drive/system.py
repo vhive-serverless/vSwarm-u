@@ -102,12 +102,8 @@ class DriveSystem(System):
         self.connectCPUDirectly()
 
 
-        # Create the appropriate memory controllers and connect them to the
-        # memory bus
-        self.mem_ctrls = [DriveMemClass(range = r)
-                            for r in self.mem_ranges]
-        for i in range(len(self.mem_ctrls)):
-            self.mem_ctrls[i].port = self.membus.master
+        # Create the memory controller for the sytem
+        self.createMemoryControllers()
 
 
     def getHostParallel(self):
@@ -158,11 +154,11 @@ class DriveSystem(System):
         # Add a tiny cache. This cache is required when switching CPUs
         # for the classic memory model for coherence
         self.llc_cache = Cache(assoc=8,
-                                tag_latency = 50,
-                                data_latency = 50,
-                                response_latency = 50,
+                                tag_latency = 5,
+                                data_latency = 5,
+                                response_latency = 5,
                                 mshrs = 20,
-                                size = '1kB',
+                                size = '4MB',
                                 tgts_per_mshr = 12,)
         self.llc_cache.mem_side = self.membus.cpu_side_ports
         self.llc_cache.cpu_side = self.llc_bus.mem_side_ports
@@ -189,49 +185,15 @@ class DriveSystem(System):
 
 
 
-    # Memory latency: Using the smaller number from [3]: 96ns
-    def createMemoryControllersDDR4(self, n_dram_cntrl=1):
-        self._createMemoryControllers(n_dram_cntrl, DDR4_2400_16x4)
+    def createMemoryControllers(self):
+        """ Create the memory controller for the system """
 
-    def createSimpleMemController(self, n_dram_cntrl=1):
-        ranges = self._getInterleaveRanges(self.mem_ranges[0], n_dram_cntrl, 7, 20)
-        self.mem_cntrls = [
-            MemCtrl(dram = DDR4_2400_16x4(range = ranges[i]), port = self.membus.mem_side_ports)
-            for i in range(n_dram_cntrl)
-        ]
-
-
-
-    def _createMemoryControllers(self, num, cls):
-        kernel_controller = self._createKernelMemoryController(cls)
-
-        ranges = self._getInterleaveRanges(self.mem_ranges[-1], num, 7, 20)
-        self.mem_cntrls = [
-            MemCtrl(dram = cls(range = ranges[i]), port = self.membus.mem_side_ports)
-            for i in range(num)
-        ] + [kernel_controller]
-
-    def _createKernelMemoryController(self, cls):
-        return MemCtrl(dram = cls(range = self.mem_ranges[0]), port = self.membus.mem_side_ports)
-
-    def _getInterleaveRanges(self, rng, num, intlv_low_bit, xor_low_bit):
-        from math import log
-        bits = int(log(num, 2))
-        if 2**bits != num:
-            m5.fatal("Non-power of two number of memory controllers")
-
-        intlv_bits = bits
-        ranges = [
-            AddrRange(start=rng.start,
-                      end=rng.end,
-                      intlvHighBit = intlv_low_bit + intlv_bits - 1,
-                      xorHighBit = xor_low_bit + intlv_bits - 1,
-                      intlvBits = intlv_bits,
-                      intlvMatch = i)
-                for i in range(num)
-            ]
-
-        return ranges
+        # Just create a controller for the first range, assuming the memory
+        # size is < 3GB this will work. If it's > 3GB or if you want to use
+        # mulitple or interleaved memory controllers then this should be
+        # updated accordingly
+        self.mem_cntrl = SimpleMemory(range = self.mem_ranges[0],
+                                       port = self.membus.mem_side_ports)
 
 
 class CowDisk(IdeDisk):
