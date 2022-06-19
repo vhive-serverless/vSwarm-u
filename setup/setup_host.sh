@@ -30,6 +30,10 @@ ROOT="$( cd $DIR && cd .. && pwd)"
 
 START=$(date +%s.%N)
 
+
+ARCH=amd64
+if [ $(uname -i) == "aarch64" ]; then ARCH=arm64 ; fi
+
 ## Set the path to the directory where
 ## all resources should be placed
 ## - gem5
@@ -73,7 +77,7 @@ sudo apt-get install -y \
 && curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
 
 sudo add-apt-repository \
-    "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
+    "deb [arch=${ARCH}] https://download.docker.com/linux/ubuntu \
     $(lsb_release -cs) \
     stable" \
 && sudo apt-get update >> /dev/null \
@@ -88,8 +92,11 @@ make -f ${ROOT}/setup/disk.Makefile dep_install
 
 
 # Install golang
-wget --continue --quiet https://golang.org/dl/go1.16.4.linux-amd64.tar.gz
-sudo tar -C /usr/local -xzf go1.16.4.linux-amd64.tar.gz
+VERSION=1.16.4
+GO_BUILD="go${VERSION}.linux-${ARCH}"
+
+wget --continue --quiet https://golang.org/dl/${GO_BUILD}.tar.gz
+sudo tar -C /usr/local -xzf ${GO_BUILD}.tar.gz
 export PATH=$PATH:/usr/local/go/bin
 sudo sh -c  "echo 'export PATH=\$PATH:/usr/local/go/bin' >> /etc/profile"
 sudo sh -c  "echo 'export PATH=\$PATH:/usr/local/go/bin' >> ${HOME}/.bashrc"
