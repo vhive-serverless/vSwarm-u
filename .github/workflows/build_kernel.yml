@@ -54,7 +54,12 @@ jobs:
     runs-on: ubuntu-20.04
     # runs-on: [self-hosted, gem5-build]
     strategy:
-      fail-fast: true
+      fail-fast: false
+      matrix:
+        arch: [ amd64, arm64 ]
+
+    env:
+      ARCH: ${{ matrix.arch }}
 
     steps:
       - name: Check out code
@@ -70,7 +75,7 @@ jobs:
         run: |
           make -f ${{ env.MAKEFILE }} build
 
-      - name: Save the outup binary
+      - name: Save the output binary
         shell: bash
         env:
           OUTPUT: ${{ env.KERNEL }}
@@ -80,5 +85,5 @@ jobs:
       - name: Upload Kernel Artifact
         uses: actions/upload-artifact@v3
         with:
-          name: vmlinux-amd64
+          name: vmlinux-${{ matrix.arch }}
           path: ${{ env.KERNEL }}

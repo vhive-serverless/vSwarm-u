@@ -36,7 +36,8 @@ KERNEL_OUT 	?= $(RESOURCES)/vmlinux
 OUTPUT		?=
 
 KVERSION	:= v5.4.84
-KERNEL_CONFIG_GEM5 := $(ROOT)/configs/linux-configs/$(KVERSION).config
+ARCH		?= arm64
+KERNEL_CONFIG_GEM5 := $(ROOT)/configs/linux-configs/$(KVERSION)-$(ARCH).config
 KERNEL_CONFIG := $(LINUX_DIR)/.config
 
 
