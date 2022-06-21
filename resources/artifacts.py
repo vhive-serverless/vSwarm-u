@@ -132,8 +132,8 @@ def get_latest_release():
     # print("debug: " + str(response.status_code))
 
     RELEASE = response.json()
-    with open("rel.json", "w") as f:
-        json.dump(RELEASE, f)
+    # with open("rel.json", "w") as f:
+    #     json.dump(RELEASE, f)
     RELEASES_LEN = len(RELEASE)
     return RELEASE
 
@@ -149,8 +149,8 @@ def get_release(tag_name="latest"):
     print("debug: " + str(response.status_code))
 
     RELEASES = response.json()
-    with open("rel.json", "w") as f:
-        json.dump(RELEASES, f)
+    # with open("rel.json", "w") as f:
+    #     json.dump(RELEASES, f)
     RELEASES_LEN = len(RELEASES)
 
     for i in range(0, RELEASES_LEN):

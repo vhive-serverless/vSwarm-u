@@ -145,10 +145,10 @@ Only the red part of the flow is the part we are actually measuring in detailed 
 
 ### System
 The different systems we use to run these simulations on are is defined `gem5-configs/systems/`. By default we use a simple system. Use the `--system` argument to define the system you want to use.
-<!-- TODO: we need to add here more -->
-| | Parameters |
+
+| Diagram | Parameters |
 |---|---|
-| <img src="../figures/simple_system.jpg" title="Simple system" height="200"/>| **Core:** TimingSimpleCPU<br> **L1-I/D:** 36KB <br>**LLC:** 128KB<br>**Memory:** 2GB
+| <img src="{{ site.baseurl }}/figures/simple_system.jpg" title="Two Machine" height=100/> | **Core:** TimingSimpleCPU<br> **L1-I/D:** 36KB <br>**LLC:** 128KB<br>**Memory:** 2GB |
 
 
 ### Start Simulation
