@@ -729,3 +729,5 @@ runtime
 Jupyter
 jupyter
 microarchitect's
+EthernetLink
+ip

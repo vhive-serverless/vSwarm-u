@@ -114,13 +114,8 @@ printf "\nBuilding gem5 completed after: $(echo "$END - $START" | bc) sec.\n"
 ## Download the most recent release artifacts
 START=$(date +%s.%N)
 echo "Download Release artifacts from: "
-${ROOT}/resources/artifacts.py \
-    --file ${ROOT}/resources/release.json \
-    --version
 
-${ROOT}/resources/artifacts.py \
-    --file ${ROOT}/resources/release.json \
-    --download --output ${ROOT}/resources/
+${ROOT}/resources/artifacts.py --output ${ROOT}/resources/
 
 END=$(date +%s.%N)
 printf "\nDownload artifacts complete. Took: $(echo "$END - $START" | bc) sec.\n"
