@@ -44,15 +44,24 @@ on:
 
 
 jobs:
-  build-x86-64:
-    name: Build Gem5 for x86
+  build-gem5:
+    name: Build gem5
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: amd64
+            runner: ubuntu-20.04
+          - arch: arm64
+            runner: "self-hosted, ARM64, vswarm-u-build"
+
     # Building the kernel works also on the github runners.
     # However, they only offer building on one core therefor it take a while
     # Using self hosted is faster
-    runs-on: ubuntu-20.04
-    # runs-on: [self-hosted, gem5-build]
-    strategy:
-      fail-fast: true
+
+    runs-on: [ ${{ matrix.runner }} ]
+    env:
+      ARCH: ${{ matrix.arch }}
 
     steps:
       - name: Check out code
