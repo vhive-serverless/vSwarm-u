@@ -54,15 +54,17 @@ jobs:
         include:
           - arch: amd64
             runner: ubuntu-20.04
+            runner-arch: X86
           - arch: arm64
             runner: vswarm-u-build
+            runner-arch: ARM64
 
     # Building the kernel works also on the github runners.
     # However, they only offer building on one core therefor it take a while
     # Using self hosted is faster
     # runs-on: [self-hosted, gem5-build]
 
-    runs-on: ${{ matrix.runner }}
+    runs-on: [ "${{ matrix.runner }}" , "${{ matrix.runner-arch }}" ]
     env:
       ARCH: ${{ matrix.arch }}
 
