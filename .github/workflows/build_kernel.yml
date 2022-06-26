@@ -55,7 +55,7 @@ jobs:
           - arch: amd64
             runner: ubuntu-20.04
           - arch: arm64
-            runner: "[ self-hosted, ARM64, vswarm-u-build ]"
+            runner: self-hosted, ARM64, vswarm-u-build
 
     # Building the kernel works also on the github runners.
     # However, they only offer building on one core therefor it take a while
