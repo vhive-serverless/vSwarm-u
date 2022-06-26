@@ -59,7 +59,7 @@ jobs:
     # However, they only offer building on one core therefor it take a while
     # Using self hosted is faster
 
-    runs-on: [ ${{ matrix.runner }} ]
+    runs-on: ${{ matrix.runner }}
     env:
       ARCH: ${{ matrix.arch }}
 
