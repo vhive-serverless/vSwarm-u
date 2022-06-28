@@ -1,4 +1,4 @@
-#!/bin/python
+#!/bin/python3
 #
 # MIT License
 #
@@ -34,9 +34,13 @@ import tarfile
 import shutil
 import logging as log
 
-RESOURCES = os.environ['RESOURCES']
+#RESOURCES = os.environ['RESOURCES']
+#if RESOURCES == "":
+#    log.warning(" 'RESOURCES' variable not set!!")
+
+RESOURCES = os.getenv("RESOURCES")
 if RESOURCES == "":
-    log.warning(" 'RESOURCES' variable not set!!")
+    log.warning("'RESOURCES' variable not set!!")
 
 import argparse
 

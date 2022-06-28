@@ -53,7 +53,7 @@ jobs:
       matrix:
         include:
           - arch: amd64
-            runner: ubuntu-20.04
+            runner: vswarm-u-build
             runner-arch: X86
           - arch: arm64
             runner: vswarm-u-build

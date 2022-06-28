@@ -24,14 +24,18 @@
 RESOURCES 	?=$(ROOT)/resources/
 ACCESS_TOKEN :=${GH_ACCESS_TOKEN}
 
+PLATFORMS := linux/amd64,linux/arm64
+
 RUNNERS := gem5-test-runner
 
 
 #### Build the runner images
 %-runner: Dockerfile
-	DOCKER_BUILDKIT=1 docker build \
+	DOCKER_BUILDKIT=1 docker buildx build \
 	--tag vhiveease/$@ \
 	--target $@ \
+	--platform ${PLATFORMS} \
+	--push \
 	-f Dockerfile \
 	.
 
@@ -80,11 +84,11 @@ start-%-test-runner:
 
 
 # Build runners
-start-build-runners: start-gem5-build-runner
-stop-build-runners: stop-gem5-build-runner
+start-build-runners: start-vswarm-u-build-runner
+stop-build-runners: stop-vswarm-u-build-runner
 
-start-gem5-build-runner:
-	@$(eval runner := gem5-build-runner)
+start-vswarm-u-build-runner:
+	@$(eval runner := vswarm-u-build-runner)
 	@$(eval runner_name := "$(runner)-$(shell date +%s%N | cut -b10-19)")
 	echo $(runner_name)
 	docker run --name $(runner_name) -d \
