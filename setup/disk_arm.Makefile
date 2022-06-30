@@ -58,6 +58,7 @@ RUN_SCRIPT_TEMPLATE := $(ROOT)/scripts/run_function.sh
 
 INSTALL_CONFIG 		:= $(BUILD_DIR)/user-data
 KERNEL 				:= $(BUILD_DIR)/vmlinux
+KERNEL_CUSTOM		:= $(BUILD_DIR)/Image
 INITRD 				:= $(BUILD_DIR)/initrd
 SERVE 				:= $(BUILD_DIR)/server.pid
 
@@ -186,7 +187,7 @@ run_emulator:
 		-device e1000,netdev=net0 \
     	-netdev type=user,id=net0,hostfwd=tcp:127.0.0.1:5555-:22  \
 		-drive file=$(DISK_IMAGE_FILE),format=qcow2 \
-		-kernel $(KERNEL) \
+		-kernel $(KERNEL_CUSTOM) \
 		-append 'console=ttyAMA0 earlyprintk=ttyAMA0 root=/dev/vda2'
 
 run: run_emulator
@@ -257,7 +258,7 @@ download:
 		wget $(CLOUD_IMAGE_URL); \
 	fi
 
-	echo "f8e3086f3cea0fb3fefb29937ab5ed9d19e767079633960ccb50e76153effc98 *$(CLOUD_IMAGE_FILE)" | shasum -a 256 --check
+#echo "f8e3086f3cea0fb3fefb29937ab5ed9d19e767079633960ccb50e76153effc98 *$(CLOUD_IMAGE_FILE)" | shasum -a 256 --check
 
 
 $(BUILD_DIR):

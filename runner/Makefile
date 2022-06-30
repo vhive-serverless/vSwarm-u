@@ -28,9 +28,14 @@ PLATFORMS := linux/amd64,linux/arm64
 
 RUNNERS := gem5-test-runner
 
+docker-builder:
+	docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+	docker buildx create --name multiarch --driver docker-container --use
+	docker buildx inspect --bootstrap
+
 
 #### Build the runner images
-%-runner: Dockerfile
+%-runner: docker-builder Dockerfile
 	DOCKER_BUILDKIT=1 docker buildx build \
 	--tag vhiveease/$@ \
 	--target $@ \

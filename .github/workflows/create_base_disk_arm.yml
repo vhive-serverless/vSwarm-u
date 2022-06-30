@@ -40,15 +40,15 @@ on:
     branches: [main]
     paths:
       - "test/**"
-      - "setup/disk.Makefile"
+      - "setup/disk_arm.Makefile"
       - "configs/disk-image-configs/**"
 
   pull_request:
     branches: [main]
-    paths:
-      - "test/**"
-      - "setup/disk_arm.Makefile"
-      - "configs/disk-image-configs/**"
+    # paths:
+    #   - "test/**"
+    #   - "setup/disk_arm.Makefile"
+    #   - "configs/disk-image-configs/**"
 
 jobs:
 
@@ -62,7 +62,7 @@ jobs:
       fail-fast: true
     env:
       WORKDIR: setup/
-      MAKEFILE: setup/disk.Makefile
+      MAKEFILE: setup/disk_arm.Makefile
       BUILD_DIR: wkdir/
 
     steps:

@@ -30,6 +30,13 @@ ROOT 		:= $(abspath $(dir $(MKFILE))/../)
 RESOURCES 	?= $(ROOT)/resources/
 WORKING_DIR ?= $(ROOT)/wkdir/
 GEM5_DIR	?= $(RESOURCES)/gem5/
+ARCH		?= arm64
+
+ifeq ($(ARCH), amd64)
+	_ARCH=X86
+else ifeq ($(ARCH), arm64)
+	_ARCH=ARM
+endif
 
 
 ## Machine parameter
@@ -38,9 +45,9 @@ CPUS    := 2
 
 
 ## Required resources
-KERNEL 		?= $(RESOURCES)/kernel
-DISK		?= $(RESOURCES)/disk-image.qcow2
-GEM5		?= $(RESOURCES)/gem5/build/X86/gem5.opt
+KERNEL 		?= $(RESOURCES)/kernel-${ARCH}
+DISK		?= $(RESOURCES)/disk-image-${ARCH}.qcow2
+GEM5		?= $(RESOURCES)/gem5/build/${ARCH}/gem5.opt
 
 
 
@@ -56,12 +63,12 @@ GEM5		?= $(RESOURCES)/gem5/build/X86/gem5.opt
 ##################################################################
 ## Build the working directory ----------------------------
 #
-WK_KERNEL 	:= $(WORKING_DIR)/kernel
+WK_KERNEL 	:= $(WORKING_DIR)/Image
 WK_DISK 	:= $(WORKING_DIR)/disk.img
 WK_CLIENT	:= $(WORKING_DIR)/test-client
 
 build-wkdir: $(WORKING_DIR) \
-	$(WK_DISK) $(WK_KERNEL) $(WK_CLIENT) \
+	$(WK_DISK) $(WK_KERNEL) \
 	templates
 
 build-two-machine: build-wkdir
@@ -138,17 +145,49 @@ $(WORKING_DIR)/%.sh: $(TEMPLATES_DIR)/%.tmpl.sh
 # The command will boot an instance.
 # Then it will listen to port 3003 to retive a run script
 # This run script will be the one we provided.
-run_emulator:
-	sudo qemu-system-x86_64 \
+# run_emulator:
+# 	sudo qemu-system-x86_64 \
+# 		-nographic \
+# 		-cpu host -enable-kvm \
+# 		-smp ${CPUS} \
+# 		-m ${MEMORY} \
+# 		-drive file=$(WK_DISK),format=raw \
+# 		-kernel $(WK_KERNEL) \
+# 		-append 'console=ttyS0 root=/dev/hda2'
+
+FLASH0 := $(WORKING_DIR)/flash0.img
+FLASH1 := $(WORKING_DIR)/flash1.img
+
+$(FLASH0):
+	cp /usr/share/qemu-efi-aarch64/QEMU_EFI.fd $@
+	truncate -s 64M $@
+
+$(FLASH1):
+	truncate -s 64M $@
+
+
+run_emulator_arm:
+	sudo qemu-system-aarch64 \
 		-nographic \
+		-M virt \
 		-cpu host -enable-kvm \
 		-smp ${CPUS} \
 		-m ${MEMORY} \
 		-drive file=$(WK_DISK),format=raw \
 		-kernel $(WK_KERNEL) \
-		-append 'console=ttyS0 root=/dev/hda2'
+		-append 'console=ttyAMA0 earlyprintk=ttyAMA0 lpj=7999923 root=/dev/vda2'
 
-run: run_emulator
+# run_emulator_arm:
+# 	sudo qemu-system-aarch64 -M virt -enable-kvm -cpu host -m 2048 \
+# 		-kernel $(WK_KERNEL) \
+# 		-append 'console=ttyAMA0 earlyprintk=ttyAMA0 lpj=7999923 root=/dev/vda2 rw' \
+# 		-drive file=wkdir/disk.img,format=raw,id=hd \
+# 		-no-reboot \
+# 		-device e1000,netdev=net0 \
+# 		-netdev type=user,id=net0,hostfwd=tcp:127.0.0.1:5555-:22  \
+# 		-nographic
+
+run: run_emulator_arm
 
 
 ## Run Simulator -------------------------------------------------
@@ -183,7 +222,7 @@ install_functions: build-wkdir
 	if [ -f $(LOGFILE) ]; then rm $(LOGFILE); fi
 	$(MAKE) -f $(MKFILE) create_install_script
 	$(MAKE) -f $(MKFILE) serve_start
-	$(MAKE) -f $(MKFILE) run_emulator
+	$(MAKE) -f $(MKFILE) run_emulator_arm
 	$(MAKE) -f $(MKFILE) serve_stop
 	$(MAKE) -f $(MKFILE) delete_run_script
 
