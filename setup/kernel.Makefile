@@ -72,11 +72,17 @@ build: $(LINUX_DIR) config
 	make -j $$(nproc)
 
 
+BUILD_OBJ := $(LINUX_DIR)/vmlinux
+ifeq ($(ARCH), arm64)
+	BUILD_OBJ := $(LINUX_DIR)/arch/arm64/boot/Image
+endif
+
+
 save: build
-	cp $(LINUX_DIR)/vmlinux $(KERNEL_OUT)
+	cp $(BUILD_OBJ) $(KERNEL_OUT)
 
 save_output:
-	cp $(LINUX_DIR)/vmlinux $(OUTPUT)
+	cp $(BUILD_OBJ) $(OUTPUT)
 
 
 clean:

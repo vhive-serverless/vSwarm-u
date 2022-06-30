@@ -54,7 +54,7 @@ jobs:
         include:
           - arch: amd64
             runner: vswarm-u-build
-            runner-arch: X86
+            runner-arch: X64
           - arch: arm64
             runner: vswarm-u-build
             runner-arch: ARM64
