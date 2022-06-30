@@ -48,7 +48,18 @@ env:
 jobs:
   build:
     name: Build
-    runs-on: ubuntu-20.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: amd64
+            runner: vswarm-u-build
+            runner-arch: X86
+          - arch: arm64
+            runner: vswarm-u-build
+            runner-arch: ARM64
+
+    runs-on: [ "${{ matrix.runner }}" , "${{ matrix.runner-arch }}" ]
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3
@@ -69,5 +80,5 @@ jobs:
       - name: Upload the artifact
         uses: actions/upload-artifact@v3
         with:
-          name: test-client
+          name: test-client-${{ matrix.arch }}
           path: tools/client/test-client
