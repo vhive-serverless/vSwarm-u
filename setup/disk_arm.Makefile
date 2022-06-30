@@ -277,7 +277,7 @@ $(INITRD): $(CLOUD_IMAGE_FILE)
 	mkdir -p iso
 	sudo mount -r $(CLOUD_IMAGE_FILE) iso
 
-	cp iso/casper/vmlinuz $(BUILD_DIR)/vmlinux
+	cp iso/casper/vmlinuz $(KERNEL)
 	cp iso/casper/initrd $(BUILD_DIR)/initrd
 
 	sudo umount iso

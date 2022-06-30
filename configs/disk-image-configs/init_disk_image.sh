@@ -109,5 +109,5 @@ sh -c  "echo 'export PATH=\$PATH:/usr/local/go/bin' >> /etc/profile"
 
 ## Get the client binary
 wget -P /root/ http://_gateway:3003/client-${ARCH}
-chmod +x /root/client
+chmod +x /root/client-${ARCH}
 
