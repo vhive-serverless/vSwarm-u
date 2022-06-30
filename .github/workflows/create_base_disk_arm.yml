@@ -1,0 +1,284 @@
+# MIT License
+#
+# Copyright (c) 2022 David Schall and EASE Lab
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+name: Create base disk image ARM
+
+env:
+  ARTIFACTS_DIR: artifacts/
+  KERNEL: artifacts/kernel
+  DISK_PRE_TEST: artifacts/disk-image.qcow2
+  DISK_FINAL: artifacts/disk.qcow2
+  CHECKSUMS: artifacts/checksums
+  CLIENT: artifacts/test-client
+
+on:
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+  schedule:
+    - cron: "0 7 * * 1"
+
+  push:
+    branches: [main]
+    paths:
+      - "test/**"
+      - "setup/disk.Makefile"
+      - "configs/disk-image-configs/**"
+
+  pull_request:
+    branches: [main]
+    paths:
+      - "test/**"
+      - "setup/disk_arm.Makefile"
+      - "configs/disk-image-configs/**"
+
+jobs:
+
+#########################################
+### Install the OS on the new disk image
+
+  install-base-image:
+    name: Build Base image with Ubuntu
+    runs-on: [self-hosted, vswarm-u-build, ARM64]
+    strategy:
+      fail-fast: true
+    env:
+      WORKDIR: setup/
+      MAKEFILE: setup/disk.Makefile
+      BUILD_DIR: wkdir/
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+
+
+      - name: Cache base disk installation
+        id: base-disk
+        uses: actions/cache@v3
+        with:
+          path: artifacts/
+          key: ${{ runner.os }}-${{ github.sha }}-base-disk-arm
+
+      - name: Setup the artifacts dir
+        if: steps.base-disk.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p ${{ env.ARTIFACTS_DIR }}
+
+      # ./resources/artifacts.sh download-disk ${{ env.DISK_PRE_TEST }} test-disk-image-amd64
+      # mkdir wkdir
+      # cp ${{ env.DISK_PRE_TEST }} wkdir/disk.img
+
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          make -f ${{ env.MAKEFILE }} dep_install
+
+      - name: Download the iso file
+        shell: bash
+        run: |
+          make -f ${{ env.MAKEFILE }} download
+
+      - name: Settup the working directory
+        shell: bash
+        run: |
+          make -f ${{ env.MAKEFILE }} build
+
+      - name: Install ubuntu on the disk
+        shell: bash
+        run: |
+          make -f ${{ env.MAKEFILE }} install_kvm
+
+      - name: Finalize Disk image
+        shell: bash
+        run: |
+          make -f ${{ env.MAKEFILE }} install_finalize
+
+      - name: Save the image as base image
+        shell: bash
+        env:
+          OUTPUT: ${{ env.DISK_PRE_TEST }}
+        run: |
+          make -f ${{ env.MAKEFILE }} save_output
+
+      - name: Clean everything
+        if: ${{ always() }}
+        run: |
+          make -f ${{ env.MAKEFILE }} clean
+
+
+  ## Upload the artifact.
+  # We do this in a separate job as it can be done parallel to the test
+  upload-base-image-artifact:
+    name: Upload Base Image
+    runs-on: ubuntu-latest
+    needs: install-base-image
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+      ## Get the cached base disk
+      - name: Cache Base disk from install job
+        id: base-disk
+        uses: actions/cache@v3
+        with:
+          path: artifacts/
+          key: ${{ runner.os }}-${{ github.sha }}-base-disk-arm
+          # key: ${{ runner.os }}-base-disk
+
+      - name: Compress and split
+        # if: ${{ matrix.compress == true }}
+        run: |
+          mkdir temp
+          cp ${{ env.DISK_PRE_TEST }} temp/
+          ./resources/artifacts.sh compress-split temp/*
+          rm temp/disk-image.qcow2
+
+      - name: Upload Base Image Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: disk-image-arm64
+          path: temp
+
+      - name: Create checksums of the artifacts
+        shell: bash
+        run: |
+          shasum ${{ env.DISK_PRE_TEST }} > ${{ env.CHECKSUMS }}
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: checksums
+          path: ${{ env.CHECKSUMS }}
+
+
+
+
+# #####################################
+# ### Test base disk image
+
+
+#   base-image-test:
+#     name: Test and Finalize Base Image
+#     runs-on: ubuntu-20.04
+#     needs: install-base-image
+#     env:
+#       FUNCTIONS_UNDER_TEST: "fibonacci-go"
+#       MAKEFILE: test/Makefile
+
+#     steps:
+#       - name: Check out code
+#         uses: actions/checkout@v2
+
+#       ## Use the cached base disk
+#       - name: Use base disk cache from install job
+#         id: base-disk
+#         uses: actions/cache@v3
+#         with:
+#           path: artifacts/
+#           key: ${{ runner.os }}-${{ github.sha }}-base-disk-arm
+
+
+
+
+
+#       # ## Download and cache the other artifacts for the test
+#       # - name: Cache Build Artifacts after test
+#       #   id: build-artifacts
+#       #   uses: actions/cache@v3
+#       #   with:
+#       #     path: artifacts/
+#       #     key: ${{ runner.os }}-${{ github.sha }}-base-disk-tested
+
+#       - name: Download latest kernel
+#         uses: dawidd6/action-download-artifact@v2
+#         with:
+#           workflow: build_kernel.yml
+#           name: vmlinux-amd64
+#           path: tmp
+
+#       - name: Download latest test client
+#         uses: dawidd6/action-download-artifact@v2
+#         with:
+#           workflow: test_client.yml
+#           name: test-client-amd64
+#           path: tmp
+
+#       - name: Copy artifacts
+#         run: |
+#           mkdir -p ${{ env.ARTIFACTS_DIR }}
+#           cp tmp/kernel ${{ env.KERNEL }}
+#           cp tmp/test-client ${{ env.CLIENT }}
+
+
+
+
+
+
+#       ##### Setup Test #####
+#       - name: Install dependencies
+#         run: |
+#           make -f ${{ env.MAKEFILE }} dep_install
+#           make -f ${{ env.MAKEFILE }} dep_check_qemu
+
+
+#       - name: Create the working directory to run the test.
+#         env:
+#           KERNEL: ${{ env.KERNEL }}
+#           DISK: ${{ env.DISK_PRE_TEST }}
+#           TEST_CLIENT: ${{ env.CLIENT }}
+#         run: |
+#           make -f ${{ env.MAKEFILE }} build
+
+
+#       - name: Run the actual test of the emulator.
+#         timeout-minutes: 15
+#         run: |
+#           make -f ${{ env.MAKEFILE }} run_test_no_kvm
+
+
+#       - name: Check the results file.
+#         run: |
+#           make -f ${{ env.MAKEFILE }} check_emu
+
+
+#       # - name: Save the final disk image
+#       #   shell: bash
+#       #   env:
+#       #     OUTPUT: ${{ env.DISK_FINAL }}
+#       #   run: |
+#       #     make -f ${{ env.MAKEFILE }} save_output
+
+
+#       - name: Create checksums of the artifacts
+#         shell: bash
+#         run: |
+#           shasum ${{ env.DISK_PRE_TEST }} > ${{ env.CHECKSUMS }}
+#           shasum ${{ env.KERNEL }} >> ${{ env.CHECKSUMS }}
+#           shasum ${{ env.CLIENT }} >> ${{ env.CHECKSUMS }}
+
+
+#       - name: Clean everything.
+#         if: ${{ always() }}
+#         run: |
+#           make -f ${{ env.MAKEFILE }} clean
+
+

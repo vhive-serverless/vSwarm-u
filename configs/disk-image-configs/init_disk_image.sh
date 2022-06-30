@@ -1,5 +1,28 @@
 #!/bin/bash
 
+# MIT License
+#
+# Copyright (c) 2022 David Schall and EASE lab
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+# Install dependencies
+
 set -e
 
 # Allow root to login with ssh
@@ -17,10 +40,13 @@ apt install -y net-tools
 #     g++ \
 #     make
 
+ARCH=amd64
+if [ $(uname -i) == "aarch64" ]; then ARCH=arm64 ; fi
+
 ##### GEM5 specific setup #####
 ## Prepare gem5 utility tool
-wget http://_gateway:3003/m5.x86
-mv m5.x86 /sbin/m5
+wget http://_gateway:3003/m5.${ARCH}
+mv m5.${ARCH} /sbin/m5
 chmod +x /sbin/m5
 
 ## Create and enable the gem5 init service
@@ -60,7 +86,7 @@ apt-get install -y \
     software-properties-common \
 && curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add - \
 && add-apt-repository \
-    "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
+    "deb [arch=${ARCH}] https://download.docker.com/linux/ubuntu \
     $(lsb_release -cs) \
     stable" \
 && apt-get update \
@@ -73,16 +99,15 @@ curl -L "https://github.com/docker/compose/releases/latest/download/docker-compo
 
 
 # Install golang
-wget --continue --quiet https://golang.org/dl/go1.16.4.linux-amd64.tar.gz
-tar -C /usr/local -xzf go1.16.4.linux-amd64.tar.gz
+VERSION=1.16.4
+GO_BUILD="go${VERSION}.linux-${ARCH}"
+
+wget --continue --quiet https://golang.org/dl/${GO_BUILD}.tar.gz
+sudo tar -C /usr/local -xzf ${GO_BUILD}.tar.gz
 export PATH=$PATH:/usr/local/go/bin
 sh -c  "echo 'export PATH=\$PATH:/usr/local/go/bin' >> /etc/profile"
 
-
-# # Clone the vSwarm repo
-# git clone https://github.com/ease-lab/vSwarm.git
-
 ## Get the client binary
-wget -P /root/ http://_gateway:3003/client
+wget -P /root/ http://_gateway:3003/client-${ARCH}
 chmod +x /root/client
 
