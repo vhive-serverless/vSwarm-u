@@ -53,8 +53,8 @@ dep_install:
 
 ## Clone repo --
 $(GEM5_DIR):
-	git clone https://gem5.googlesource.com/public/gem5 $@
-	cd $@; git checkout $(VERSION)
+	git clone https://github.com/ease-lab/gem5.git $@
+	cd $@; git checkout main
 
 
 ## Build
