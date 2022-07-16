@@ -48,7 +48,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Use the cache from the build workflow
         id: build-artifacts
         uses: actions/cache@v3
@@ -112,7 +112,7 @@ jobs:
 
     steps:
       - name: Check out code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Use the cache from the build workflow
         id: build-artifacts
         uses: actions/cache@v3

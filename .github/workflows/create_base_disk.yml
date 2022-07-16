@@ -67,7 +67,7 @@ jobs:
 
     steps:
       - name: Check out code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
 
       - name: Cache base disk installation
@@ -134,7 +134,7 @@ jobs:
 
     steps:
       - name: Check out code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       ## Get the cached base disk
       - name: Cache Base disk from install job
         id: base-disk
@@ -184,7 +184,7 @@ jobs:
 
     steps:
       - name: Check out code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       ## Use the cached base disk
       - name: Use base disk cache from install job
@@ -326,7 +326,7 @@ jobs:
 
   #   steps:
   #     - name: Checkout
-  #       uses: actions/checkout@v2
+  #       uses: actions/checkout@v3
 
   #     - name: Cache Build Artifacts after test
   #       uses: actions/cache@v3
