@@ -2,6 +2,8 @@
 
 set -e
 
+ARCH=amd64
+
 # Allow root to login with ssh
 echo 'ubuntu ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/ubuntu
 sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
@@ -60,7 +62,7 @@ apt-get install -y \
     software-properties-common \
 && curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add - \
 && add-apt-repository \
-    "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
+    "deb [arch=${ARCH}] https://download.docker.com/linux/ubuntu \
     $(lsb_release -cs) \
     stable" \
 && apt-get update \
@@ -73,8 +75,11 @@ curl -L "https://github.com/docker/compose/releases/latest/download/docker-compo
 
 
 # Install golang
-wget --continue --quiet https://golang.org/dl/go1.16.4.linux-amd64.tar.gz
-tar -C /usr/local -xzf go1.16.4.linux-amd64.tar.gz
+VERSION=1.16.4
+GO_BUILD="go${VERSION}.linux-${ARCH}"
+
+wget --continue --quiet https://golang.org/dl/${GO_BUILD}.tar.gz
+sudo tar -C /usr/local -xzf ${GO_BUILD}.tar.gz
 export PATH=$PATH:/usr/local/go/bin
 sh -c  "echo 'export PATH=\$PATH:/usr/local/go/bin' >> /etc/profile"
 
