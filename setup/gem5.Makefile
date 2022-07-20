@@ -29,7 +29,7 @@ ROOT 		:= $(abspath $(dir $(mkfile_path))/../)
 ## User specific inputs
 RESOURCES 	?=$(ROOT)/resources/
 ARCH		:= X86
-VERSION     := v21.2.1.0
+VERSION     := v21.2.1.1
 
 GEM5_DIR 	?= $(RESOURCES)/gem5/
 GEM5 		:= $(GEM5_DIR)/build/$(ARCH)/gem5.opt
@@ -54,7 +54,7 @@ dep_install:
 ## Clone repo --
 $(GEM5_DIR):
 	git clone https://github.com/ease-lab/gem5.git $@
-	cd $@; git checkout main
+	cd $@; git checkout $(VERSION)
 
 
 ## Build
