@@ -3,7 +3,6 @@
 set -e
 
 ## Wait until cloud-init is finish
-
 sleep 15;
 
 while [ ! -f  /var/lib/cloud/instance/boot-finished ];

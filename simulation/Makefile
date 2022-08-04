@@ -63,7 +63,7 @@ GEM5		?= $(RESOURCES)/gem5/build/${ARCH}/gem5.opt
 ##################################################################
 ## Build the working directory ----------------------------
 #
-WK_KERNEL 	:= $(WORKING_DIR)/Image
+WK_KERNEL 	:= $(WORKING_DIR)/vmlinux
 WK_DISK 	:= $(WORKING_DIR)/disk.img
 WK_CLIENT	:= $(WORKING_DIR)/test-client
 
@@ -166,16 +166,20 @@ $(FLASH1):
 	truncate -s 64M $@
 
 
-run_emulator_arm:
+run_emulator_arm: $(FLASH0) $(FLASH1)
 	sudo qemu-system-aarch64 \
 		-nographic \
 		-M virt \
 		-cpu host -enable-kvm \
-		-smp ${CPUS} \
-		-m ${MEMORY} \
+		-smp ${CPUS} -m ${MEMORY} \
+		-device e1000,netdev=net0 \
+    	-netdev type=user,id=net0,hostfwd=tcp:127.0.0.1:5555-:22  \
 		-drive file=$(WK_DISK),format=raw \
+		-drive file=$(FLASH0),format=raw,if=pflash -drive file=$(FLASH1),format=raw,if=pflash \
 		-kernel $(WK_KERNEL) \
 		-append 'console=ttyAMA0 earlyprintk=ttyAMA0 lpj=7999923 root=/dev/vda2'
+
+
 
 # run_emulator_arm:
 # 	sudo qemu-system-aarch64 -M virt -enable-kvm -cpu host -m 2048 \

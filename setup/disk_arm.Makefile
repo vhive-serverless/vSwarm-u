@@ -38,11 +38,17 @@ DISK_SIZE   := 16G
 MEMORY      := 8G
 CPUS        := 4
 
-# CLOUD_IMAGE_FILE     := focal-server-cloudimg-amd64-disk-kvm.img
-# CLOUD_IMAGE_BASE_URL := https://cloud-images.ubuntu.com/focal/current
+UBUNTU_VERSION 		?= focal
 
-CLOUD_IMAGE_FILE     := ubuntu-20.04.3-live-server-arm64.iso
-CLOUD_IMAGE_BASE_URL := https://releases.ubuntu.com/20.04.3/
+ifeq ($(UBUNTU_VERSION), focal)
+	CLOUD_IMAGE_FILE     := ubuntu-20.04.3-live-server-arm64.iso
+	CLOUD_IMAGE_BASE_URL := https://releases.ubuntu.com/20.04.3/
+else ifeq ($(UBUNTU_VERSION), jammy)
+	CLOUD_IMAGE_FILE     := ubuntu-22.04-live-server-arm64.iso
+	CLOUD_IMAGE_BASE_URL := https://cdimage.ubuntu.com/releases/22.04/release/
+else
+	@echo "Unsupported ubuntu version $(UBUNTU_VERSION)"
+endif
 
 IMAGE_NAME        	 := disk
 
@@ -123,7 +129,7 @@ install_kvm: build $(FLASH0) $(FLASH1)
 	$(MAKE) -f $(MKFILE) serve_start
 	sudo qemu-system-aarch64 \
 		-nographic \
-		-M virt \
+		-M virt -machine gic-version=max \
 		-cpu host -enable-kvm \
 		-smp ${CPUS} -m ${MEMORY} \
 		-no-reboot \
@@ -181,12 +187,13 @@ install: install_kvm
 run_emulator:
 	sudo qemu-system-aarch64 \
 		-nographic \
-		-M virt \
+		-M virt -machine gic-version=max \
 		-cpu host -enable-kvm \
 		-smp ${CPUS} -m ${MEMORY} \
 		-device e1000,netdev=net0 \
     	-netdev type=user,id=net0,hostfwd=tcp:127.0.0.1:5555-:22  \
 		-drive file=$(DISK_IMAGE_FILE),format=qcow2 \
+		-drive file=$(FLASH0),format=raw,if=pflash -drive file=$(FLASH1),format=raw,if=pflash \
 		-kernel $(KERNEL_CUSTOM) \
 		-append 'console=ttyAMA0 earlyprintk=ttyAMA0 root=/dev/vda2'
 
@@ -212,13 +219,6 @@ run_emulator_shipped_kernel:
 		-kernel wkdir/Image \
 		-append 'console=ttyAMA0 earlyprintk=ttyAMA0 root=/dev/vda2'
 
-
-# install_finalize:
-# 	cp $(ROOT)/configs/disk-image-configs/finalize.sh $(WORKING_DIR)/run.sh
-# 	$(MAKE) -f $(MKFILE) serve_start
-# 	$(MAKE) -f $(MKFILE) run_emulator
-# 	$(MAKE) -f $(MKFILE) serve_stop
-# 	rm $(BUILD_DIR)/run.sh
 
 install_finalize:
 	cp $(CONFIGS_DIR)/finalize.sh $(BUILD_DIR)/run.sh
