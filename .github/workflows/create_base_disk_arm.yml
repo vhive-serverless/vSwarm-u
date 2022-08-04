@@ -56,7 +56,7 @@ jobs:
 ### Install the OS on the new disk image
 
   install-base-image:
-    name: Build Base image with Ubuntu
+    name: Build base image with Ubuntu
     runs-on: [self-hosted, vswarm-u-build, ARM64]
     strategy:
       fail-fast: true
