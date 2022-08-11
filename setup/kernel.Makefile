@@ -38,6 +38,7 @@ OUTPUT		?=
 KVERSION	:= v5.4.84
 KERNEL_CONFIG_GEM5 := $(ROOT)/configs/linux-configs/$(KVERSION).config
 KERNEL_CONFIG := $(LINUX_DIR)/.config
+KERNEL_PATCH_GEM5 := $(ROOT)/configs/linux-configs/kernel_m5.patch
 
 
 .PONY: all config
@@ -64,8 +65,14 @@ config: $(LINUX_DIR)
 	cp $(KERNEL_CONFIG_GEM5) $(KERNEL_CONFIG)
 
 
+## Add patches to the kernel
+patch: $(LINUX_DIR)
+	-cd $(LINUX_DIR); \
+	git apply --ignore-space-change $(KERNEL_PATCH_GEM5)
+
+
 ## Build
-build: $(LINUX_DIR) config
+build: $(LINUX_DIR) config patch
 	@$(call print_config)
 	cd $(LINUX_DIR); \
 	make -j $$(nproc)
