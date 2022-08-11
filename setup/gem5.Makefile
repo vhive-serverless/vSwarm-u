@@ -29,7 +29,7 @@ ROOT 		:= $(abspath $(dir $(mkfile_path))/../)
 ## User specific inputs
 RESOURCES 	?=$(ROOT)/resources/
 ARCH		:= X86
-VERSION     := v21.2.1.1
+VERSION     := v22.0.0.1
 
 GEM5_DIR 	?= $(RESOURCES)/gem5/
 GEM5 		:= $(GEM5_DIR)/build/$(ARCH)/gem5.opt
@@ -61,6 +61,7 @@ $(GEM5_DIR):
 gem5: $(GEM5_DIR)
 	@$(call print_config)
 	cd $(GEM5_DIR); \
+	git checkout $(VERSION); \
 	scons build/$(ARCH)/gem5.opt -j $$(nproc) --install-hooks
 
 

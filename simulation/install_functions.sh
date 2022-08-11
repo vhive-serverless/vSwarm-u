@@ -2,7 +2,7 @@
 
 set -x
 
-LOGFILE=install.log
+LOGFILE=/root/install.log
 
 function start_logging {
   ## Log everything to a empty log file
@@ -24,8 +24,8 @@ function pull_test_function {
     echo "Install and test: ${FUNCTION_NAME} "
 
     ## Pull the image from regestry
-    docker-compose -f functions.yaml pull ${FUNCTION_NAME}
-    docker-compose -f functions.yaml up -d --remove-orphans ${FUNCTION_NAME}
+    docker-compose -f /root/functions.yaml pull ${FUNCTION_NAME}
+    docker-compose -f /root/functions.yaml up -d --remove-orphans ${FUNCTION_NAME}
 
     sleep 5
 
@@ -55,14 +55,14 @@ curl  "http://10.0.2.2:3003/test-client" -f -o /root/test-client
 chmod 755 /root/test-client
 
 ## Download the function yaml and list.
-curl  "http://10.0.2.2:3003/functions.yaml" -f -o functions.yaml
-curl  "http://10.0.2.2:3003/functions.list" -f -o functions.list
+curl  "http://10.0.2.2:3003/functions.yaml" -f -o /root/functions.yaml
+curl  "http://10.0.2.2:3003/functions.list" -f -o /root/functions.list
 
 
 # docker-compose -f functions.yaml pull
 
 ## List all functions can be commented out
-FUNCTIONS=$(cat functions.list | sed '/^\s*#/d;/^\s*$/d')
+FUNCTIONS=$(cat /root/functions.list | sed '/^\s*#/d;/^\s*$/d')
 
 for f in $FUNCTIONS
   do
@@ -74,7 +74,6 @@ for f in $FUNCTIONS
   echo "\033[0;31m----------------"
   echo "FAIL"
   echo "----------------\033[0m"
-  cat results.log
 }
 # set +e
 end_logging

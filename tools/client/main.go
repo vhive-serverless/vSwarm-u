@@ -48,7 +48,7 @@ var (
 	url            = flag.String("url", "0.0.0.0", "The url to connect to")
 	port           = flag.String("port", "50051", "the port to connect to")
 	input          = flag.String("input", defaultInput, "Input to the function")
-	functionMethod = flag.String("function-method", "default", "Which method of benchmark to invoke")
+	functionMethod = flag.String("function-method", "0", "Which method of benchmark to invoke")
 	numInvoke      = flag.Int("n", 10, "Number of invocations")
 	numWarm        = flag.Int("w", 0, "Number of invocations for warming")
 	logfile        = flag.String("logging", "", "Log to file instead of standart out")
