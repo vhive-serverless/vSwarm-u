@@ -71,7 +71,7 @@ m5 fail 1 ## 1: BOOTING complete
 
 ## Spin up Container
 echo "Start the container..."
-docker-compose -f functions.yaml up -d {FN_NAME}
+docker-compose -f /root/functions.yaml up -d {FN_NAME}
 m5 fail 2 ## 2: Started container
 
 echo "Pin function container to core 1"
@@ -101,7 +101,7 @@ m5 fail 11 ## 11: Stop client
 
 
 ## Stop container
-docker-compose -f functions.yaml down
+docker-compose -f /root/functions.yaml down
 m5 fail 6 ## 6: Container stop
 
 

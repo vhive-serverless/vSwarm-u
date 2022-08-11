@@ -84,6 +84,10 @@ class SimpleSystem(System):
 
         self.workload.command_line = ' '.join(boot_options)
 
+        # Set m7ops_base address to enable m5 binary to exit from kvm
+        # Default in intel is 0xffff0000
+        self.m5ops_base = int("ffff0000",16)
+
         # Create the CPU for our system.
         self.createCPU(num_cpus=num_cpus, CPUModel=CPUModel)
 

@@ -196,7 +196,7 @@ ifconfig {device_name} {test_ip}
 
 ## Spin up Container
 echo "Start the container..."
-docker-compose -f functions.yaml up -d {function}
+docker-compose -f /root/functions.yaml up -d {function}
 m5 fail 2 ## 2: Started container
 
 echo "Pin function container to core {cpu}"

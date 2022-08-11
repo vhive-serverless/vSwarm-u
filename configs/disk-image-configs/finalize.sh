@@ -22,4 +22,11 @@ touch /etc/cloud/cloud-init.disabled
 sudo update-alternatives --set iptables /usr/sbin/iptables-legacy
 sudo update-alternatives --set ip6tables /usr/sbin/ip6tables-legacy
 
+## Disable other unnecessary services
+systemctl disable systemd-modules-load.service
+systemctl disable multipathd.service
+systemctl disable apt-daily-upgrade.timer
+
+apt update && apt upgrade -y
+
 shutdown -h now
