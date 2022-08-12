@@ -19,4 +19,7 @@ touch /etc/cloud/cloud-init.disabled
 # sudo apt-get purge cloud-init
 # sudo rm -rf /etc/cloud/ && sudo rm -rf /var/lib/cloud/
 
+sudo update-alternatives --set iptables /usr/sbin/iptables-legacy
+sudo update-alternatives --set ip6tables /usr/sbin/ip6tables-legacy
+
 shutdown -h now

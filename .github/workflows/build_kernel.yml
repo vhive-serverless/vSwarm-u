@@ -46,8 +46,8 @@ env:
   KERNEL: kernel
 
 jobs:
-  build-x86-64:
-    name: Build kernel for x86
+  build:
+    name: Build kernel
     # Building the kernel works also on the github runners.
     # However, they only offer building on one core therefor it take a while
     # Using self hosted is faster
@@ -55,6 +55,18 @@ jobs:
     # runs-on: [self-hosted, gem5-build]
     strategy:
       fail-fast: true
+      matrix:
+        arch: [ amd64, arm64 ]
+        version: [ focal, jammy ]
+        include:
+          - version: focal
+            kversion: v5.4.84
+          - version: jammy
+            kversion: v5.15.59
+
+    env:
+      ARCH: ${{ matrix.arch }}
+      KVERSION: ${{ matrix.kversion }}
 
     steps:
       - name: Check out code
@@ -80,5 +92,5 @@ jobs:
       - name: Upload Kernel Artifact
         uses: actions/upload-artifact@v3
         with:
-          name: vmlinux-amd64
+          name: vmlinux-${{ matrix.version }}-${{ matrix.arch }}
           path: ${{ env.KERNEL }}
