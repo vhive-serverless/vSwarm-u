@@ -27,7 +27,7 @@
 MKFILE := $(abspath $(lastword $(MAKEFILE_LIST)))
 ROOT 		:= $(abspath $(dir $(MKFILE))/../../)
 OUTPUT ?= test-client
-
+ARCH   ?= amd64
 
 # Go parameters
 GOCMD=$(shell which go)
@@ -42,28 +42,25 @@ test: build
 		$(GOCMD) test
 
 
-_CGO_LDFLAGS="-g -O2 -no-pie"
 
-$(BIN): main.go version.go m5lib
-	CGO_LDFLAGS=$(_CGO_LDFLAGS) go build -o $@ -v .
-
-all: $(BIN)
-
-libclean:
-	rm $(DIR)/*.o
-	rm $(DIR)/*.a
-
-clean: libclean
-	go clean
-
-
-save_output: all
-	cp $(BIN) $(OUTPUT)
-
+## Assembly files
+M5OP_S := $(DIR)/m5op.S
+$(M5OP_S):
+	cp $(DIR)/$(ARCH)/* $(DIR)
 
 
 ## m5 ops library -------------------------
 CC = gcc
+AR = ar
+RANLIB = ranlib
+ifeq ($(ARCH), arm64)
+ifeq ($(shell uname -i),x86_64)
+CC = aarch64-linux-gnu-gcc
+AR = aarch64-linux-gnu-ar
+RANLIB = aarch64-linux-gnu-ranlib
+endif
+endif
+
 CFLAGS = -g -fPIC
 DIR = m5
 
@@ -79,8 +76,30 @@ OBJFILES := $(CFILES:.c=.o) $(SFILES:.S=.o)
 		$(CC) -o $@ $< -c -g -fPIC
 
 m5ops: $(OBJFILES)
-		ar rc -o $(DIR)/lib$@.a $^
-		ranlib $(DIR)/lib$@.a
+		$(AR) rc -o $(DIR)/lib$@.a $^
+		$(RANLIB) $(DIR)/lib$@.a
 
-m5lib: m5ops
+m5lib: $(M5OP_S) m5ops
 ## ----------------------------------------
+
+
+
+_CGO_LDFLAGS="-g -O2 -no-pie"
+
+$(BIN): main.go version.go m5lib
+	CC=$(CC) CGO_LDFLAGS=$(_CGO_LDFLAGS) CGO_ENABLED=1 GOOS=linux GOARCH=$(ARCH) go build -o $@ -v .
+
+all: $(BIN)
+
+libclean:
+	rm $(DIR)/*.o
+	rm $(DIR)/*.a
+	rm $(DIR)/*.S
+
+clean: libclean
+	go clean
+
+
+save_output: all
+	cp $(BIN) $(OUTPUT)
+
