@@ -33,8 +33,8 @@ env:
 on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
-  schedule:
-    - cron: "0 7 * * 1"
+  # schedule:
+  #   - cron: "0 7 * * 1"
 
   push:
     branches: [main]
@@ -59,11 +59,14 @@ jobs:
     name: Build Base image with Ubuntu
     runs-on: ubuntu-20.04
     strategy:
-      fail-fast: true
+      fail-fast: false
+      matrix:
+        ubuntu-version: [ focal, jammy ]
     env:
       WORKDIR: setup/
       MAKEFILE: setup/disk.Makefile
       BUILD_DIR: wkdir/
+      UBUNTU_VERSION: ${{ matrix.ubuntu-version }}
 
     steps:
       - name: Check out code
@@ -75,7 +78,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: artifacts/
-          key: ${{ runner.os }}-${{ github.sha }}-base-disk
+          key: ${{ runner.os }}-${{ github.sha }}-${{ matrix.ubuntu-version }}-base-disk
 
       - name: Setup the artifacts dir
         if: steps.base-disk.outputs.cache-hit != 'true'
@@ -131,6 +134,9 @@ jobs:
     name: Upload Base Image
     runs-on: ubuntu-latest
     needs: install-base-image
+    strategy:
+      matrix:
+        ubuntu-version: [ focal, jammy ]
 
     steps:
       - name: Check out code
@@ -141,7 +147,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: artifacts/
-          key: ${{ runner.os }}-${{ github.sha }}-base-disk
+          key: ${{ runner.os }}-${{ github.sha }}-${{ matrix.ubuntu-version }}-base-disk
           # key: ${{ runner.os }}-base-disk
 
       - name: Compress and split
@@ -155,7 +161,7 @@ jobs:
       - name: Upload Base Image Artifact
         uses: actions/upload-artifact@v3
         with:
-          name: disk-image-amd64
+          name: disk-image-${{ matrix.ubuntu-version }}-amd64
           path: temp
 
       - name: Create checksums of the artifacts
@@ -178,6 +184,10 @@ jobs:
     name: Test and Finalize Base Image
     runs-on: ubuntu-20.04
     needs: install-base-image
+    strategy:
+      matrix:
+        ubuntu-version: [ focal, jammy ]
+
     env:
       FUNCTIONS_UNDER_TEST: "fibonacci-go"
       MAKEFILE: test/Makefile
@@ -192,7 +202,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: artifacts/
-          key: ${{ runner.os }}-${{ github.sha }}-base-disk
+          key: ${{ runner.os }}-${{ github.sha }}-${{ matrix.ubuntu-version }}-base-disk
 
 
 
