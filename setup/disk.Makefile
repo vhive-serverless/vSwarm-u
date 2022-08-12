@@ -30,7 +30,7 @@ MKFILE := $(abspath $(lastword $(MAKEFILE_LIST)))
 ROOT 		:= $(abspath $(dir $(MKFILE))/../)
 
 ## User specific inputs
-BUILD_DIR   ?= wkdir/
+BUILD_DIR   ?= wkdir_install/
 RESOURCES 	?=$(ROOT)/resources/
 OUTPUT		?=
 
@@ -38,11 +38,21 @@ DISK_SIZE   := 16G
 MEMORY      := 8G
 CPUS        := 4
 
-# CLOUD_IMAGE_FILE     := focal-server-cloudimg-amd64-disk-kvm.img
-# CLOUD_IMAGE_BASE_URL := https://cloud-images.ubuntu.com/focal/current
 
-CLOUD_IMAGE_FILE     := ubuntu-20.04.3-live-server-amd64.iso
-CLOUD_IMAGE_BASE_URL := https://releases.ubuntu.com/20.04.3/
+UBUNTU_VERSION 		?= focal
+
+ifeq ($(UBUNTU_VERSION), focal)
+	CLOUD_IMAGE_FILE     := ubuntu-20.04-live-server-amd64.iso
+	CLOUD_IMAGE_BASE_URL := https://releases.ubuntu.com/20.04.3/
+	CLOUD_IMAGE_HASH	 := caf3fd69c77c439f162e2ba6040e9c320c4ff0d69aad1340a514319a9264df9f
+else ifeq ($(UBUNTU_VERSION), jammy)
+	CLOUD_IMAGE_FILE     := ubuntu-22.04.1-live-server-amd64.iso
+	CLOUD_IMAGE_BASE_URL := https://releases.ubuntu.com/22.04/
+	CLOUD_IMAGE_HASH	 := 10f19c5b2b8d6db711582e0e27f5116296c34fe4b313ba45f9b201a5007056cb
+else
+	@echo "Unsupported ubuntu version $(UBUNTU_VERSION)"
+endif
+
 
 IMAGE_NAME        	 := disk
 
@@ -59,7 +69,6 @@ RUN_SCRIPT_TEMPLATE := $(ROOT)/scripts/run_function.sh
 INSTALL_CONFIG 		:= $(BUILD_DIR)/user-data
 KERNEL 				:= $(BUILD_DIR)/vmlinux
 INITRD 				:= $(BUILD_DIR)/initrd
-SERVE 				:= $(BUILD_DIR)/server.pid
 
 # Resource files
 RESRC_BASE_IMAGE 	:= $(RESOURCES)/disk-image.qcow2
@@ -199,7 +208,7 @@ $(RUN_SCRIPT): $(BUILD_DIR)
 
 
 $(INSTALL_CONFIG): $(BUILD_DIR)
-	cp $(CONFIGS_DIR)/autoinstall.yaml $@
+	cp $(CONFIGS_DIR)/autoinstall-amd64.yaml $@
 	touch $(BUILD_DIR)/meta-data
 	touch $(BUILD_DIR)/vendor-data
 
@@ -212,8 +221,8 @@ download:
 		echo "$(CLOUD_IMAGE_FILE) does not exist. Download it..."; \
 		wget $(CLOUD_IMAGE_URL); \
 	fi
+	echo "$(CLOUD_IMAGE_HASH) *$(CLOUD_IMAGE_FILE)" | shasum -a 256 --check; \
 
-	echo "f8e3086f3cea0fb3fefb29937ab5ed9d19e767079633960ccb50e76153effc98 *$(CLOUD_IMAGE_FILE)" | shasum -a 256 --check
 
 
 $(BUILD_DIR):
@@ -242,19 +251,19 @@ $(INITRD): $(CLOUD_IMAGE_FILE)
 
 ####
 # File server
-$(SERVE):
+serve_start:
 	PID=$$(lsof -t -i :3003); \
 	if [ ! -z $$PID ]; then kill -9 $$PID; fi
 
-	python3 -m uploadserver -d $(BUILD_DIR) 3003 &  \
-	echo "$$!" > $@ ;
+	python3 -m uploadserver -d $(BUILD_DIR) 3003 > server.log 2>&1 &  \
 	sleep 2
-	@echo "Run server: $$(cat $@ )"
 
-serve_start: $(SERVE)
+	@PID=$$(lsof -t -i :3003); \
+	if [ -z $$PID ]; then \
+	echo "Fail to start server"; $$(cat server.log); exit; \
+	else echo "Run server: $$PID"; fi
 
 serve_stop:
-	if [ -e $(SERVE) ]; then kill `cat $(SERVE)` && rm $(SERVE) 2> /dev/null; fi
 	PID=$$(lsof -t -i :3003); \
 	if [ ! -z $$PID ]; then kill -9 $$PID; fi
 
