@@ -129,7 +129,7 @@ install_kvm: build $(FLASH0) $(FLASH1)
 	$(MAKE) -f $(MKFILE) serve_start
 	sudo qemu-system-aarch64 \
 		-nographic \
-		-M virt -machine gic-version=max \
+		-M virt \
 		-cpu host -enable-kvm \
 		-smp ${CPUS} -m ${MEMORY} \
 		-no-reboot \
@@ -187,7 +187,7 @@ install: install_kvm
 run_emulator:
 	sudo qemu-system-aarch64 \
 		-nographic \
-		-M virt -machine gic-version=max \
+		-M virt \
 		-cpu host -enable-kvm \
 		-smp ${CPUS} -m ${MEMORY} \
 		-device e1000,netdev=net0 \
