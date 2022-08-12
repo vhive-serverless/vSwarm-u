@@ -42,6 +42,11 @@ test: build
 		$(GOCMD) test
 
 
+dep_install:
+	sudo apt-get update \
+  	&& sudo apt-get install -y \
+		gcc-arm-linux-gnueabihf gcc-aarch64-linux-gnu device-tree-compiler
+
 
 ## Assembly files
 M5OP_S := $(DIR)/m5op.S

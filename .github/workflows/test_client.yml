@@ -38,7 +38,7 @@ on:
   pull_request:
     branches: [main]
     paths:
-      - "test/**"
+      - "tools/**"
 
 env:
   GOOS: linux
@@ -59,6 +59,10 @@ jobs:
       - uses: actions/setup-go@v3
         with:
           go-version: '1.16'
+
+      - name: Install cross compiler
+        working-directory: tools/client
+        run: make dep_install
 
       - name: Build client
         working-directory: tools/client
