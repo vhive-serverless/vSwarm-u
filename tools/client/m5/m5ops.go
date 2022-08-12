@@ -2,7 +2,8 @@ package m5ops
 
 /*
 #cgo CFLAGS: -g
-#cgo LDFLAGS: -L. -lm5ops
+#cgo amd64 LDFLAGS: -L. -lm5ops
+#cgo arm64 LDFLAGS: -L. -lm5ops
 #include "m5ops.h"
 #include "m5_mmap.h"
 */

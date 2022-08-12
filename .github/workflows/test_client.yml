@@ -49,6 +49,11 @@ jobs:
   build:
     name: Build
     runs-on: ubuntu-20.04
+    strategy:
+      matrix:
+        arch: [ amd64, arm64 ]
+    env:
+      ARCH: ${{ matrix.arch }}
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3
@@ -59,7 +64,6 @@ jobs:
         working-directory: tools/client
         run: make all
 
-
       - name: Save the client
         working-directory: tools/client
         env:
@@ -69,5 +73,5 @@ jobs:
       - name: Upload the artifact
         uses: actions/upload-artifact@v3
         with:
-          name: test-client
+          name: test-client-${{ matrix.arch }}
           path: tools/client/test-client
