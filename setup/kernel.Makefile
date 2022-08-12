@@ -35,11 +35,14 @@ LINUX_DIR 	:= linux/
 KERNEL_OUT 	?= $(RESOURCES)/vmlinux
 OUTPUT		?=
 
-KVERSION	:= v5.4.84
-KERNEL_CONFIG_GEM5 := $(ROOT)/configs/linux-configs/$(KVERSION).config
+KVERSION	?= v5.4.84
+ARCH		?= amd64
+KERNEL_CONFIG_GEM5 := $(ROOT)/configs/linux-configs/$(KVERSION)-$(ARCH).config
 KERNEL_CONFIG := $(LINUX_DIR)/.config
 KERNEL_PATCH_GEM5 := $(ROOT)/configs/linux-configs/kernel_m5.patch
 
+
+BUILD_OBJ 	:= $(LINUX_DIR)/vmlinux
 
 .PONY: all config
 
@@ -52,7 +55,8 @@ dep_install:
 	sudo apt-get update \
   	&& sudo apt-get install -y \
         git build-essential ncurses-dev xz-utils libssl-dev bc \
-    	flex libelf-dev bison
+    	flex libelf-dev bison \
+		gcc-arm-linux-gnueabihf gcc-aarch64-linux-gnu device-tree-compiler
 
 ## Get sources --
 $(LINUX_DIR):
@@ -72,17 +76,30 @@ patch: $(LINUX_DIR)
 
 
 ## Build
-build: $(LINUX_DIR) config patch
+build-amd64: $(LINUX_DIR) config patch
 	@$(call print_config)
 	cd $(LINUX_DIR); \
-	make -j $$(nproc)
+	make ARCH=x86_64 -j $$(nproc)
+
+build-arm64: $(LINUX_DIR) config patch
+	@$(call print_config)
+	cd $(LINUX_DIR); \
+	make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- -j $$(nproc)
+
+
+ifeq ($(ARCH), arm64)
+build: build-arm64
+else
+build: build-amd64
+endif
+
 
 
 save: build
-	cp $(LINUX_DIR)/vmlinux $(KERNEL_OUT)
+	cp $(BUILD_OBJ) $(KERNEL_OUT)
 
 save_output:
-	cp $(LINUX_DIR)/vmlinux $(OUTPUT)
+	cp $(BUILD_OBJ) $(OUTPUT)
 
 
 clean:
