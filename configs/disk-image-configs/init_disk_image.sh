@@ -58,20 +58,17 @@ cat > /lib/systemd/system/gem5.service <<EOF
 Description=gem5 init script
 Documentation=http://gem5.org
 After=getty.target
+After=docker.service
 
 [Service]
 Type=idle
 ExecStart=/sbin/gem5init
 StandardOutput=tty
-StandardInput=tty-force
 StandardError=tty
 
 [Install]
 WantedBy=default.target
 EOF
-
-# Enable gem5 service
-systemctl enable gem5.service
 
 
 
@@ -111,3 +108,6 @@ sh -c  "echo 'export PATH=\$PATH:/usr/local/go/bin' >> /etc/profile"
 wget -P /root/ http://_gateway:3003/client-${ARCH}
 chmod +x /root/client-${ARCH}
 
+# Enable gem5 service
+systemctl daemon-reload
+systemctl enable gem5.service

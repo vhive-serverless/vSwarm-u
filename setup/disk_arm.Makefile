@@ -42,9 +42,9 @@ CPUS        := 4
 UBUNTU_VERSION 		?= focal
 
 ifeq ($(UBUNTU_VERSION), focal)
-	CLOUD_IMAGE_FILE     := ubuntu-20.04-live-server-arm64.iso
+	CLOUD_IMAGE_FILE     := ubuntu-20.04.3-live-server-arm64.iso
 	CLOUD_IMAGE_BASE_URL := https://releases.ubuntu.com/20.04.3/
-	CLOUD_IMAGE_HASH	 := 46d5ee0843e5da7e170fa84b5f4e9e474456180659221ec6cc2dc60f6fcd1b06
+	CLOUD_IMAGE_HASH	 := d6fea1f11b4d23b481a48198f51d9b08258a36f6024cb5cec447fe78379959ce
 else ifeq ($(UBUNTU_VERSION), jammy)
 	CLOUD_IMAGE_FILE     := ubuntu-22.04.1-live-server-arm64.iso
 	CLOUD_IMAGE_BASE_URL := https://cdimage.ubuntu.com/releases/22.04/release/
@@ -81,7 +81,7 @@ dep_install:
   	&& sudo apt-get install -y \
         python3-pip \
         curl lsof \
-        qemu-kvm bridge-utils
+        qemu-kvm bridge-utils qemu-system-arm
 	python3 -m pip install --user uploadserver
 
 dep_check_qemu:
@@ -135,7 +135,7 @@ install_no_kvm: build
 	$(MAKE) -f $(MKFILE) serve_start
 	sudo qemu-system-aarch64 \
 		-nographic \
-		-M virt -cpu cortex-a9 \
+		-machine virt -cpu cortex-a72 \
 		-smp ${CPUS} \
 		-m ${MEMORY} \
 		-no-reboot \

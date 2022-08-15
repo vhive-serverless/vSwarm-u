@@ -49,6 +49,7 @@ size=500m
 set -e -x
 # Check dependencies.
 TST=$(which jq || sudo apt install jq)
+TST=$(which pigz || sudo apt install pigz)
 
 
 
