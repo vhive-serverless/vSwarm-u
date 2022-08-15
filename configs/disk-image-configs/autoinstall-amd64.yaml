@@ -57,3 +57,7 @@ autoinstall:
     - curtin in-target --target=/target -- wget -P /root/ http://_gateway:3003/init_disk_image.sh
     - curtin in-target --target=/target -- chmod +x /root/init_disk_image.sh
     - curtin in-target --target=/target -- bash /root/init_disk_image.sh
+
+  runcmd:
+    - [ systemctl, restart, gem5.service ]
+    - [ sh, -xc, "echo $(date) ': hello world!'" ]

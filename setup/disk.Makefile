@@ -42,9 +42,9 @@ CPUS        := 4
 UBUNTU_VERSION 		?= focal
 
 ifeq ($(UBUNTU_VERSION), focal)
-	CLOUD_IMAGE_FILE     := ubuntu-20.04-live-server-amd64.iso
-	CLOUD_IMAGE_BASE_URL := https://releases.ubuntu.com/20.04.3/
-	CLOUD_IMAGE_HASH	 := caf3fd69c77c439f162e2ba6040e9c320c4ff0d69aad1340a514319a9264df9f
+	CLOUD_IMAGE_FILE     := ubuntu-20.04.4-live-server-amd64.iso
+	CLOUD_IMAGE_BASE_URL := https://releases.ubuntu.com/20.04.4/
+	CLOUD_IMAGE_HASH	 := 28ccdb56450e643bad03bb7bcf7507ce3d8d90e8bf09e38f6bd9ac298a98eaad
 else ifeq ($(UBUNTU_VERSION), jammy)
 	CLOUD_IMAGE_FILE     := ubuntu-22.04.1-live-server-amd64.iso
 	CLOUD_IMAGE_BASE_URL := https://releases.ubuntu.com/22.04/
@@ -81,7 +81,7 @@ dep_install:
   	&& sudo apt-get install -y \
         python3-pip \
         curl lsof \
-        qemu-kvm bridge-utils
+        qemu-kvm bridge-utils qemu-system-x86
 	python3 -m pip install --user uploadserver
 
 dep_check_qemu:
@@ -106,11 +106,11 @@ install_kvm: build
 		-smp ${CPUS} \
 		-m ${MEMORY} \
 		-no-reboot \
-		-drive file=$(DISK_IMAGE_FILE),format=qcow2 \
+		-drive file=$(DISK_IMAGE_FILE),format=qcow2,if=virtio \
 		-cdrom $(CLOUD_IMAGE_FILE) \
 		-kernel $(KERNEL) \
 		-initrd $(INITRD) \
-		-append 'autoinstall ds=nocloud-net;s=http://_gateway:3003/'
+		-append 'autoinstall console=ttyS0 ds=nocloud-net;s=http://_gateway:3003/'
 	$(MAKE) -f $(MKFILE) serve_stop
 
 
@@ -121,11 +121,11 @@ install_no_kvm: build
 		-smp ${CPUS} \
 		-m ${MEMORY} \
 		-no-reboot \
-		-drive file=$(DISK_IMAGE_FILE),format=qcow2 \
+		-drive file=$(DISK_IMAGE_FILE),format=qcow2,if=virtio \
 		-cdrom $(CLOUD_IMAGE_FILE) \
 		-kernel $(KERNEL) \
 		-initrd $(INITRD) \
-		-append 'autoinstall ds=nocloud-net;s=http://_gateway:3003/'
+		-append 'autoinstall console=ttyS0 ds=nocloud-net;s=http://_gateway:3003/'
 	$(MAKE) -f $(MKFILE) serve_stop
 
 
@@ -169,9 +169,10 @@ run_emulator:
 
 run: run_emulator
 
-run_emulator_shipped_kernel:
+run_emulator_kvm:
 	sudo qemu-system-x86_64 \
 		-nographic \
+		-cpu host -enable-kvm \
 		-smp ${CPUS} \
 		-m ${MEMORY} \
 		-drive file=$(DISK_IMAGE_FILE),format=qcow2
@@ -187,7 +188,24 @@ run_emulator_shipped_kernel:
 install_finalize:
 	cp $(CONFIGS_DIR)/finalize.sh $(BUILD_DIR)/run.sh
 	$(MAKE) -f $(MKFILE) serve_start
-	$(MAKE) -f $(MKFILE) run_emulator_shipped_kernel
+	sudo qemu-system-x86_64 \
+		-nographic \
+		-smp ${CPUS} \
+		-m ${MEMORY} \
+		-drive file=$(DISK_IMAGE_FILE),format=qcow2,if=virtio
+	$(MAKE) -f $(MKFILE) serve_stop
+	rm $(BUILD_DIR)/run.sh
+
+
+install_finalize_kvm:
+	cp $(CONFIGS_DIR)/finalize.sh $(BUILD_DIR)/run.sh
+	$(MAKE) -f $(MKFILE) serve_start
+	sudo qemu-system-x86_64 \
+		-nographic \
+		-cpu host -enable-kvm \
+		-smp ${CPUS} \
+		-m ${MEMORY} \
+		-drive file=$(DISK_IMAGE_FILE),format=qcow2,if=virtio
 	$(MAKE) -f $(MKFILE) serve_stop
 	rm $(BUILD_DIR)/run.sh
 
