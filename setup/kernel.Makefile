@@ -35,10 +35,18 @@ LINUX_DIR 	:= linux/
 KERNEL_OUT 	?= $(RESOURCES)/vmlinux
 OUTPUT		?=
 
-KVERSION	:= v5.4.84
-KERNEL_CONFIG_GEM5 := $(ROOT)/configs/linux-configs/$(KVERSION).config
+KVERSION	?= v5.4.84
+ARCH		?= amd64
+KERNEL_CONFIG_GEM5 := $(ROOT)/configs/linux-configs/$(KVERSION)-$(ARCH).config
 KERNEL_CONFIG := $(LINUX_DIR)/.config
 KERNEL_PATCH_GEM5 := $(ROOT)/configs/linux-configs/kernel_m5.patch
+
+
+BUILD_OBJ 	:= $(LINUX_DIR)/vmlinux
+__ARCH 		:= x86
+ifeq ($(ARCH), arm64)
+	__ARCH 	:= arm64
+endif
 
 
 .PONY: all config
@@ -75,14 +83,14 @@ patch: $(LINUX_DIR)
 build: $(LINUX_DIR) config patch
 	@$(call print_config)
 	cd $(LINUX_DIR); \
-	make -j $$(nproc)
+	ARCH=$(__ARCH) make -j $$(nproc)
 
 
 save: build
-	cp $(LINUX_DIR)/vmlinux $(KERNEL_OUT)
+	cp $(BUILD_OBJ) $(KERNEL_OUT)
 
 save_output:
-	cp $(LINUX_DIR)/vmlinux $(OUTPUT)
+	cp $(BUILD_OBJ) $(OUTPUT)
 
 
 clean:

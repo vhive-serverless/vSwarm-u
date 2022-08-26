@@ -1,0 +1,58 @@
+#cloud-config
+autoinstall:
+  version: 1
+  apt:
+    geoip: true
+    preserve_sources_list: false
+    primary:
+    # - arches: [amd64, arm64, default]
+    #   uri: http://us.archive.ubuntu.com/ubuntu
+    - arches: [default]
+      uri: http://us.ports.ubuntu.com/ubuntu-ports
+
+  # The passwords are all 'root'
+  user-data:
+    disable_root: false
+    chpasswd:
+      list: |
+        root:$6$FhcddHFVZ7ABA4Gi$9l4yURWASWe8xEa1jzI0bacVLvhe3Yn4/G3AnU11K3X0yu/mICVRxfo6tZTB2noKljlIRzjkVZPocdf63MtzC0
+  identity:
+    hostname: ubuntu-server
+    username: ubuntu     # root does not work
+    password: "$6$FhcddHFVZ7ABA4Gi$9l4yURWASWe8xEa1jzI0bacVLvhe3Yn4/G3AnU11K3X0yu/mICVRxfo6tZTB2noKljlIRzjkVZPocdf63MtzC0" # root
+
+  # kernel:
+  #   kernel:
+  #     package: linux-generic
+  keyboard:
+    layout: us
+    toggle: null
+    variant: ''
+  locale: en_US.UTF-8
+  network:
+    network:
+      ethernets:
+        enp0s1:
+          dhcp4: true
+      version: 2
+  ssh:
+    allow-pw: true
+    authorized-keys: []
+    install-server: true
+
+  updates: security
+  storage:
+    layout:
+      name: "direct"
+  refresh-installer:
+    update: true
+
+  ## The following late commands are executed as soon as ubuntu is fully installed
+  ## We enable some useful features to use vSwarm in the gem5 simulator
+
+  late-commands:
+    # Instead of listing all install commands here we
+    # put them in a separate script. Here we only download and execute this script
+    - curtin in-target --target=/target -- wget -P /root/ http://_gateway:3003/init_disk_image.sh
+    - curtin in-target --target=/target -- chmod +x /root/init_disk_image.sh
+    - curtin in-target --target=/target -- bash /root/init_disk_image.sh

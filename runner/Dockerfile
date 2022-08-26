@@ -57,19 +57,7 @@
 
 #---------- Build runner -----------#
 ARG OS=ubuntu-focal
-FROM myoung34/github-runner:$OS as gem5-build-runner
-
-ARG ORG=ease-lab \
-    REPO=vSwarm-u \
-    OS_LABEL=ubuntu-20.04
-
-ENV REPO_URL=https://github.com/$ORG/$REPO \
-    RUNNER_NAME="gem5-build-runner" \
-    ACCESS_TOKEN="${GH_ACCESS_TOKEN}" \
-    RUNNER_WORKDIR=_work-$REPO \
-    RUNNER_GROUP="default" \
-    LABELS="gem5-build" \
-    GIT_SSL_NO_VERIFY=1
+FROM myoung34/github-runner:$OS as vswarm-u-build-runner
 
 # Install dependencies
 RUN  apt-get update \
@@ -84,6 +72,20 @@ RUN  apt-get update \
       lsof \
       qemu-kvm bridge-utils \
   && rm -rf /var/lib/apt/lists/*
+
+
+ARG ORG=ease-lab \
+    REPO=vSwarm-u \
+    OS_LABEL=ubuntu-20.04
+
+ENV REPO_URL=https://github.com/$ORG/$REPO \
+    RUNNER_NAME="vswarm-u-build-runner" \
+    ACCESS_TOKEN="${GH_ACCESS_TOKEN}" \
+    RUNNER_WORKDIR=_work-$REPO \
+    RUNNER_GROUP="default" \
+    LABELS="vswarm-u-build" \
+    GIT_SSL_NO_VERIFY=1
+
 
 ENTRYPOINT ["/entrypoint.sh"]
 CMD ["./bin/Runner.Listener", "run", "--startuptype", "service"]
@@ -130,6 +132,43 @@ CMD ["./bin/Runner.Listener", "run", "--startuptype", "service"]
 
 
 #---------- gem5 test runner -----------#
+ARG OS=ubuntu-focal
+FROM myoung34/github-runner:$OS as gem5-test-runner
+
+# Install dependencies
+RUN  apt-get update \
+  && apt-get install -y \
+      build-essential git m4 scons zlib1g zlib1g-dev \
+    	libprotobuf-dev protobuf-compiler libprotoc-dev libgoogle-perftools-dev \
+    	python3-dev python3-six python-is-python3 libboost-all-dev pkg-config \
+  && apt-get install -y \
+        python3-pip \
+        curl \
+        lsof \
+        qemu-kvm bridge-utils \
+  && rm -rf /var/lib/apt/lists/*
+
+ARG ORG=ease-lab \
+    REPO=vSwarm-u \
+    OS_LABEL=ubuntu-20.04
+
+ENV REPO_URL=https://github.com/$ORG/$REPO \
+    RUNNER_NAME="gem5-test-runner" \
+    ACCESS_TOKEN="${GH_ACCESS_TOKEN}" \
+    RUNNER_WORKDIR=_work-$REPO \
+    RUNNER_GROUP="default" \
+    LABELS="gem5-test" \
+    RESOURCES=/tmp/resources
+
+ENTRYPOINT ["/entrypoint.sh"]
+CMD ["./bin/Runner.Listener", "run", "--startuptype", "service"]
+
+
+
+
+
+
+#---------- gem5 arm runner -----------#
 ARG OS=ubuntu-focal
 FROM myoung34/github-runner:$OS as gem5-test-runner
 

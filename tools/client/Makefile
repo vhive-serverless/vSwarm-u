@@ -52,6 +52,7 @@ all: $(BIN)
 libclean:
 	rm $(DIR)/*.o
 	rm $(DIR)/*.a
+	rm $(DIR)/*.S
 
 clean: libclean
 	go clean
@@ -60,6 +61,19 @@ clean: libclean
 save_output: all
 	cp $(BIN) $(OUTPUT)
 
+
+## Assembly files
+ARCH ?= x86
+UNAME := $(shell uname -i)
+ifeq ($(UNAME),aarch64)
+	ARCH=arm64
+endif
+
+# if [ $(uname -i) == "aarch64" ]; then ARCH=arm64 ; fi
+
+M5OP_S := $(DIR)/m5op.S
+$(M5OP_S):
+	cp $(DIR)/$(ARCH)/* $(DIR)
 
 
 ## m5 ops library -------------------------
@@ -82,5 +96,5 @@ m5ops: $(OBJFILES)
 		ar rc -o $(DIR)/lib$@.a $^
 		ranlib $(DIR)/lib$@.a
 
-m5lib: m5ops
+m5lib: $(M5OP_S) m5ops
 ## ----------------------------------------

@@ -28,11 +28,24 @@ ROOT 		:= $(abspath $(dir $(mkfile_path))/../)
 
 ## User specific inputs
 RESOURCES 	?=$(ROOT)/resources/
-ARCH		:= X86
+ARCH		?= amd64
 VERSION     := v21.2.1.1
 
+_ARCH=x86
+__ARCH=x86
+ifeq ($(ARCH), amd64)
+	_ARCH=X86
+	__ARCH=x86
+endif
+ifeq ($(ARCH), arm64)
+	_ARCH=ARM
+	__ARCH=arm64
+endif
+
+
+
 GEM5_DIR 	?= $(RESOURCES)/gem5/
-GEM5 		:= $(GEM5_DIR)/build/$(ARCH)/gem5.opt
+GEM5 		:= $(GEM5_DIR)/build/$(_ARCH)/gem5.opt
 
 
 .PONY: all gem5 term m5
@@ -61,7 +74,7 @@ $(GEM5_DIR):
 gem5: $(GEM5_DIR)
 	@$(call print_config)
 	cd $(GEM5_DIR); \
-	scons build/$(ARCH)/gem5.opt -j $$(nproc) --install-hooks
+	scons build/$(_ARCH)/gem5.opt -j $$(nproc) --install-hooks
 
 
 ## Build the terminal
@@ -71,17 +84,12 @@ term: $(GEM5_DIR)
 	make
 
 
-_ARCH=x86
-ifeq ($(ARCH), X86)
-	_ARCH =x86
-endif
-
 ## Build m5 tools
 m5: $(GEM5_DIR)
 	@printf "\n${GREEN}Build gem5's m5 binaries${NC}\n"
-# $(eval $(if [ $(ARCH) == X86 ]; then _ARCH :=x86; fi))
+# $(eval $(if [ $(ARCH) == X86 ]; then __ARCH :=x86; fi))
 	cd $(GEM5_DIR)/util/m5; \
-	scons build/$(_ARCH)/out/m5
+	scons build/$(__ARCH)/out/m5
 
 
 RED=\033[0;31m
