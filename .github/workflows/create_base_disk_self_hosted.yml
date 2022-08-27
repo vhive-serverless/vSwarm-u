@@ -71,6 +71,7 @@ jobs:
     env:
       WORKDIR: setup/
       MAKEFILE: ${{ matrix.makefile }}
+      TEST_MAKEFILE: test/Makefile
       BUILD_DIR: wkdir/
       UBUNTU_VERSION: ${{ matrix.ubuntu-version }}
       ARCH: ${{ matrix.arch }}
@@ -137,7 +138,6 @@ jobs:
 
   ## Upload the artifact.
 
-
       - name: Compress and split
         run: |
           mkdir temp
@@ -167,43 +167,6 @@ jobs:
 ### Test base disk image
 
 
-  base-image-test:
-    name: Test and Finalize Base Image
-    runs-on: ubuntu-20.04
-    needs: install-base-image
-    strategy:
-      matrix:
-        ubuntu-version: [ focal, jammy ]
-        arch: [ amd64, arm64 ]
-
-    env:
-      FUNCTIONS_UNDER_TEST: "fibonacci-go"
-      MAKEFILE: test/Makefile
-
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v3
-
-      ## Use the cached base disk
-      - name: Use base disk cache from install job
-        id: base-disk
-        uses: actions/cache@v3
-        with:
-          path: artifacts/
-          key: ${{ runner.os }}-${{ github.sha }}-${{ matrix.ubuntu-version }}-${{ matrix.arch }}-base-disk
-
-
-
-
-
-      # ## Download and cache the other artifacts for the test
-      # - name: Cache Build Artifacts after test
-      #   id: build-artifacts
-      #   uses: actions/cache@v3
-      #   with:
-      #     path: artifacts/
-      #     key: ${{ runner.os }}-${{ github.sha }}-base-disk-tested
-
       - name: Download latest kernel
         uses: dawidd6/action-download-artifact@v2
         with:
@@ -225,15 +188,11 @@ jobs:
           cp tmp/test-client ${{ env.CLIENT }}
 
 
-
-
-
-
       ##### Setup Test #####
       - name: Install dependencies
         run: |
-          make -f ${{ env.MAKEFILE }} dep_install
-          make -f ${{ env.MAKEFILE }} dep_check_qemu
+          make -f ${{ env.TEST_MAKEFILE }} dep_install
+          make -f ${{ env.TEST_MAKEFILE }} dep_check_qemu
 
 
       - name: Create the working directory to run the test.
@@ -242,26 +201,18 @@ jobs:
           DISK: ${{ env.DISK_PRE_TEST }}
           TEST_CLIENT: ${{ env.CLIENT }}
         run: |
-          make -f ${{ env.MAKEFILE }} build
+          make -f ${{ env.TEST_MAKEFILE }} build
 
 
       - name: Run the actual test of the emulator.
         timeout-minutes: 15
         run: |
-          make -f ${{ env.MAKEFILE }} run_test_no_kvm
+          make -f ${{ env.TEST_MAKEFILE }} run_test
 
 
       - name: Check the results file.
         run: |
-          make -f ${{ env.MAKEFILE }} check_emu
-
-
-      # - name: Save the final disk image
-      #   shell: bash
-      #   env:
-      #     OUTPUT: ${{ env.DISK_FINAL }}
-      #   run: |
-      #     make -f ${{ env.MAKEFILE }} save_output
+          make -f ${{ env.TEST_MAKEFILE }} check_emu
 
 
       - name: Create checksums of the artifacts
@@ -275,6 +226,6 @@ jobs:
       - name: Clean everything.
         if: ${{ always() }}
         run: |
-          make -f ${{ env.MAKEFILE }} clean
+          make -f ${{ env.TEST_MAKEFILE }} clean
 
 
