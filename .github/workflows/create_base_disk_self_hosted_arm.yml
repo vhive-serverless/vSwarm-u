@@ -1,0 +1,175 @@
+# MIT License
+#
+# Copyright (c) 2022 David Schall and EASE Lab
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+name: Create ARM base disk image on self-hosted runners
+
+env:
+  ARTIFACTS_DIR: artifacts/
+  KERNEL: artifacts/kernel
+  DISK_PRE_TEST: artifacts/disk-image.qcow2
+  DISK_FINAL: artifacts/disk.qcow2
+  CHECKSUMS: artifacts/checksums
+  CLIENT: artifacts/test-client
+
+on:
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+  push:
+    branches: [main]
+    paths:
+      - "test/**"
+      - "setup/disk.Makefile"
+      - "configs/disk-image-configs/**"
+
+  pull_request:
+    branches: [main]
+    paths:
+      - "test/**"
+      - "setup/disk.Makefile"
+      - "configs/disk-image-configs/**"
+
+jobs:
+
+#########################################
+### Install the OS on the new disk image
+
+  install-base-image:
+    name: Build Base image with Ubuntu
+    strategy:
+      fail-fast: false
+      matrix:
+        ubuntu-version: [ focal, jammy ]
+        # arch: [ amd64, arm64 ]
+        include:
+          # - arch: amd64
+          #   makefile: setup/disk.Makefile
+          #   runner-arch: X64
+          - arch: arm64
+            makefile: setup/disk_arm.Makefile
+            runner-arch: ARM64
+    runs-on:  [self-hosted, vswarm-u-build, ARM64 ]
+    env:
+      WORKDIR: setup/
+      MAKEFILE: ${{ matrix.makefile }}
+      BUILD_DIR: wkdir/
+      UBUNTU_VERSION: ${{ matrix.ubuntu-version }}
+      ARCH: ${{ matrix.arch }}
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+
+
+      - name: Cache base disk installation
+        id: base-disk
+        uses: actions/cache@v3
+        with:
+          path: artifacts/
+          key: ${{ runner.os }}-${{ github.sha }}-${{ matrix.ubuntu-version }}-${{ matrix.arch }}-base-disk
+
+      - name: Setup the artifacts dir
+        if: steps.base-disk.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p ${{ env.ARTIFACTS_DIR }}
+
+      # ./resources/artifacts.sh download-disk ${{ env.DISK_PRE_TEST }} test-disk-image-amd64
+      # mkdir wkdir
+      # cp ${{ env.DISK_PRE_TEST }} wkdir/disk.img
+
+      - name: Download latest kernel
+        uses: dawidd6/action-download-artifact@v2
+        with:
+          workflow: build_kernel.yml
+          name: vmlinux-${{ matrix.ubuntu-version }}-${{ matrix.arch }}
+          path: tmp
+
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          make -f ${{ env.MAKEFILE }} dep_install
+
+      - name: Download the iso file
+        shell: bash
+        run: |
+          make -f ${{ env.MAKEFILE }} download
+
+      - name: Settup the working directory
+        shell: bash
+        run: |
+          make -f ${{ env.MAKEFILE }} build
+
+      - name: Install ubuntu on the disk
+        shell: bash
+        run: |
+          make -f ${{ env.MAKEFILE }} install_kvm
+
+      - name: Finalize Disk image
+        shell: bash
+        env:
+          KERNEL_CUSTOM: tmp/kernel
+        run: |
+          make -f ${{ env.MAKEFILE }} install_finalize_kvm
+
+      - name: Save the image as base image
+        shell: bash
+        env:
+          OUTPUT: ${{ env.DISK_PRE_TEST }}
+        run: |
+          make -f ${{ env.MAKEFILE }} save_output
+
+      - name: Clean everything
+        if: ${{ always() }}
+        run: |
+          make -f ${{ env.MAKEFILE }} clean
+
+
+  ## Upload the artifact.
+
+
+      - name: Compress and split
+        run: |
+          mkdir temp
+          cp ${{ env.DISK_PRE_TEST }} temp/
+          ./resources/artifacts.sh compress-split temp/*
+          rm temp/disk-image.qcow2
+
+      - name: Upload Base Image Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: disk-image-${{ matrix.ubuntu-version }}-${{ matrix.arch }}
+          path: temp
+
+      - name: Create checksums of the artifacts
+        shell: bash
+        run: |
+          shasum ${{ env.DISK_PRE_TEST }} > ${{ env.CHECKSUMS }}
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: checksum-${{ matrix.ubuntu-version }}-${{ matrix.arch }}
+          path: ${{ env.CHECKSUMS }}
+
+
+
