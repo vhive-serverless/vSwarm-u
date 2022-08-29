@@ -45,10 +45,12 @@ ifeq ($(UBUNTU_VERSION), focal)
 	CLOUD_IMAGE_FILE     := ubuntu-20.04.4-live-server-amd64.iso
 	CLOUD_IMAGE_BASE_URL := https://releases.ubuntu.com/20.04.4/
 	CLOUD_IMAGE_HASH	 := 28ccdb56450e643bad03bb7bcf7507ce3d8d90e8bf09e38f6bd9ac298a98eaad
+	KERNEL_CUSTOM		 ?= $(RESOURCES)/vmlinux-focal-amd64
 else ifeq ($(UBUNTU_VERSION), jammy)
 	CLOUD_IMAGE_FILE     := ubuntu-22.04.1-live-server-amd64.iso
 	CLOUD_IMAGE_BASE_URL := https://releases.ubuntu.com/22.04/
 	CLOUD_IMAGE_HASH	 := 10f19c5b2b8d6db711582e0e27f5116296c34fe4b313ba45f9b201a5007056cb
+	KERNEL_CUSTOM		 ?= $(RESOURCES)/vmlinux-jammy-amd64
 else
 	@echo "Unsupported ubuntu version $(UBUNTU_VERSION)"
 endif
@@ -69,6 +71,7 @@ RUN_SCRIPT_TEMPLATE := $(ROOT)/scripts/run_function.sh
 INSTALL_CONFIG 		:= $(BUILD_DIR)/user-data
 KERNEL 				:= $(BUILD_DIR)/vmlinux
 INITRD 				:= $(BUILD_DIR)/initrd
+KERNEL_C			:= $(BUILD_DIR)/vmlinux-custom
 
 # Resource files
 RESRC_BASE_IMAGE 	:= $(RESOURCES)/disk-image.qcow2
@@ -159,13 +162,12 @@ run_emulator:
 	sudo qemu-system-x86_64 \
 		-nographic \
 		-cpu host -enable-kvm \
-		-smp ${CPUS} \
-		-m ${MEMORY} \
+		-smp ${CPUS} -m ${MEMORY} \
 		-device e1000,netdev=net0 \
     	-netdev type=user,id=net0,hostfwd=tcp:127.0.0.1:5555-:22  \
 		-drive file=$(DISK_IMAGE_FILE),format=qcow2 \
-		-kernel $(KERNEL) \
-		-append 'console=ttyS0 root=/dev/hda2'
+		-kernel $(KERNEL_CUSTOM) \
+		-append 'console=ttyS0 root=/dev/vda2'
 
 run: run_emulator
 
@@ -185,7 +187,7 @@ run_emulator_kvm:
 # 	$(MAKE) -f $(MKFILE) serve_stop
 # 	rm $(BUILD_DIR)/run.sh
 
-install_finalize:
+install_finalize: $(KERNEL_C)
 	cp $(CONFIGS_DIR)/finalize.sh $(BUILD_DIR)/run.sh
 	$(MAKE) -f $(MKFILE) serve_start
 	sudo qemu-system-x86_64 \
@@ -193,11 +195,13 @@ install_finalize:
 		-smp ${CPUS} \
 		-m ${MEMORY} \
 		-drive file=$(DISK_IMAGE_FILE),format=qcow2,if=virtio
+		-kernel $(KERNEL_C) \
+		-append 'console=ttyS0 root=/dev/vda2'
 	$(MAKE) -f $(MKFILE) serve_stop
 	rm $(BUILD_DIR)/run.sh
 
 
-install_finalize_kvm:
+install_finalize_kvm: $(KERNEL_C)
 	cp $(CONFIGS_DIR)/finalize.sh $(BUILD_DIR)/run.sh
 	$(MAKE) -f $(MKFILE) serve_start
 	sudo qemu-system-x86_64 \
@@ -206,6 +210,8 @@ install_finalize_kvm:
 		-smp ${CPUS} \
 		-m ${MEMORY} \
 		-drive file=$(DISK_IMAGE_FILE),format=qcow2,if=virtio
+		-kernel $(KERNEL_C) \
+		-append 'console=ttyS0 root=/dev/vda2'
 	$(MAKE) -f $(MKFILE) serve_stop
 	rm $(BUILD_DIR)/run.sh
 
@@ -265,6 +271,10 @@ $(INITRD): $(CLOUD_IMAGE_FILE)
 
 	sudo umount iso
 	rm -rf iso
+
+
+$(KERNEL_C): $(KERNEL_CUSTOM)
+	cp $< $@
 
 
 ####

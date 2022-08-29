@@ -71,6 +71,7 @@ jobs:
     env:
       WORKDIR: setup/
       MAKEFILE: ${{ matrix.makefile }}
+      TEST_MAKEFILE: test/Makefile
       BUILD_DIR: wkdir/
       UBUNTU_VERSION: ${{ matrix.ubuntu-version }}
       ARCH: ${{ matrix.arch }}
@@ -80,22 +81,7 @@ jobs:
         uses: actions/checkout@v3
 
 
-      - name: Cache base disk installation
-        id: base-disk
-        uses: actions/cache@v3
-        with:
-          path: artifacts/
-          key: ${{ runner.os }}-${{ github.sha }}-${{ matrix.ubuntu-version }}-${{ matrix.arch }}-base-disk
-
-      - name: Setup the artifacts dir
-        if: steps.base-disk.outputs.cache-hit != 'true'
-        run: |
-          mkdir -p ${{ env.ARTIFACTS_DIR }}
-
-      # ./resources/artifacts.sh download-disk ${{ env.DISK_PRE_TEST }} test-disk-image-amd64
-      # mkdir wkdir
-      # cp ${{ env.DISK_PRE_TEST }} wkdir/disk.img
-
+      ### Get Kernel and test-client #################
       - name: Download latest kernel
         uses: dawidd6/action-download-artifact@v2
         with:
@@ -103,7 +89,22 @@ jobs:
           name: vmlinux-${{ matrix.ubuntu-version }}-${{ matrix.arch }}
           path: tmp
 
+      - name: Download latest test client
+        uses: dawidd6/action-download-artifact@v2
+        with:
+          workflow: test_client.yml
+          name: test-client-${{ matrix.arch }}
+          path: tmp
 
+      - name: Copy artifacts
+        run: |
+          mkdir -p ${{ env.ARTIFACTS_DIR }}
+          cp tmp/kernel ${{ env.KERNEL }}
+          cp tmp/test-client ${{ env.CLIENT }}
+
+
+
+      ### Build the disk ###############################
       - name: Install dependencies
         shell: bash
         run: |
@@ -127,7 +128,7 @@ jobs:
       - name: Finalize Disk image
         shell: bash
         env:
-          KERNEL_CUSTOM: tmp/kernel
+          KERNEL_CUSTOM: ${{ env.KERNEL }}
         run: |
           make -f ${{ env.MAKEFILE }} install_finalize_kvm
 
@@ -144,9 +145,8 @@ jobs:
           make -f ${{ env.MAKEFILE }} clean
 
 
-  ## Upload the artifact.
 
-
+      ## Upload the artifact ###############################
       - name: Compress and split
         run: |
           mkdir temp

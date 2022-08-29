@@ -45,10 +45,12 @@ ifeq ($(UBUNTU_VERSION), focal)
 	CLOUD_IMAGE_FILE     := ubuntu-20.04.4-live-server-arm64.iso
 	CLOUD_IMAGE_BASE_URL := https://cdimage.ubuntu.com/releases/20.04.4/release/
 	CLOUD_IMAGE_HASH	 := fef8bc204d2b09b579b9d40dfd8c5a084f8084a9bffafe8a0f39a0e53606312d
+	KERNEL_CUSTOM		 ?= $(RESOURCES)/vmlinux-focal-arm64
 else ifeq ($(UBUNTU_VERSION), jammy)
 	CLOUD_IMAGE_FILE     := ubuntu-22.04.1-live-server-arm64.iso
 	CLOUD_IMAGE_BASE_URL := https://cdimage.ubuntu.com/releases/22.04/release/
 	CLOUD_IMAGE_HASH	 := bc5a8015651c6f8699ab262d333375d3930b824f03d14ae51e551d89d9bb571c
+	KERNEL_CUSTOM		 ?= $(RESOURCES)/vmlinux-jammy-arm64
 else
 	@echo "Unsupported ubuntu version $(UBUNTU_VERSION)"
 endif
@@ -69,7 +71,7 @@ RUN_SCRIPT_TEMPLATE := $(ROOT)/scripts/run_function.sh
 INSTALL_CONFIG 		:= $(BUILD_DIR)/user-data
 KERNEL 				:= $(BUILD_DIR)/vmlinux
 INITRD 				:= $(BUILD_DIR)/initrd
-KERNEL_CUSTOM		?= $(BUILD_DIR)/vmlinux-custom
+KERNEL_C			:= $(BUILD_DIR)/vmlinux-custom
 
 # Resource files
 RESRC_BASE_IMAGE 	:= $(RESOURCES)/disk-image.qcow2
@@ -192,7 +194,7 @@ run: run_emulator
 
 
 
-install_finalize:
+install_finalize: $(KERNEL_C)
 	cp $(CONFIGS_DIR)/finalize.sh $(BUILD_DIR)/run.sh
 	$(MAKE) -f $(MKFILE) serve_start
 	sudo qemu-system-aarch64 \
@@ -202,14 +204,14 @@ install_finalize:
 		-device e1000,netdev=net0 \
     	-netdev type=user,id=net0,hostfwd=tcp:127.0.0.1:5555-:22  \
 		-drive file=$(DISK_IMAGE_FILE),format=qcow2 \
-		-kernel $(KERNEL_CUSTOM) \
+		-kernel $(KERNEL_C) \
 		-drive file=$(FLASH0),format=raw,if=pflash -drive file=$(FLASH1),format=raw,if=pflash \
 		-append 'console=ttyAMA0 earlyprintk=ttyAMA0 root=/dev/vda2'
 	$(MAKE) -f $(MKFILE) serve_stop
 	rm $(BUILD_DIR)/run.sh
 
 
-install_finalize_kvm:
+install_finalize_kvm: $(KERNEL_C)
 	cp $(CONFIGS_DIR)/finalize.sh $(BUILD_DIR)/run.sh
 	$(MAKE) -f $(MKFILE) serve_start
 	sudo qemu-system-aarch64 \
@@ -219,7 +221,7 @@ install_finalize_kvm:
 		-device e1000,netdev=net0 \
     	-netdev type=user,id=net0,hostfwd=tcp:127.0.0.1:5555-:22  \
 		-drive file=$(DISK_IMAGE_FILE),format=qcow2 \
-		-kernel $(KERNEL_CUSTOM) \
+		-kernel $(KERNEL_C) \
 		-drive file=$(FLASH0),format=raw,if=pflash -drive file=$(FLASH1),format=raw,if=pflash \
 		-append 'console=ttyAMA0 earlyprintk=ttyAMA0 root=/dev/vda2'
 	$(MAKE) -f $(MKFILE) serve_stop
@@ -281,6 +283,10 @@ $(INITRD): $(CLOUD_IMAGE_FILE)
 
 	sudo umount iso
 	rm -rf iso
+
+
+$(KERNEL_C): $(KERNEL_CUSTOM)
+	cp $< $@
 
 
 ####

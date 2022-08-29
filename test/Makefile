@@ -187,9 +187,9 @@ run_kvm:
 		-cpu host -enable-kvm \
 		-smp ${CPUS} \
 		-m ${MEMORY} \
-		-drive file=$(WK_DISK) \
+		-drive file=$(WK_DISK),format=qcow2,if=virtio \
 		-kernel $(WK_KERNEL) \
-		-append 'console=ttyS0 root=/dev/hda2'
+		-append 'console=ttyS0 root=/dev/vda2'
 
 
 run_no_kvm:
