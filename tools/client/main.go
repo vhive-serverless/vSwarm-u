@@ -30,6 +30,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 
@@ -51,6 +52,7 @@ var (
 	functionMethod = flag.String("function-method", "default", "Which method of benchmark to invoke")
 	numInvoke      = flag.Int("n", 10, "Number of invocations")
 	numWarm        = flag.Int("w", 0, "Number of invocations for warming")
+	delay          = flag.Int("delay", 0, "Add a delay between sending requests (us)")
 	logfile        = flag.String("logging", "", "Log to file instead of standart out")
 	m5_enable      = flag.Bool("m5ops", false, "Enable m5 magic instructions")
 	// Client
@@ -97,7 +99,7 @@ func main() {
 	client.Init(ctx, *url, *port)
 	defer client.Close()
 
-	log.Printf("Greeting: %s")
+	log.Printf("Connection established.\n")
 
 	generator = client.GetGenerator()
 	generator.SetGenerator(grpcClients.Unique)
@@ -105,7 +107,6 @@ func main() {
 	generator.SetMethod(*functionMethod)
 	pkt := generator.Next()
 
-	log.Printf("Greeting: %s")
 	reply := client.Request(ctx, pkt)
 
 	log.Printf("Greeting: %s", reply)
@@ -150,6 +151,9 @@ func invokeFunction(ctx context.Context, n int) {
 		if i%mod == 0 {
 			log.Printf("Invoked for %d times\n", i)
 		}
+		if *delay > 0 {
+			time.Sleep(time.Duration(*delay) * time.Microsecond)
+		}
 	}
 }
 
@@ -170,6 +174,10 @@ func invokeFunctionInstrumented(ctx context.Context, n int) {
 		m5.WorkEnd(100+i, 0) // 21: Response received
 		if i%mod == 0 {
 			log.Printf("Invoked for %d times\n", i)
+		}
+
+		if *delay > 0 {
+			time.Sleep(time.Duration(*delay) * time.Microsecond)
 		}
 	}
 }
