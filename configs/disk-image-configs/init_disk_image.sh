@@ -40,8 +40,13 @@ apt install -y net-tools
 #     g++ \
 #     make
 
-ARCH=amd64
-if [ $(uname -i) == "aarch64" ]; then ARCH=arm64 ; fi
+
+if [ $(uname -i) == "aarch64" ];
+then
+    ARCH=arm64
+else
+    ARCH=amd64
+fi
 
 ##### GEM5 specific setup #####
 ## Prepare gem5 utility tool
@@ -96,8 +101,8 @@ curl -L "https://github.com/docker/compose/releases/latest/download/docker-compo
 
 
 # Install golang
-VERSION=1.16.4
-GO_BUILD="go${VERSION}.linux-${ARCH}"
+GO_VERSION=1.18
+GO_BUILD="go${GO_VERSION}.linux-${ARCH}"
 
 wget --continue --quiet https://golang.org/dl/${GO_BUILD}.tar.gz
 sudo tar -C /usr/local -xzf ${GO_BUILD}.tar.gz
