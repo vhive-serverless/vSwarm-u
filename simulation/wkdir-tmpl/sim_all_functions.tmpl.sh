@@ -60,6 +60,9 @@ do
                 --kernel $KERNEL \
                 --disk $DISK_IMAGE \
                 --function ${fn} \
+                --mode=evaluation \
+                --atomic-warming 10 \
+                --num-invocation 10 \
             > $OUTDIR/gem5.log 2>&1 \
             &
 

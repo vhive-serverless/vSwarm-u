@@ -54,6 +54,4 @@ sudo $GEM5 \
             --kernel $KERNEL \
             --disk $DISK_IMAGE \
             --function ${FN} \
-            --mode=evaluation \
-            --atomic-warming 10 \
-            --num-invocation 10
+            --mode=setup

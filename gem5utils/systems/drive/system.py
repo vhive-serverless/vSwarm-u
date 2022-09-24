@@ -45,7 +45,7 @@ from . import x86
 
 class DriveSystem(System):
 
-    def __init__(self, kernel, disk, no_kvm=False):
+    def __init__(self, kernel, disk, kvm=True):
         super(DriveSystem, self).__init__()
         # driver system CPU is always simple, so is the memory
         # Note this is an assignment of a class, not an instance.
@@ -53,8 +53,7 @@ class DriveSystem(System):
         drive_mem_mode = 'atomic'
         DriveMemClass = SimpleMemory
 
-        self._no_kvm = no_kvm
-        self._host_parallel = True
+        self._host_parallel = True if kvm else False
 
         # Set up the clock domain and the voltage domain
         self.clk_domain = SrcClockDomain()
@@ -99,11 +98,16 @@ class DriveSystem(System):
 
         # Create the CPUs for our system.
         print("Drive system: {} {} cores".format(1,DriveCPUClass))
-        self.createCPU()
+        # Create the CPU for our system,
+        # as well as the cache hierarchy.
+        if kvm:
+            self.createCPU(CPUModel=X86KvmCPU)
+        else:
+            self.createCPU(CPUModel=DriveCPUClass)
 
+        self.connectCPUDirectly()
         # Set up the interrupt controllers for the system (x86 specific)
         self.setupInterrupts()
-        self.connectCPUDirectly()
 
 
         # Create the memory controller for the sytem
@@ -120,25 +124,38 @@ class DriveSystem(System):
         for c in cpu:
             c.createThreads()
 
-    def createCPU(self):
 
-        # KVM core for booting and setup
+    def createCPU(self, CPUModel=AtomicSimpleCPU):
+        """ Create the CPUs for the system """
+
+        # Beside the CPU we use for simulation we will use
+        # KVM booting linux and spinning up the function.
         # Note KVM needs a VM and atomic_noncaching
-        self.cpu = [X86KvmCPU(clk_domain=self.clk_domain,
-                            cpu_id = 0,
-                            switched_out = False)]
-        self.createCPUThreads(self.cpu)
-        self.kvm_vm = KvmVM()
-        self.mem_mode = 'atomic_noncaching'
+        print("Create CPU: ", CPUModel)
+        self.cpu = [CPUModel(cpu_id = 0)]
+        self.atomic_cpu = [AtomicSimpleCPU(cpu_id=0,switched_out=True)]
 
-        # Create atomic cpu for driving the test
-        self.atomicCpu = [AtomicSimpleCPU(clk_domain=self.clk_domain,
-                                        cpu_id = 0,
-                                        switched_out = True)]
-        self.createCPUThreads(self.atomicCpu)
+        self.cpu[0].createThreads()
+        self.atomic_cpu[0].createThreads()
+
+        if issubclass(CPUModel, BaseKvmCPU):
+            self.kvm_vm = KvmVM()
+            self.mem_mode = 'atomic_noncaching'
+        elif issubclass(CPUModel, BaseAtomicSimpleCPU):
+            self.mem_mode = 'atomic'
+        else:
+            self.mem_mode = 'timing'
+
+        print(f"Created Drive CPU: 1x {CPUModel}, Mem mode: {self.mem_mode}")
 
 
 
+
+    def switchToAtomicCpu(self):
+        m5.switchCpus(self, list(zip(self.cpu, self.atomic_cpu)))
+
+    def switchToMainCpu(self):
+        m5.switchCpus(self, list(zip(self.atomic_cpu, self.cpu)))
 
     def switchCpus(self, old, new):
         assert(new[0].switchedOut())

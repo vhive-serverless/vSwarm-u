@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from itertools import count
 import os
 import re
 import argparse
@@ -32,8 +33,8 @@ for subdir in subdirs[:]:
 
     if os.path.exists(filename):
         with open(filename) as f:
-            print(filename, "\n")
             start_tick = 0
+            count = 0
             for line in f:
                 if line[:14] == "command line: ":
                     cmd = line[14:].strip()
@@ -42,11 +43,18 @@ for subdir in subdirs[:]:
                 if "Simulation done" in line:
                     success = True
                     break
+                if "End invokation:" in line:
+                    count += 1
 
             if success:
-                print(f"{subdir} \033[92m succeed\033[00m")
+                if count < 20:
+                    status = "\033[93m WARN\033[00m"
+                else:
+                    status = "\033[92m succeed\033[00m"
+
             else:
-                print(f"{subdir} \033[91m fail\033[00m")
+                status= "\033[91m fail\033[00m"
+            print(f"{subdir:>25} > {count} : {status}")
             rerun_cmds += [(success, f"{cmd} > {filename} 2>&1 &")]
 
 total = len(rerun_cmds) -1

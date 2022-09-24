@@ -45,14 +45,6 @@ GEM5		?= $(RESOURCES)/gem5/build/X86/gem5.opt
 
 
 
-## Dependencies -------------------------------------------------
-## Check and install all dependencies necessary to perform function
-##
-# dep_install:
-# 	sudo pip install -U niet
-
-
-
 ##################################################################
 ## Build the working directory ----------------------------
 #
@@ -99,10 +91,12 @@ SERVE 				:= $(WORKING_DIR)/server.pid
 FUNCTIONS_YAML      := $(WORKING_DIR)/functions.yaml
 FUNCTIONS_LIST		:= $(WORKING_DIR)/functions.list
 GEM5_CONFIG  		:= $(WORKING_DIR)/run_sim.py
+SETUP_ALL_SCRIPT    := $(WORKING_DIR)/setup_all_functions.sh
+SETUP_FN_SCRIPT     := $(WORKING_DIR)/setup_function.sh
 SIM_ALL_SCRIPT      := $(WORKING_DIR)/sim_all_functions.sh
 SIM_FN_SCRIPT       := $(WORKING_DIR)/sim_function.sh
 
-templates: $(SIM_ALL_SCRIPT) $(SIM_FN_SCRIPT) $(GEM5_CONFIG) $(FUNCTIONS_YAML) $(FUNCTIONS_LIST)
+templates: $(SETUP_ALL_SCRIPT) $(SETUP_FN_SCRIPT) $(SIM_ALL_SCRIPT) $(SIM_FN_SCRIPT) $(GEM5_CONFIG) $(FUNCTIONS_YAML) $(FUNCTIONS_LIST)
 
 
 $(WORKING_DIR)/functions.%: $(ROOT)/simulation/functions/functions.%

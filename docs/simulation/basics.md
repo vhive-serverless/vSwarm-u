@@ -128,12 +128,22 @@ if exit_event.getCause() == "m5_fail instruction encountered":
    executeM5FailCode(exit_event.getCode())
 ```
 
-The full workflow defined in `run_sim.py` is:
 
+In general its easy to switch cores in gem5. However the kvm core is a bit picky and requires different event queues which makes gem5 much more unstable. Often things break. The best way to switch from kvm to another core is to take a checkpoint, exit the simulation and then start the simulation with another core.
+
+Another advantage of this flow is that you need to do the booting and warming just once and then do your experimentation from a clearly defined point. We implemented the run script with two modes `setup` and `evaluation`. Running the script with `--mode=setup` will instantiate the kvm core to boot, warm and checkpoint the system. `--mode=evaluation` will instantiate a detailed core and start from the checkpoint taken with setup. The checkpoint that setup mode generates is pre-required to run the evaluation mode. The director where checkpoints are written can be changed using the `--checkpoint-dir` flag.
+
+A full workflow is defined in `run_sim.py` and does the following:
+
+**_Setup_** mode:
 1. Booting linux
 2. Spinning up the container
 3. Pin the container to core 1
 4. Run the invoker to warm the function container.
+5.
+
+**_Evaluation_** mode:
+
 5. Reset the gem5 stats
 6. <font color="red">Invoker the function</font>
 7. Dump the gem5 stats
@@ -150,14 +160,22 @@ The different systems we use to run these simulations on are is defined `gem5-co
 |---|---|
 | <img src="{{ site.baseurl }}/figures/simple_system.jpg" title="Two Machine" height=100/> | **Core:** TimingSimpleCPU<br> **L1-I/D:** 36KB <br>**LLC:** 128KB<br>**Memory:** 2GB |
 
-
-### Start Simulation
-The initial working directory will contain two scripts which you can use to start the gem5 simulator out of the box. The first script starts the simulator for only one particular function and keeps attached to the process.
+### Setup Simulation
+The initial working directory will contain two scripts to setup your simulator. It will automatically boot linux, spin up the container and take a checkpoint.
+The first script starts the simulator for only one particular function and keeps attached to the process.
 ```bash
-./sim_function.sh <function> <results>
+./setup_function.sh <function> <results>
 ```
 The second script will parse the `functions.list` file and spawn a simulation for each function defined and not commented out in the list.
 ```bash
+./setup_all_functions.sh <results>
+```
+
+### Evaluations with the Simulator
+In the same manor two scripts for evaluation mode are provided which you can use to start from a checkpoint taken in setup mode.
+```bash
+./sim_function.sh <function> <results>
+# Or
 ./sim_all_functions.sh <results>
 ```
 The results of simulation as well as the log files will be written to `results/function/`

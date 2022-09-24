@@ -27,6 +27,7 @@ from m5.objects import *
 # sys.path.append('configs/common/') # For the next line...
 # import SimpleOpts
 import os
+from pathlib import Path
 ROOT = '<__ROOT__>'
 print(ROOT)
 
@@ -51,11 +52,27 @@ def parse_arguments():
                         help="""Specify a function that should run in the simulator.""")
     parser.add_argument("--cpu", type=str, default="SklTunedCPU",
                         help="""Define the system to be used.""")
+    parser.add_argument("--atomic-warming", type=int, default=0,
+                        help="""Perform warming of the cache hierarchy using the atomic core.""")
+    parser.add_argument("--num-invocations", type=int, default=5,
+                        help="""Number of invocation to be measured.""")
+    parser.add_argument("--mode", type=str, default="setup",choices=["setup", "evaluation",],
+                        help="""Setup mode: Will boot linux using the kvm core, perform functional
+                                warming and then take a snapshot.
+                                Evaluation mode: Will start from a previously taken checkpoint
+                                do some """)
+    parser.add_argument("--take-checkpoints", action="store_true", default=False,
+                        help="""Take a checkpoint after system is configured and ready
+                            to start the proper simulation""")
+    parser.add_argument("--use-checkpoint", type=str, default="warm",choices=["boot", "warm",],
+                        help="""Choose from which checkpoint to start from
+                                boot: taken after booting. warm: taken after functional warming.""")
+    parser.add_argument("--checkpoint-dir", type = str, default="cpt_2m/",
+                        help = "Directory of")
     parser.add_argument(
         "--etherdump", action="store", type=str, dest="etherdump",
         help="Specify the filename to dump a pcap capture of the"
         "ethernet traffic")
-
     return parser.parse_args()
 
 
@@ -64,13 +81,16 @@ _us = _f/int(1e6)
 _ms = _f/int(1e3)
 _s = _f/1
 
-def create_system(linux_kernel_path, disk_image_path, detailed_cpu_model):
+
+
+def create_system(linux_kernel_path, disk_image_path, detailed_cpu_model, kvm=False):
 
     # create the system we are going to simulate
     system = SklSystem(kernel = linux_kernel_path,
                     disk = disk_image_path,
                     num_cpus = 2, # run the benchmark in a single thread
-                    CPUModel = detailed_cpu_model)
+                    CPUModel = detailed_cpu_model,
+                    kvm = kvm)
     # For workitems to work correctly
     # This will cause the simulator to exit simulation when the first work
     # item is reached and when the first work item is finished.
@@ -78,17 +98,19 @@ def create_system(linux_kernel_path, disk_image_path, detailed_cpu_model):
     # system.work_item_id = 1
     # system.work_begin_exit_count = 1
     # system.work_end_exit_count = 1
+    system.m5ops_base = int("ffff0000",16)
     return system
 
-def create_drive_system(linux_kernel_path, disk_image_path):
+def create_drive_system(linux_kernel_path, disk_image_path, kvm=False):
     # create the system we are going to simulate
     drv_sys = DriveSystem(kernel = linux_kernel_path,
-                    disk = disk_image_path)
+                    disk = disk_image_path, kvm=kvm)
     drv_sys.exit_on_work_items = True
+    drv_sys.m5ops_base = int("ffff0000",16)
     return drv_sys
 
 
-def makeDualRoot(full_system, testSystem, driveSystem, dumpfile):
+def makeDualRoot(full_system, testSystem, driveSystem, dumpfile,kvm=False):
     self = Root(full_system = full_system)
     self.testsys = testSystem
     self.drivesys = driveSystem
@@ -99,18 +121,18 @@ def makeDualRoot(full_system, testSystem, driveSystem, dumpfile):
     # setting this number to low will cause a lot of switches
     # between the cores and we will see no progress. On the other
     # hand when setting to high our dual core system has problems.
-    # We want two different configurations:
-    # 1. For booting and warming up the functions we will use a
-    #    larger quantum (1ms)
-    # 2. For running the actual experiments 1ms is to large.
-    #    It sould be much smaller then the execution time of the function
-    #    itself. we will use 1us
-    # f = getClockFrequency()
+    #
+    # Therefore we only do booting and functional warming with kvm.
+    # Then we take a checkpoint and exit.
+    # For the measurement we start from the checkpoint. Now
+    # we can have only one event queue and no need for a simulation
+    # quantum > 0 anymore.
+
     f = int(1e12)
-    # Set the sim quatum in us
-    q = 50
-    # q = 500 * _us
-    sq = int(q * _us)
+    # Set the sim quatum
+    # 1ms for kvm. 0 if no kvm is used
+    q = 1000 if kvm else 0
+    sq = int(1000 * _us)
     print(f"Tick freq = {f} ticks/sec. Set sim quantum to {sq} ticks/sec => {q}µs")
     self.sim_quantum = sq
 
@@ -140,8 +162,8 @@ def writeDriveScript(dir, function):
     drive_ip = "10.0.2.18"
     test_ip = "10.0.2.17"
     device = "enp0s2"
-    n_invocations=5
-    n_warming=5000
+    n_invocations=50
+    n_warming=20000
 
     tmpl = f"""
 #!/bin/bash
@@ -235,39 +257,69 @@ FAIL_CODES = {
     -1: "Exit simulation",
 }
 
+
+inv_to_warm = -1
+inv_to_measure = -1
+
 def workitem(begin, id):
+    global inv_to_warm,inv_to_measure
     id -= 100
+    if args.mode != "evaluation":
+        return
+
     if begin:
         prYellow(f"Start invokation: {id}")
+
+        ## Perform warming if needed
+        if inv_to_warm > 0:
+            return
+        if inv_to_warm == 0:
+            prGreen("Warming done")
+            system.switchToMainCpu()
+            drive_sys.switchToMainCpu()
+            inv_to_warm = -1
+            m5.stats.reset()
+
+        # if inv_to_measure > 0:
+        #     m5.stats.reset()
+
     else:
         prYellow(f"End invokation: {id}")
+
+        if inv_to_warm > 0:
+            inv_to_warm -= 1
+            return
+
+        if inv_to_measure > 0:
+            # m5.stats.dump()
+            inv_to_measure -= 1
+
+        if inv_to_measure == 0:
+            prGreen("Measuring done")
+            m5.stats.dump()
+            return True
+
 
 
 def executeM5FailCode(code):
     if code not in FAIL_CODES:
         print("Nothing to do for fail code: %s", code)
-        return
+        return False
 
     prYellow(FAIL_CODES[code])
 
-    # After warming but before invoking
-    # we switch to detailed core
-    #
+    # Take checkpoints after booting and warming
+    # if code == 1 or code == 32:
     if code == 32:
-        print("Switch detailed core")
-        system.switchToDetailedCpus()
-        m5.stats.reset()
-
-    if code == 11:
-        print("Switch to kvm core")
-        system.switchToKvmCpus()
-        m5.stats.dump()
-        m5.stats.reset()
+        ckp_name = "boot" if code == 1 else \
+                    "warm" if code == 32 else "xx"
+        ckp="{}/{}/cpt.{}".format(args.checkpoint_dir, args.function, ckp_name)
+        print("Create checkpoint: ", ckp)
+        m5.checkpoint(ckp)
 
     if code == -1:
         prGreen("Simulation done.")
-        exit(0)
-
+        return True
 
 
 def simulate():
@@ -277,39 +329,44 @@ def simulate():
     - user exits
     - or the run script exits with fail code -1
     '''
-
-    while True:
+    _exit=False
+    while not _exit:
         print("Start simulation...")
         exit_event = m5.simulate()
 
         if exit_event.getCause() == "m5_fail instruction encountered":
-            executeM5FailCode(exit_event.getCode())
+            _exit=executeM5FailCode(exit_event.getCode())
 
         elif exit_event.getCause() == "workbegin":
-            workitem(True,exit_event.getCode())
+            _exit=workitem(True,exit_event.getCode())
         elif exit_event.getCause() == "workend":
-            workitem(False,exit_event.getCode())
+            _exit=workitem(False,exit_event.getCode())
 
         elif exit_event.getCause() == "user interrupt received":
             print("Received user interrupt. Exit simulation")
-            exit(1)
+            _exit=True
 
         else:
             print("Exit cause: %s | code: %d" % (exit_event.getCause(), exit_event.getCode()))
 
-
+    prGreen("Simulation done.")
 
 if __name__ == "__m5_main__":
 
     args = parse_arguments()
 
+    if args.take_checkpoints or args.mode == "setup":
+        Path("{}/{}".format(args.checkpoint_dir, args.function)).mkdir(parents=True, exist_ok=True)
+
+    kvm = True if args.mode == "setup" else False
+
     # Create the system we are going to simulate
-    system = create_system(args.kernel, args.disk, SklTunedCPU)
+    system = create_system(args.kernel, args.disk, SklTunedCPU,kvm=kvm)
 
     dual_system = True
     if dual_system:
-        drive_sys = create_drive_system(args.kernel, args.disk)
-        root = makeDualRoot(True, system, drive_sys, args.etherdump)
+        drive_sys = create_drive_system(args.kernel, args.disk,kvm=kvm)
+        root = makeDualRoot(True, system, drive_sys, args.etherdump, kvm=kvm)
     else:
         root = Root(full_system=True, system=system)
 
@@ -330,7 +387,41 @@ if __name__ == "__m5_main__":
         system.readfile = args.script
 
     # instantiate all of the objects we've created above
-    m5.instantiate()
+    if args.mode == "setup":
+        print("--- Setup Mode ---")
+        # In setup mode we do not exit on work items
+        m5.instantiate()
 
-    # Run the simulator
+
+    elif args.mode == "evaluation":
+        print("--- Evaluation Mode ---")
+
+        ckp="{}/{}/cpt.{}".format(args.checkpoint_dir, args.function, args.use_checkpoint)
+        print("Instantiate checkpoint: ", ckp)
+
+        ## Run just for a few instructions with the main CPU
+        ## to setup everything. The we can optionally switch to atomic
+        for i in range(len(system.cpu)):
+            system.cpu[i].switched_out = False
+            system.cpu[i].max_insts_any_thread = 1
+            system.atomic_cpu[i].switched_out = True
+
+        # instantiate all of the objects we've created above
+        # and the checkpoint previously taken
+        m5.instantiate(ckp)
+        exit_event = m5.simulate()
+
+        ## If needed switch to the atomic core to warm the caches
+        if args.atomic_warming > 0:
+            system.switchToAtomicCpu()
+            drive_sys.switchToAtomicCpu()
+            inv_to_warm = args.atomic_warming
+
+        inv_to_measure = args.num_invocations
+        prGreen(f"Warming for {inv_to_warm} invocations")
+        prGreen(f"Measure for {inv_to_measure} invocations")
+
+    else:
+        fatal("Invalid mode")
+
     simulate()
