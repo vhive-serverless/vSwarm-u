@@ -57,17 +57,17 @@ dump_number = 0
 stats_per_core_model = {
     "simple" :  [
         ('Benchmark', lambda r: r.props['benchmark'], str),
-        ('Cycles', lambda r: r.stats[dump_number]['system.detailed_cpu1.numCycles'], int),
-        ('Instructions', lambda r: r.stats[dump_number]['system.detailed_cpu1.exec_context.thread_0.numInsts'], int),
-        ('IPC', lambda r: r.stats[dump_number]['system.detailed_cpu1.ipc'], float),
-        ('CPI', lambda r: r.stats[dump_number]['system.detailed_cpu1.cpi'], float),
+        ('Cycles', lambda r: r.stats[dump_number]['system.cpu1.numCycles'], int),
+        ('Instructions', lambda r: r.stats[dump_number]['system.cpu1.exec_context.thread_0.numInsts'], int),
+        ('IPC', lambda r: r.stats[dump_number]['system.cpu1.ipc'], float),
+        ('CPI', lambda r: r.stats[dump_number]['system.cpu1.cpi'], float),
     ],
     "detailed" :  [
         ('Benchmark', lambda r: r.props['benchmark'], str),
-        ('Cycles', lambda r: r.stats[dump_number]['system.detailed_cpu1.numCycles'], int),
-        ('Instructions', lambda r: r.stats[dump_number]['system.detailed_cpu1.numInsts'], int),
-        ('IPC', lambda r: r.stats[dump_number]['system.detailed_cpu1.ipc'], float),
-        ('CPI', lambda r: r.stats[dump_number]['system.detailed_cpu1.cpi'], float),
+        ('Cycles', lambda r: r.stats[dump_number]['system.cpu1.numCycles'], int),
+        ('Instructions', lambda r: r.stats[dump_number]['system.cpu1.numInsts'], int),
+        ('IPC', lambda r: r.stats[dump_number]['system.cpu1.ipc'], float),
+        ('CPI', lambda r: r.stats[dump_number]['system.cpu1.cpi'], float),
     ]
 }
 

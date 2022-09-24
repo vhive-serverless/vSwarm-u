@@ -23,8 +23,7 @@
 # SOFTWARE.
 
 # Execute this script using
-#   ./sim_function.sh <function> <results>
-
+#   ./setup_all_functions.sh <results>
 
 set -x
 
@@ -36,24 +35,33 @@ GEM5_CONFIG=run_sim.py
 
 
 ################################################################################
-
 sudo chown $USER /dev/kvm
 
-# Define the results directory and the function for your run.
-FN=${1:-fibonacci-go}
-RESULTS_DIR=${2:-results}
+
+## Parse the functions.list file
+## Functions can be commented out with '#'
+FUNCTIONS=$(cat functions.list | sed '/^\s*#/d;/^\s*$/d')
 
 
-OUTDIR=$RESULTS_DIR/${FN}/
-## Create output directory
-mkdir -p $OUTDIR
+# Define the output file of your run
+RESULTS_DIR=../results/setup
 
-sudo $GEM5 \
-    --outdir=$OUTDIR \
-        $GEM5_CONFIG \
-            --kernel $KERNEL \
-            --disk $DISK_IMAGE \
-            --function ${FN} \
-            --mode=evaluation \
-            --atomic-warming 10 \
-            --num-invocation 10
+
+for fn in $FUNCTIONS ;
+do
+    OUTDIR=$RESULTS_DIR/${fn}/
+
+    ## Create output directory
+    mkdir -p $OUTDIR
+
+    sudo $GEM5 \
+        --outdir=$OUTDIR \
+            $GEM5_CONFIG \
+                --kernel $KERNEL \
+                --disk $DISK_IMAGE \
+                --function ${fn} \
+                --mode=setup \
+            > $OUTDIR/gem5.log 2>&1 \
+            &
+
+done

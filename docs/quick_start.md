@@ -61,17 +61,30 @@ make -f simulation/Makefile install_check
 ```
 The installation will happen using the qemu simulator and will take a few minutes to complete. *(~ 2min)*
 
-#### 3. Simulate function
+#### 3. Boot System with the Simulator (kvm)
 
-Finally the simulation can be started. For convenience we generate a script with all the parameters set for gem5 in you working directory. Use it to simulate one of the functions we just installed:
+Now everything is setup to switch to the simulator. At this point the "machine" we want to simulate is in power off state and we need to boot.
+For booting and starting the container the kvm core is used. Once booted and the function is started a checkpoint is taken.
+
+For convenience we generated a script with all the parameters set for gem5 in you working directory. Use it to simulate one of the functions.
+```bash
+cd wkdir
+./setup_function.sh <function> <results/dir>
+```
+Use for example `fibonacci-go` and `results/` as parameters.
+Once started you can attach to the simulator with the [m5 terminal](https://www.gem5.org/documentation/general_docs/fullsystem/m5term) `$GEM5_DIR/util/term/m5term localhost 3456`. The simulator will boot linux, start the container and invoke the function and take a checkpoint. After 20 invocations the simulator will exit. Check [here](./simulation/basics.md#simulations) for more details.
+
+
+#### 4. Simulate function
+
+Finally the simulator is in a state to do the exciting stuff. With the checkpoint that was generated during the previous step we can start detailed simulations from a deterministic state of the our system. Your working dir contains again a script with all the parameters set to start from the checkpoint with the detailed core.
 ```bash
 cd wkdir
 ./sim_function.sh <function> <results/dir>
 ```
-Use for example `fibonacci-go` and `results/` as parameters.
-Once started you can attach to the simulator with the [m5 terminal](https://www.gem5.org/documentation/general_docs/fullsystem/m5term) `$GEM5_DIR/util/term/m5term localhost 3456`. The simulator will boot linux, start the container and invoke the function. After 10 invocations simulator exit. Check [here](./simulation/basics.md#simulations) for more details.
+This time the simulator will not use the kvm but an simple core to perform some warming of the caches. Then it switches to the most detailed core in gem5, the O3CPU and simulate 10 further very detailed invocations.
 
-#### 4. Analyze Results
+#### 5. Analyze Results
 After the simulation you can find results and statistics in the `results/` folder.
 
-Yippee 😀 you have done it. Your first simulation of a serverless function with gem5. Please go to our [simulation basics](./simulation/basics.md) page to find out how everything works.
+Yippee 😀 You are done. Your first simulation of a serverless function with gem5. Please refer to our [simulation basics](./simulation/basics.md) page to find out more how everything works.

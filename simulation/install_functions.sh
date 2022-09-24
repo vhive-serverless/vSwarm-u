@@ -37,7 +37,7 @@ function pull_test_function {
         -n 5 -input 1
 
     ## Stop container
-    docker-compose -f functions.yaml down
+    docker-compose -f /root/functions.yaml down
     CONTAINERS="$(docker ps -a -q)"
     if [ $(expr length "$CONTAINERS") -gt 0 ];
     then
@@ -59,8 +59,6 @@ curl  "http://10.0.2.2:3003/functions.yaml" -f -o /root/functions.yaml
 curl  "http://10.0.2.2:3003/functions.list" -f -o /root/functions.list
 
 
-# docker-compose -f functions.yaml pull
-
 ## List all functions can be commented out
 FUNCTIONS=$(cat /root/functions.list | sed '/^\s*#/d;/^\s*$/d')
 
@@ -74,6 +72,7 @@ for f in $FUNCTIONS
   echo "\033[0;31m----------------"
   echo "FAIL"
   echo "----------------\033[0m"
+  cat /root/results.log
 }
 # set +e
 end_logging

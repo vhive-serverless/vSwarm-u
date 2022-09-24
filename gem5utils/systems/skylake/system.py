@@ -37,10 +37,10 @@ from .caches import *
 
 class SklSystem(System):
 
-    def __init__(self, kernel, disk, num_cpus=2, CPUModel=AtomicSimpleCPU):
+    def __init__(self, kernel, disk, num_cpus=2, CPUModel=AtomicSimpleCPU, kvm=True):
         super(SklSystem, self).__init__()
 
-        self._host_parallel = False if num_cpus == 1 else True
+        self._host_parallel = True if kvm and num_cpus > 1 else False
 
         # Set up the clock domain and the voltage domain
         self.clk_domain = SrcClockDomain()
@@ -89,15 +89,18 @@ class SklSystem(System):
         # Default in intel is 0xffff0000
         self.m5ops_base = int("ffff0000",16)
 
-        # Create the CPU for our system.
-        self.createCPU(num_cpus=num_cpus, CPUModel=CPUModel)
-        # Create the CPUs for our system.
-        print("Test system: {} {} cores".format(num_cpus, CPUModel))
-        self.createCPU(num_cpus, CPUModel)
+        # Create the CPU for our system,
+        # as well as the cache hierarchy.
+        if kvm:
+            self.createCPU(num_cpus=num_cpus,CPUModel=X86KvmCPU)
+            self.connectCPUDirectly()
+        else:
+            self.createCPU(num_cpus=num_cpus,CPUModel=CPUModel)
+            self.createCacheHierarchy()
+
+
         # Set up the interrupt controllers for the system (x86 specific)
         self.setupInterrupts()
-        # Create the cache heirarchy for the system.
-        self.createCacheHierarchy()
 
         # Create the memory controller for the sytem
         # self.createMemoryControllers()
@@ -126,51 +129,34 @@ class SklSystem(System):
         # Beside the CPU we use for simulation we will use
         # KVM booting linux and spinning up the function.
         # Note KVM needs a VM and atomic_noncaching
-        self.cpu = [X86KvmCPU(cpu_id = i)
-                    for i in range(num_cpus)]
-        self.createCPUThreads(self.cpu)
-        self.kvm_vm = KvmVM()
-        self.mem_mode = 'atomic_noncaching'
+        print("Create CPU: ", CPUModel)
+        self.cpu = [CPUModel(cpu_id = i) for i in range(num_cpus)]
+        self.atomic_cpu = [AtomicSimpleCPU(
+                                cpu_id = i,
+                                switched_out=True) for i in range(num_cpus)]
+
+        for i in range(num_cpus):
+            self.cpu[i].createThreads()
+            self.atomic_cpu[i].createThreads()
+
+        if issubclass(CPUModel, BaseKvmCPU):
+            self.kvm_vm = KvmVM()
+            self.mem_mode = 'atomic_noncaching'
+        elif issubclass(CPUModel, BaseAtomicSimpleCPU):
+            self.mem_mode = 'atomic'
+        else:
+            self.mem_mode = 'timing'
+
+        print(f"Created CPU: {num_cpus}x {CPUModel}, Mem mode: {self.mem_mode}")
 
 
-        # Create the CPUs for our detailed simulations.
-        # By default this is a simple atomic CPU. Using other CPU models
-        # and using timing memory is possible as well.
-        # Also, changing this to using multiple CPUs is also possible
-        # Note: If you use multiple CPUs, then the BIOS config needs to be
-        #       updated as well.
-        #
-        self.detailed_cpu = [CPUModel(cpu_id = i,
-                                     switched_out = True)
-                   for i in range(num_cpus)]
-        self.createCPUThreads(self.detailed_cpu)
 
 
-        # # KVM core for booting and setup
-        # # Note KVM needs a VM and atomic_noncaching
-        # self.cpu = [X86KvmCPU(clk_domain=self.clk_domain,
-        #                     cpu_id = 0,
-        #                     switched_out = False)]
-        # self.createCPUThreads(self.cpu)
-        # self.kvm_vm = KvmVM()
-        # self.mem_mode = 'atomic_noncaching'
+    def switchToAtomicCpu(self):
+        m5.switchCpus(self, list(zip(self.cpu, self.atomic_cpu)))
 
-        # # Create atomic cpu for driving the test
-        # self.detailed_cpu = [AtomicSimpleCPU(clk_domain=self.clk_domain,
-        #                                 cpu_id = 0,
-        #                                 switched_out = True)]
-        # self.createCPUThreads(self.detailed_cpu)
-
-
-    def createCPUThreads(self, cpu):
-        for c in cpu:
-            c.createThreads()
-
-    def switchToDetailedCpus(self):
-        m5.switchCpus(self, list(zip(self.cpu, self.detailed_cpu)))
-
-    def switchToKvmCpus(self):
-        m5.switchCpus(self, list(zip(self.detailed_cpu, self.cpu)))
+    def switchToMainCpu(self):
+        m5.switchCpus(self, list(zip(self.atomic_cpu, self.cpu)))
 
     def setDiskImage(self, img_path):
         """ Set the disk image

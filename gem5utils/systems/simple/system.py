@@ -36,10 +36,10 @@ from .caches import *
 
 class SimpleSystem(System):
 
-    def __init__(self, kernel, disk, num_cpus=2, CPUModel=AtomicSimpleCPU):
+    def __init__(self, kernel, disk, num_cpus=2, CPUModel=AtomicSimpleCPU, kvm=True):
         super(SimpleSystem, self).__init__()
 
-        self._host_parallel = False if num_cpus == 1 else True
+        self._host_parallel = True if kvm and num_cpus > 1 else False
 
         # Set up the clock domain and the voltage domain
         self.clk_domain = SrcClockDomain()
@@ -88,13 +88,18 @@ class SimpleSystem(System):
         # Default in intel is 0xffff0000
         self.m5ops_base = int("ffff0000",16)
 
-        # Create the CPU for our system.
-        self.createCPU(num_cpus=num_cpus, CPUModel=CPUModel)
+        # Create the CPU for our system,
+        # as well as the cache hierarchy.
+        if kvm:
+            self.createCPU(num_cpus=num_cpus,CPUModel=X86KvmCPU)
+            self.connectCPUDirectly()
+        else:
+            self.createCPU(num_cpus=num_cpus,CPUModel=CPUModel)
+            self.createCacheHierarchy()
+
 
         # Set up the interrupt controllers for the system (x86 specific)
         self.setupInterrupts()
-        # Create the cache heirarchy for the system.
-        self.createCacheHierarchy()
 
         # Create the memory controller for the sytem
         self.createMemoryControllers()
@@ -116,35 +121,34 @@ class SimpleSystem(System):
         # Beside the CPU we use for simulation we will use
         # KVM booting linux and spinning up the function.
         # Note KVM needs a VM and atomic_noncaching
-        self.cpu = [X86KvmCPU(cpu_id = i)
-                    for i in range(num_cpus)]
-        self.createCPUThreads(self.cpu)
-        self.kvm_vm = KvmVM()
-        self.mem_mode = 'atomic_noncaching'
+        print("Create CPU: ", CPUModel)
+        self.cpu = [CPUModel(cpu_id = i) for i in range(num_cpus)]
+        self.atomic_cpu = [AtomicSimpleCPU(
+                                cpu_id = i,
+                                switched_out=True) for i in range(num_cpus)]
+
+        for i in range(num_cpus):
+            self.cpu[i].createThreads()
+            self.atomic_cpu[i].createThreads()
+
+        if issubclass(CPUModel, BaseKvmCPU):
+            self.kvm_vm = KvmVM()
+            self.mem_mode = 'atomic_noncaching'
+        elif issubclass(CPUModel, BaseAtomicSimpleCPU):
+            self.mem_mode = 'atomic'
+        else:
+            self.mem_mode = 'timing'
+
+        print(f"Created CPU: {num_cpus}x {CPUModel}, Mem mode: {self.mem_mode}")
 
 
-        # Create the CPUs for our detailed simulations.
-        # By default this is a simple atomic CPU. Using other CPU models
-        # and using timing memory is possible as well.
-        # Also, changing this to using multiple CPUs is also possible
-        # Note: If you use multiple CPUs, then the BIOS config needs to be
-        #       updated as well.
-        #
-        self.detailed_cpu = [CPUModel(cpu_id = i,
-                                     switched_out = True)
-                   for i in range(num_cpus)]
-        self.createCPUThreads(self.detailed_cpu)
 
 
-    def createCPUThreads(self, cpu):
-        for c in cpu:
-            c.createThreads()
+    def switchToAtomicCpu(self):
+        m5.switchCpus(self, list(zip(self.cpu, self.atomic_cpu)))
 
-    def switchToDetailedCpus(self):
-        m5.switchCpus(self, list(zip(self.cpu, self.detailed_cpu)))
-
-    def switchToKvmCpus(self):
-        m5.switchCpus(self, list(zip(self.detailed_cpu, self.cpu)))
+    def switchToMainCpu(self):
+        m5.switchCpus(self, list(zip(self.atomic_cpu, self.cpu)))
 
     def setDiskImage(self, img_path):
         """ Set the disk image
@@ -155,27 +159,6 @@ class SimpleSystem(System):
         disk0 = CowDisk(img_path)
         self.pc.south_bridge.ide.disks = [disk0]
 
-    def connectCPUDirectly(self):
-        self.llc_bus = L2XBar(width = 64,
-                            snoop_filter = SnoopFilter(max_capacity='32MB'))
-
-        # Add a tiny cache. This cache is required when switching CPUs
-        # for the classic memory model for coherence
-        self.llc_cache = Cache(assoc=8,
-                                tag_latency = 50,
-                                data_latency = 50,
-                                response_latency = 50,
-                                mshrs = 20,
-                                size = '1kB',
-                                tgts_per_mshr = 12,)
-        self.llc_cache.mem_side = self.membus.cpu_side_ports
-        self.llc_cache.cpu_side = self.llc_bus.mem_side_ports
-
-        for cpu in self.cpu:
-            for port in [cpu.icache_port, cpu.dcache_port]:
-                self.llc_bus.cpu_side_ports = port
-            for tlb in [cpu.mmu.itb, cpu.mmu.dtb]:
-                self.llc_bus.cpu_side_ports = tlb.walker.port
 
     def createCacheHierarchy(self):
         """ Create a simple cache heirarchy with a shared LLC"""
@@ -205,6 +188,30 @@ class SimpleSystem(System):
             # Connect the CPU TLBs directly to the mem.
             cpu.mmu.itb.walker.port = self.membus.cpu_side_ports
             cpu.mmu.dtb.walker.port = self.membus.cpu_side_ports
+
+
+
+    def connectCPUDirectly(self):
+        self.llc_bus = L2XBar(width = 64,
+                            snoop_filter = SnoopFilter(max_capacity='32MB'))
+
+        # Add a tiny cache. This cache is required when switching CPUs
+        # for the classic memory model for coherence
+        self.llc_cache = Cache(assoc=8,
+                                tag_latency = 50,
+                                data_latency = 50,
+                                response_latency = 50,
+                                mshrs = 20,
+                                size = '1kB',
+                                tgts_per_mshr = 12,)
+        self.llc_cache.mem_side = self.membus.cpu_side_ports
+        self.llc_cache.cpu_side = self.llc_bus.mem_side_ports
+
+        for cpu in self.cpu:
+            for port in [cpu.icache_port, cpu.dcache_port]:
+                self.llc_bus.cpu_side_ports = port
+            for tlb in [cpu.mmu.itb, cpu.mmu.dtb]:
+                self.llc_bus.cpu_side_ports = tlb.walker.port
 
 
     def createMemoryControllers(self):
