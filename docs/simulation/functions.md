@@ -13,7 +13,7 @@ Currently we support and tested 21 functions from our benchmark suite vSwarm
 
 
 ## Standalone kernels
-The benchmark suite contains three functions that implement the same functionality in different runtime. With this the difference in the runtimes can be explored. The runtimes golang, nodejs, python are most common used for serverless and are representatives for a compiled, JIT-compiled and interpreted language. Details about the functions can be found in [vSwarm](https://github.com/ease-lab/vSwarm/tree/main/benchmarks)
+The benchmark suite contains three functions that implement the same functionality in different runtime. With this the difference in the runtimes can be explored. The runtimes golang, nodejs, python are most common used for serverless and are representatives for a compiled, JIT-compiled and interpreted language. Details about the functions can be found in [vSwarm](https://github.com/vhive-serverless/vSwarm/tree/main/benchmarks)
 
 
 | Benchmark      | Name | Languages implemented  | gem5 support |
@@ -26,7 +26,7 @@ The benchmark suite contains three functions that implement the same functionali
 
 
 ## Hotel Reservation app
-Functions from DeathStarBenchs hotel reservation app. Description of the benchmarks can be found in [vSwarm](https://github.com/ease-lab/vSwarm/tree/main/benchmarks/hotel-app)
+Functions from DeathStarBenchs hotel reservation app. Description of the benchmarks can be found in [vSwarm](https://github.com/vhive-serverless/vSwarm/tree/main/benchmarks/hotel-app)
 
 | Benchmark | Dependent on | Knative infra | Tracing | Gem5 support | Runtimes | Languages implemented  |
 |---|---|---|---|---|---|---|
@@ -39,7 +39,7 @@ Functions from DeathStarBenchs hotel reservation app. Description of the benchma
 | Search         | Serving | Geo, Profile, Rate | ✓ | ✕ | docker, knative | golang |
 
 ## Online Shop
-Function kernels from online shop example from google. Description of the benchmarks can be found in [vSwarm](https://github.com/ease-lab/vSwarm/tree/main/benchmarks/online-shop)
+Function kernels from online shop example from google. Description of the benchmarks can be found in [vSwarm](https://github.com/vhive-serverless/vSwarm/tree/main/benchmarks/online-shop)
 
 | Benchmark | Language | gem5 support |
 |---|---|---|

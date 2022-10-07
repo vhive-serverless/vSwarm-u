@@ -62,13 +62,13 @@ args = parser.parse_args()
 GITHUB_TOKEN = os.environ["GITHUB_TOKEN"]
 # GITHUB_TAGNAME = os.environ["TAG_NAME"]
 
-GITHUB_REPOSITORY = "ease-lab/vSwarm-u"
+GITHUB_REPOSITORY = "vhive-serverless/vSwarm-u"
 
 
 
 # token = os.getenv('GITHUB_TOKEN')
 # g = Github(token)
-# repo = g.get_repo("ease-lab/vSwarm-u")
+# repo = g.get_repo("vhive-serverless/vSwarm-u")
 
 
 # List releases for a repository:

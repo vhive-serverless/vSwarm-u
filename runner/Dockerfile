@@ -59,7 +59,7 @@
 ARG OS=ubuntu-focal
 FROM myoung34/github-runner:$OS as gem5-build-runner
 
-ARG ORG=ease-lab \
+ARG ORG=vhive-serverless \
     REPO=vSwarm-u \
     OS_LABEL=ubuntu-20.04
 
@@ -96,7 +96,7 @@ CMD ["./bin/Runner.Listener", "run", "--startuptype", "service"]
 ARG OS=ubuntu-focal
 FROM myoung34/github-runner:$OS as qemu-test-runner
 
-ARG ORG=ease-lab \
+ARG ORG=vhive-serverless \
     REPO=vSwarm-u \
     OS_LABEL=ubuntu-20.04
 
@@ -133,7 +133,7 @@ CMD ["./bin/Runner.Listener", "run", "--startuptype", "service"]
 ARG OS=ubuntu-focal
 FROM myoung34/github-runner:$OS as gem5-test-runner
 
-ARG ORG=ease-lab \
+ARG ORG=vhive-serverless \
     REPO=vSwarm-u \
     OS_LABEL=ubuntu-20.04
 

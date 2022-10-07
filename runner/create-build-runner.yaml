@@ -114,7 +114,7 @@
         GH_ACCESS_TOKEN={{ lookup('env', 'GH_ACCESS_TOKEN') }}
         TMP=$(date +%s%N | cut -b10-19)
         docker run --rm -d --name github-runner-${TMP} \
-                    -e REPO_URL="https://github.com/ease-lab/vSwarm-u" \
+                    -e REPO_URL="https://github.com/vhive-serverless/vSwarm-u" \
                     -e ACCESS_TOKEN="${GH_ACCESS_TOKEN}" \
                     -e RUNNER_NAME="vswarm-u-build-runner-${TMP}" \
                     -e RUNNER_WORKDIR="/tmp/_work" \

@@ -100,7 +100,7 @@
 
     ## Clone vSwarm-u
     - name: Clone a github repository
-      shell: git clone https://github.com/ease-lab/vSwarm-u.git /wkdir/vSwarm-u
+      shell: git clone https://github.com/vhive-serverless/vSwarm-u.git /wkdir/vSwarm-u
 
 
     ## Put all remaining installation into the setup script.

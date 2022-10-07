@@ -36,7 +36,7 @@ import (
 
 	m5ops "client/m5"
 
-	grpcClients "github.com/ease-lab/vSwarm-proto/grpcclient"
+	grpcClients "github.com/vhive-serverless/vSwarm-proto/grpcclient"
 )
 
 const (

@@ -1,13 +1,13 @@
 {
   "tag_name": "v0.0.6",
   "id": 68788024,
-  "kernel": "https://github.com/ease-lab/vSwarm-u/releases/download/v0.0.6/vmlinux-amd64",
+  "kernel": "https://github.com/vhive-serverless/vSwarm-u/releases/download/v0.0.6/vmlinux-amd64",
   "disk-image": [
-    "https://github.com/ease-lab/vSwarm-u/releases/download/v0.0.6/test-disk-image-amd64.tar.gz.aa",
-    "https://github.com/ease-lab/vSwarm-u/releases/download/v0.0.6/test-disk-image-amd64.tar.gz.ab",
-    "https://github.com/ease-lab/vSwarm-u/releases/download/v0.0.6/test-disk-image-amd64.tar.gz.ac",
-    "https://github.com/ease-lab/vSwarm-u/releases/download/v0.0.6/test-disk-image-amd64.tar.gz.ad",
-    "https://github.com/ease-lab/vSwarm-u/releases/download/v0.0.6/test-disk-image-amd64.tar.gz.ae"
+    "https://github.com/vhive-serverless/vSwarm-u/releases/download/v0.0.6/test-disk-image-amd64.tar.gz.aa",
+    "https://github.com/vhive-serverless/vSwarm-u/releases/download/v0.0.6/test-disk-image-amd64.tar.gz.ab",
+    "https://github.com/vhive-serverless/vSwarm-u/releases/download/v0.0.6/test-disk-image-amd64.tar.gz.ac",
+    "https://github.com/vhive-serverless/vSwarm-u/releases/download/v0.0.6/test-disk-image-amd64.tar.gz.ad",
+    "https://github.com/vhive-serverless/vSwarm-u/releases/download/v0.0.6/test-disk-image-amd64.tar.gz.ae"
   ],
-  "client": "https://github.com/ease-lab/vSwarm-u/releases/download/v0.0.6/test-client-amd64"
+  "client": "https://github.com/vhive-serverless/vSwarm-u/releases/download/v0.0.6/test-client-amd64"
 }
