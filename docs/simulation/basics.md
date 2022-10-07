@@ -63,7 +63,7 @@ The functions to be benchmarked need to be defined in the `function.yaml` in you
    ```
     With this simulation script is able to pin this container to an isolated core during the simulation.
 
-The initial working directory contains a template of this config file. Use it as a reference and quick start guide. Furthermore we predefined the correct config of all functions supported in gem5 from our benchmarks suite [vSwarm](https://github.com/ease-lab/vSwarm) in `simulation/functions/all_vswarm_functions.yaml`. Use it as a reference or simply copy the config to the `functions.yaml` file in your working directory.
+The initial working directory contains a template of this config file. Use it as a reference and quick start guide. Furthermore we predefined the correct config of all functions supported in gem5 from our benchmarks suite [vSwarm](https://github.com/vhive-serverless/vSwarm) in `simulation/functions/all_vswarm_functions.yaml`. Use it as a reference or simply copy the config to the `functions.yaml` file in your working directory.
 
 In addition to the config file we use a second file `functions.list` to control which functions to benchmark in a particular run. You might not always benchmark all function at once. You can comment out functions in this list and the scripts will not spawn a simulation for this one.
 

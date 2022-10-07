@@ -2,18 +2,18 @@
 ![vSwarm-u Header](docs/figures/vSwarm-u-hdr.png)
 
 
-[![Build Linux Kernel](https://github.com/ease-lab/vSwarm-u/actions/workflows/build_kernel.yml/badge.svg)](https://github.com/ease-lab/vSwarm-u/actions/workflows/build_kernel.yml)
-[![Build Gem5](https://github.com/ease-lab/vSwarm-u/actions/workflows/build_gem5.yml/badge.svg)](https://github.com/ease-lab/vSwarm-u/actions/workflows/build_gem5.yml)
-[![Build base disk image](https://github.com/ease-lab/vSwarm-u/actions/workflows/create_base_disk.yml/badge.svg)](https://github.com/ease-lab/vSwarm-u/actions/workflows/create_base_disk.yml)
-[![Function CI for gem5 Simulator](https://github.com/ease-lab/vSwarm-u/actions/workflows/function_ci.yml/badge.svg)](https://github.com/ease-lab/vSwarm-u/actions/workflows/function_ci.yml)
+[![Build Linux Kernel](https://github.com/vhive-serverless/vSwarm-u/actions/workflows/build_kernel.yml/badge.svg)](https://github.com/vhive-serverless/vSwarm-u/actions/workflows/build_kernel.yml)
+[![Build Gem5](https://github.com/vhive-serverless/vSwarm-u/actions/workflows/build_gem5.yml/badge.svg)](https://github.com/vhive-serverless/vSwarm-u/actions/workflows/build_gem5.yml)
+[![Build base disk image](https://github.com/vhive-serverless/vSwarm-u/actions/workflows/create_base_disk.yml/badge.svg)](https://github.com/vhive-serverless/vSwarm-u/actions/workflows/create_base_disk.yml)
+[![Function CI for gem5 Simulator](https://github.com/vhive-serverless/vSwarm-u/actions/workflows/function_ci.yml/badge.svg)](https://github.com/vhive-serverless/vSwarm-u/actions/workflows/function_ci.yml)
 
-[![doc](https://img.shields.io/badge/doc-latest-green)](https://ease-lab.github.io/vSwarm-u/)
-![GitHub release (latest by date)](https://img.shields.io/github/v/release/ease-lab/vSwarm-u)
+[![doc](https://img.shields.io/badge/doc-latest-green)](https://vhive-serverless.github.io/vSwarm-u/)
+![GitHub release (latest by date)](https://img.shields.io/github/v/release/vhive-serverless/vSwarm-u)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 <a href="https://twitter.com/intent/follow?screen_name=ease_lab" target="_blank">
 <img src="https://img.shields.io/twitter/follow/ease_lab?style=social&logo=twitter" alt="follow on Twitter"></a>
 
-<!-- ![GitHub Workflow Status](https://img.shields.io/github/workflow/status/ease-lab/vSwarm-u/function_ci.yml?logo=Build%20kernel) -->
+<!-- ![GitHub Workflow Status](https://img.shields.io/github/workflow/status/vhive-serverless/vSwarm-u/function_ci.yml?logo=Build%20kernel) -->
 
 <!-- ![](https://img.shields.io/static/v1?label=&message=documentation&color=green) -->
 
@@ -45,7 +45,7 @@ vSwarm-&mu; offers two main components to address the challenges of serverless h
 
 That will equip microarchitect's and researchers with the tools they need to identify the real bottlenecks in modern hardware when running serverless workloads.
 
-Interested? Find more information why and how we build vSwarm-&mu; from its first [presentation](https://ease-lab.github.io/vSwarm-u/methodology/) and the remaining documentation.
+Interested? Find more information why and how we build vSwarm-&mu; from its first [presentation](https://vhive-serverless.github.io/vSwarm-u/methodology/) and the remaining documentation.
 
 
 ## Referencing our work
@@ -81,7 +81,7 @@ Please cite our [paper](https://ease-lab.github.io/ease_website/pubs/JUKEBOX_ISC
 
 ## Getting started with vSwarm-&mu;
 
-vSwarm-&mu; can be deployed on premises or in the cloud, with support for nested virtualization. We provide [a quick-start guide](https://ease-lab.github.io/vSwarm-u/quick_start/)
+vSwarm-&mu; can be deployed on premises or in the cloud, with support for nested virtualization. We provide [a quick-start guide](https://vhive-serverless.github.io/vSwarm-u/quick_start/)
 that describes the initial setup, as well as how to set up benchmarking experiments.
 
 

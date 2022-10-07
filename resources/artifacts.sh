@@ -40,7 +40,7 @@
 
 GITHUB_TOKEN=$GITHUB_TOKEN
 RELEASE_ID=${RELEASE_ID-68604631}
-owner=ease-lab
+owner=vhive-serverless
 repo=vSwarm-u
 folder=artifacts
 size=500m

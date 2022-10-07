@@ -1,14 +1,14 @@
 title: "vSwarm-&mu;"
 remote_theme: just-the-docs/just-the-docs
 
-domain: ease-lab.github.io         # if you want to force HTTPS, specify the domain without the http at the start, e.g. example.com
-url: "https://ease-lab.github.io"  # the base hostname and protocol for your site, e.g. http://example.com
+domain: vhive-serverless.github.io         # if you want to force HTTPS, specify the domain without the http at the start, e.g. example.com
+url: "https://vhive-serverless.github.io"  # the base hostname and protocol for your site, e.g. http://example.com
 baseurl: "/vSwarm-u"
 
 # Aux links for the upper right navigation
 aux_links:
   "GitHub repo":
-    - "https://github.com/ease-lab/vSwarm-u"
+    - "https://github.com/vhive-serverless/vSwarm-u"
 # Makes Aux links open in a new tab. Default is false
 aux_links_new_tab: false
 
@@ -65,7 +65,7 @@ nav_sort: case_sensitive # Capital letters sorted before lowercase
 back_to_top: true
 back_to_top_text: "Back to top"
 
-footer_content: "Copyright &copy; 2022 EASE-lab. Distributed by an <a href=\"https://github.com/ease-lab/vSwarm-u/tree/main/LICENSE.txt\">MIT license.</a>"
+footer_content: "Copyright &copy; 2022 EASE-lab. Distributed by an <a href=\"https://github.com/vhive-serverless/vSwarm-u/tree/main/LICENSE.txt\">MIT license.</a>"
 
 # Footer last edited timestamp
 last_edit_timestamp: true # show or hide edit time - page must have `last_modified_date` defined in the frontmatter
@@ -76,7 +76,7 @@ last_edit_time_format: "%b %e %Y at %I:%M %p" # uses ruby's time format: https:/
 # Footer "Edit this page on GitHub" link text
 gh_edit_link: true # show or hide edit this page link
 gh_edit_link_text: "Edit this page on GitHub"
-gh_edit_repository: "https://github.com/ease-lab/vSwarm-u" # the github URL for your repo
+gh_edit_repository: "https://github.com/vhive-serverless/vSwarm-u" # the github URL for your repo
 gh_edit_branch: "main" # the branch that your docs is served from
 gh_edit_source: docs # the source that your files originate from
 gh_edit_view_mode: "tree" # "tree" or "edit" if you want the user to jump into the editor immediately

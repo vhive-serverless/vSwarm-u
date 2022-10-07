@@ -123,7 +123,7 @@ def downloadAsset(asset_url):
 
 ## Get the release info
 def get_latest_release():
-    RELEASES_API = "https://api.github.com/repos/ease-lab/vSwarm-u/releases/latest"
+    RELEASES_API = "https://api.github.com/repos/vhive-serverless/vSwarm-u/releases/latest"
 
     print("Releases API: " + RELEASES_API)
     headers = {}
@@ -141,7 +141,7 @@ def get_release(tag_name="latest"):
     if tag_name =="latest":
         return get_latest_release()
 
-    RELEASES_API = "https://api.github.com/repos/ease-lab/vSwarm-u/releases"
+    RELEASES_API = "https://api.github.com/repos/vhive-serverless/vSwarm-u/releases"
     print("Releases API: " + RELEASES_API)
     headers = {}
     response = requests.get(RELEASES_API, headers=headers)

@@ -176,7 +176,7 @@ download-resources:
 ## Upload artifacts to release ##
 GITHUB_TOKEN ?=
 RELEASE_ID ?= 68604631
-UPLOAD_URL ?= https://uploads.github.com/repos/ease-lab/vSwarm-u/releases/$(RELEASE_ID)
+UPLOAD_URL ?= https://uploads.github.com/repos/vhive-serverless/vSwarm-u/releases/$(RELEASE_ID)
 
 define upload_artifact
 	curl -X POST \
@@ -202,8 +202,8 @@ upload_all_artifacts:
 
 
 ## Download Artifacts ---------------------
-RELEASE_URL := https://github.com/ease-lab/vSwarm-u/releases/download/$(VERSION)
-RELEASE_URL := https://github.com/ease-lab/vSwarm-u/releases/download/v0.0.1
+RELEASE_URL := https://github.com/vhive-serverless/vSwarm-u/releases/download/$(VERSION)
+RELEASE_URL := https://github.com/vhive-serverless/vSwarm-u/releases/download/v0.0.1
 
 define download_artifact
 	curl -L $(RELEASE_URL)/$1 \
