@@ -95,7 +95,7 @@ We would be happy to answer any questions in GitHub Issues and encourage the ope
 vSwarm-&mu; is free. We publish the code under the terms of the MIT License that allows distribution, modification, and commercial use.
 This software, however, comes without any warranty or liability.
 
-The software is maintained at the [EASE lab](https://easelab.inf.ed.ac.uk/) as part of the University of Edinburgh.
+The software is maintained by the [vHive Ecosystem](https://vhive-serverless.github.io/) as well as the [EASE lab](https://easelab.inf.ed.ac.uk/) as part of the University of Edinburgh.
 
 
 ### Maintainers
