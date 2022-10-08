@@ -20,7 +20,7 @@
 <!-- ![vSwarm-u Header](docs/figures/vhive_hdr.jpg) -->
 
 <span style="font-weight:700;font-size:17px">
-Serverless computing represent a new class of workloads, challenging the microarchitecture of modern CPU's. The mission of vSwarm-&mu; is to provide microarchitect's with the tools they need to address those challenges in next generation CPU's.
+Serverless computing represent a new class of workloads, challenging the microarchitecture of modern CPU's. The mission of vSwarm-&mu; is to provide microarchitect's with the tools they need to address those challenges in next generation CPU's. As such vSwarm-&mu; is part of the [vHive Ecosystem](https://vhive-serverless.github.io/) and allow cycle accurate simulations of containerized serverless benchmarks from [vSwarm](https://github.com/vhive-serverless/vSwarm) using [gem5](https://www.gem5.org/)
 </span>
 
 <!-- <span style="color:green;font-weight:700;font-size:20px">
