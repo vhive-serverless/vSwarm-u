@@ -5,11 +5,17 @@ updates:
     directory: "./aes-go"
     schedule:
       interval: "weekly"
+    ignore:
+      - dependency-name: "*"
+        update-types: [ "version-update:semver-patch" ]
 
   - package-ecosystem: "gomod"
     directory: "./tools/client"
     schedule:
       interval: "weekly"
+    ignore:
+      - dependency-name: "*"
+        update-types: [ "version-update:semver-patch" ]
 
   # Enable version updates for Actions
   - package-ecosystem: "github-actions"
