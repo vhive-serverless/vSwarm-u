@@ -47,6 +47,14 @@ That will equip microarchitect's and researchers with the tools they need to ide
 
 Interested? Find more information why and how we build vSwarm-&mu; from its first [presentation](https://vhive-serverless.github.io/vSwarm-u/methodology/) and the remaining documentation.
 
+## Key features of vSwarm-&mu;
+
+To enable microarchitectural innovation, vSwarm-&mu; provides a ready-to-use serverless simulation platform based on the gem5 simulator. 
+With vSwarm-&mu;, 20 functions from the [vSwarm](https://github.com/vhive-serverless/vSwarm) benchmark suite are ready to run in gem5 unmodified from their deployment on real hardware – i.e., in the same OS environment and containerization.
+
+This is enabled through a set of tools, configurations and documentation to facilitate the necessary multi-node ([client-server](https://vhive-serverless.github.io/vSwarm-u/simulation/systems/#two-machine-model)) setup in gem5, [load generation](https://github.com/vhive-serverless/vSwarm-u/tree/main/tools/client), [function deployment](https://vhive-serverless.github.io/vSwarm-u/simulation/basics/#workflow),
+and [results analysis](https://vhive-serverless.github.io/vSwarm-u/analysis/basic_analysis/). Uniquely, because function execution times are relatively short, vSwarm-&mu; affords simulation of end-to-end function execution without the need for sampling or workload subsetting.
+
 
 ## Referencing our work
 
@@ -78,13 +86,6 @@ Please cite our [paper](https://ease-lab.github.io/ease_website/pubs/JUKEBOX_ISC
 }
 ```
 
-## Key features vSwarm-&mu;
-
-To enable microarchitectural innovation, vSwarm-&mu; provides a ready-to-use serverless simulation platform based on the gem5 simulator. 
-With vSwarm-&mu;, 20 functions from the [vSwarm](https://github.com/vhive-serverless/vSwarm) benchmark suite are ready to run in gem5 unmodified from their deployment on real hardware – i.e., in the same OS environment and containerization.
-
-This is enabled through a set of tools, configurations and documentation to facilitate the necessary multi-node ([client-server](https://vhive-serverless.github.io/vSwarm-u/simulation/systems/#two-machine-model)) setup in gem5, [load generation](https://github.com/vhive-serverless/vSwarm-u/tree/main/tools/client), [function deployment](https://vhive-serverless.github.io/vSwarm-u/simulation/basics/#workflow),
-and [results analysis](https://vhive-serverless.github.io/vSwarm-u/analysis/basic_analysis/). Uniquely, because function execution times are relatively short, vSwarm-&mu; affords simulation of end-to-end function execution without the need for sampling or workload subsetting.
 
 
 ## Getting started with vSwarm-&mu;
