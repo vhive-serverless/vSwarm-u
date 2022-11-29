@@ -256,9 +256,9 @@ if __name__ == "__m5_main__":
 
     # create the system we are going to simulate
     if args.system =="skylake":
-        system = SklSystem(args.kernel, args.disk, CPUModel=SklTunedCPU,kvm=kvm)
+        system = SklSystem(args.kernel, args.disk, CPUModel=SklTunedCPU, kvm=kvm)
     else:
-        system = SimpleSystem(args.kernel, args.disk, CPUModel=TimingSimpleCPU)
+        system = SimpleSystem(args.kernel, args.disk, CPUModel=TimingSimpleCPU, kvm=kvm)
 
     system.m5ops_base = int("ffff0000",16)
 
