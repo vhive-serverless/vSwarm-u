@@ -42,9 +42,9 @@ CPUS        := 4
 UBUNTU_VERSION 		?= focal
 
 ifeq ($(UBUNTU_VERSION), focal)
-	CLOUD_IMAGE_FILE     := ubuntu-20.04.4-live-server-arm64.iso
-	CLOUD_IMAGE_BASE_URL := https://cdimage.ubuntu.com/releases/20.04.4/release/
-	CLOUD_IMAGE_HASH	 := fef8bc204d2b09b579b9d40dfd8c5a084f8084a9bffafe8a0f39a0e53606312d
+	CLOUD_IMAGE_FILE     := ubuntu-20.04.5-live-server-arm64.iso
+	CLOUD_IMAGE_BASE_URL := https://cdimage.ubuntu.com/releases/20.04/release/
+	CLOUD_IMAGE_HASH	 := e42d6373dd39173094af5c26cbf2497770426f42049f8b9ea3e60ce35bebdedf
 	KERNEL_CUSTOM		 ?= $(RESOURCES)/vmlinux-focal-arm64
 else ifeq ($(UBUNTU_VERSION), jammy)
 	CLOUD_IMAGE_FILE     := ubuntu-22.04.1-live-server-arm64.iso
