@@ -46,5 +46,6 @@ ansible-playbook -v --private-key ${KEY} -u $AS_USER -i ${REMOTE}, ${PWD}/setup-
 ansible-playbook -u $AS_USER --private-key ${KEY} -i ${REMOTE}, ${PWD}/delete-runners.yaml
 
 for i in $(seq ${COUNT}); do
-    GH_ACCESS_TOKEN=${GH_ACCESS_TOKEN} ansible-playbook --private-key ${KEY} -v -u $AS_USER -i ${REMOTE}, ${PWD}/create-runner.yaml
+    # GH_ACCESS_TOKEN=${GH_ACCESS_TOKEN} ansible-playbook --private-key ${KEY} -v -u $AS_USER -i ${REMOTE}, ${PWD}/create-runner.yaml
+    GH_ACCESS_TOKEN=${GH_ACCESS_TOKEN} ansible-playbook --private-key ${KEY} -v -u $AS_USER -i ${REMOTE}, ${PWD}/create-build-runner.yaml
 done
