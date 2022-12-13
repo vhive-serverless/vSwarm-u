@@ -1,0 +1,50 @@
+name: Runner container pipeline
+
+on:
+  schedule:
+    - cron: "0 9 1 * 1"
+  workflow_dispatch:
+
+env:
+  PLATFORMS: linux/amd64,linux/arm64
+
+jobs:
+  build-and-push:
+    name: Build and push all images
+    runs-on: ubuntu-20.04
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [gem5-test-runner]
+
+
+    steps:
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v3
+        with:
+          lfs: "true"
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v2
+
+
+      - name: Build and push
+        uses: docker/build-push-action@v3
+        with:
+          push: true
+          file: runner/Dockerfile
+          platforms: ${{ env.PLATFORMS }}
+          target: ${{ matrix.runner }}
+          tags: vhiveease/${{ matrix.runner }}:latest
+          context: .
+
