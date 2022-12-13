@@ -138,9 +138,9 @@ run_emulator:
 		-cpu host -enable-kvm \
 		-smp ${CPUS} \
 		-m ${MEMORY} \
-		-drive file=$(WK_DISK),format=raw \
+		-drive file=$(WK_DISK),format=raw,if=virtio \
 		-kernel $(WK_KERNEL) \
-		-append 'console=ttyS0 root=/dev/hda2'
+		-append 'console=ttyS0 root=/dev/vda2'
 
 run: run_emulator
 

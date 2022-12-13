@@ -156,8 +156,10 @@ convert_disk:
 	qemu-img convert $(WK_DISK) $(WK_DISK_IMG)
 
 
-$(WK_CLIENT): $(TEST_CLIENT)
-	cp $< $@
+## Build test client from sources
+$(WK_CLIENT):
+	cd $(ROOT)/tools/client/ &&	$(MAKE) all
+	cp $(ROOT)/tools/client/client $@
 
 
 ## Save the disk after test

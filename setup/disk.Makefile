@@ -43,7 +43,7 @@ UBUNTU_VERSION 		?= focal
 
 ifeq ($(UBUNTU_VERSION), focal)
 	CLOUD_IMAGE_FILE     := ubuntu-20.04.4-live-server-amd64.iso
-	CLOUD_IMAGE_BASE_URL := https://releases.ubuntu.com/20.04.4/
+	CLOUD_IMAGE_BASE_URL := https://old-releases.ubuntu.com/releases/focal/
 	CLOUD_IMAGE_HASH	 := 28ccdb56450e643bad03bb7bcf7507ce3d8d90e8bf09e38f6bd9ac298a98eaad
 	KERNEL_CUSTOM		 ?= $(RESOURCES)/vmlinux-focal-amd64
 else ifeq ($(UBUNTU_VERSION), jammy)
@@ -194,7 +194,7 @@ install_finalize: $(KERNEL_C)
 		-nographic \
 		-smp ${CPUS} \
 		-m ${MEMORY} \
-		-drive file=$(DISK_IMAGE_FILE),format=qcow2,if=virtio
+		-drive file=$(DISK_IMAGE_FILE),format=qcow2,if=virtio \
 		-kernel $(KERNEL_C) \
 		-append 'console=ttyS0 root=/dev/vda2'
 	$(MAKE) -f $(MKFILE) serve_stop
@@ -209,7 +209,7 @@ install_finalize_kvm: $(KERNEL_C)
 		-cpu host -enable-kvm \
 		-smp ${CPUS} \
 		-m ${MEMORY} \
-		-drive file=$(DISK_IMAGE_FILE),format=qcow2,if=virtio
+		-drive file=$(DISK_IMAGE_FILE),format=qcow2,if=virtio \
 		-kernel $(KERNEL_C) \
 		-append 'console=ttyS0 root=/dev/vda2'
 	$(MAKE) -f $(MKFILE) serve_stop

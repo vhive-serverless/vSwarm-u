@@ -183,6 +183,10 @@ jobs:
           make -f ${{ env.TEST_MAKEFILE }} dep_install
           make -f ${{ env.TEST_MAKEFILE }} dep_check_qemu
 
+      - uses: actions/setup-go@v3
+        with:
+          go-version: '1.18'
+
 
       - name: Create the working directory to run the test.
         env:
