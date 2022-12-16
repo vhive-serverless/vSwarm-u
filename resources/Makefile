@@ -244,7 +244,7 @@ release-artifacts:
 
 release-version:
 	@echo $(VERSION)
-	@echo '::set-output name=VERSION::$(VERSION)'
+	@echo '"test=hello" >> $$GITHUB_OUTPUT'
 
 release:
 	git tag $(VERSION)
@@ -280,3 +280,26 @@ test_upload:
 
 
 test_all:
+
+
+
+## Upload artifacts to release ##
+
+ACTIONS_URL = https://api.github.com/repos/vhive-serverless/vSwarm-u/actions/artifacts
+
+define get_wf_artifacts
+	curl -X POST \
+		-H "Accept: application/vnd.github+json" \
+    	-H "Authorization: token $(GITHUB_TOKEN)" \
+    	-H "X-GitHub-Api-Version: 2022-11-28" \
+    	$(ACTIONS_URL) > artifacts.json
+endef
+
+
+get_all_workflow_artifacts:
+	$(call get_wf_artifacts)
+
+
+
+
+
