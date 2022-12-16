@@ -180,6 +180,25 @@ function upload-disk {
 	rm -r tmpup
 }
 
+
+function upload-files-in-dir {
+	dir=$1
+	asset_name=$1
+	[ $# == 2 ] && asset_name=$2
+
+	## Create folder
+	mkdir -p tmpup && cp $dir/* tmpup/
+
+	pushd tmpup > /dev/null
+
+	for f in *; do
+		echo Upload $f
+		upload $f $f
+	done
+	popd > /dev/null
+	rm -r tmpup
+}
+
 # upload-disk $1
 
 

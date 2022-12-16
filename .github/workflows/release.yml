@@ -62,16 +62,17 @@ jobs:
 
       ## Create the release
       - name: Create Release
-        uses: actions/create-release@v1
+        uses: softprops/action-gh-release@v1
         id: create_release
         with:
           draft: false
           prerelease: true
           tag_name: ${{ github.ref }}
-          release_name: Release ${{ steps.version.outputs.VERSION }}
+          name: Release ${{ github.ref }}
           # body_path: CHANGELOG.md
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
+          token: ${{ github.token }}
+        # env:
+        #   GITHUB_TOKEN: ${{ github.token }}
 
 
 
@@ -88,6 +89,10 @@ jobs:
         include:
           - workflow: build_kernel.yml
           - file: kernel
+    env:
+      GITHUB_TOKEN: ${{ github.token }}
+      RELEASE_ID: ${{ needs.prepare-release.outputs.rel_id }}
+
 
     steps:
       - name: Check out code
@@ -121,6 +126,10 @@ jobs:
           - workflow: test_client.yml
           - file: test-client
           - prefix: test-client
+    env:
+      GITHUB_TOKEN: ${{ github.token }}
+      RELEASE_ID: ${{ needs.prepare-release.outputs.rel_id }}
+
 
     steps:
       - name: Check out code
@@ -138,6 +147,53 @@ jobs:
           ./resources/artifacts.sh upload \
                          tmp/${{ matrix.file }} \
                          test-client-${{ matrix.arch }}
+
+
+
+
+  ### Release Disk image Artifact ----------------------------
+  upload-disk-image:
+    runs-on: ubuntu-latest
+    needs: prepare-release
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ focal, jammy ]
+        arch : [ amd64, arm64 ]
+        include:
+          - arch: amd64
+            workflow: create_base_disk_self_hosted.yml
+          - arch: arm64
+            workflow: create_base_disk_self_hosted_arm.yml
+    env:
+      GITHUB_TOKEN: ${{ github.token }}
+      RELEASE_ID: ${{ needs.prepare-release.outputs.rel_id }}
+
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+      - uses: awalsh128/cache-apt-pkgs-action@latest
+        with:
+          packages: rename
+
+      - name: Download latest disk image
+        uses: dawidd6/action-download-artifact@v2
+        with:
+          workflow: ${{ matrix.workflow }}
+          name: disk-image-${{ matrix.os }}-${{ matrix.arch }}
+          path: tmp
+
+      # During the asset creation the disk was already splitted and compressed
+      # The disk will be in the temp folder. Refer to the workflow itself.
+      - name: Upload Artifact
+        run: |
+          rename 's/disk-image/disk-image-${{ matrix.os }}-${{ matrix.arch }}/' tmp/*
+          ./resources/artifacts.sh upload-files-in-dir \
+                         tmp/ \
+                         disk-image-${{ matrix.os }}-${{ matrix.arch }}.qcow2
+
+
 
 
 
