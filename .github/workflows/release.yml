@@ -42,94 +42,17 @@ env:
 
 jobs:
 
-  ### We want to use the cache from the build stage
-  ## Check if the cache exist otherwise download it from the artifacts
-  prepare-artifacts:
+  ## Prepare the release
+  # Create ID
+  prepare-release:
     runs-on: ubuntu-latest
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v3
-      - name: Use the cache from the build workflow
-        id: build-artifacts
-        uses: actions/cache@v3
-        with:
-          path: artifacts/
-          key: ${{ runner.os }}-${{ github.sha }}-release
-
-      - name: Download latest kernel
-        if: steps.build-artifacts.outputs.cache-hit != 'true'
-        uses: dawidd6/action-download-artifact@v2
-        with:
-          workflow: build_kernel.yml
-          name: vmlinux-amd64
-          path: tmp
-
-      - name: Download latest test client
-        if: steps.build-artifacts.outputs.cache-hit != 'true'
-        uses: dawidd6/action-download-artifact@v2
-        with:
-          workflow: test_client.yml
-          name: test-client
-          path: tmp
-
-      - name: Download latest base image
-        if: steps.build-artifacts.outputs.cache-hit != 'true'
-        uses: dawidd6/action-download-artifact@v2
-        with:
-          workflow: create_base_image.yml
-          name: disk-image-amd64
-          # workflow_conclusion: success
-          run_id: 2516383957
-          path: disktmp
-
-
-      - name: Copy Artifacts
-        if: steps.build-artifacts.outputs.cache-hit != 'true'
-        run: |
-          mkdir -p ${{ env.ARTIFACTS_DIR }}
-          cp tmp/kernel ${{ env.KERNEL }}
-          cp tmp/test-client ${{ env.TEST_CLIENT }}
-          ./resources/artifacts.sh decompress-split disktmp/disk-image.qcow2
-          cp temp/disk-image.qcow2 ${{ env.DISK }}
-
-
-
-
-
-  release:
-    name: Release
-    needs: prepare-artifacts
-    strategy:
-      matrix:
-        include:
-          - os: ubuntu-20.04
-            arch: amd64
-    runs-on: ${{ matrix.os }}
-    # env:
-    #   KERNEL: ${{ env.KERNEL }}
-    #   DISK: ${{ env.DISK }}
-    #   TEST_CLIENT: ${{ env.TEST_CLIENT }}
+    outputs:
+      version: ${{ steps.version.outputs.VERSION }}
+      rel_id:  ${{ steps.create_release.outputs.id }}
 
     steps:
       - name: Check out code
         uses: actions/checkout@v3
-      - name: Use the cache from the build workflow
-        id: build-artifacts
-        uses: actions/cache@v3
-        with:
-          path: artifacts/
-          key: ${{ runner.os }}-${{ github.sha }}-release
-
-
-
-      - name: Check Release
-        working-directory: resources
-        run: make check-release
-
-      - name: Get Release artifacts
-        id: artifacts
-        working-directory: resources
-        run: make release-artifacts
 
       - name: Get the version
         id: version
@@ -145,54 +68,111 @@ jobs:
           draft: false
           prerelease: true
           tag_name: ${{ github.ref }}
-          release_name: Release ${{ steps.artifacts.outputs.VERSION }}
+          release_name: Release ${{ steps.version.outputs.VERSION }}
           # body_path: CHANGELOG.md
         env:
           GITHUB_TOKEN: ${{ github.token }}
 
 
-      - name: Upload Artifacts
-        working-directory: resources
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-          RELEASE_ID: ${{ steps.create_release.outputs.id }}
-        id: upload
+
+
+  ### Release Kernel Artifact ----------------------------
+  upload-kernel:
+    runs-on: ubuntu-latest
+    needs: prepare-release
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ focal, jammy ]
+        arch : [ amd64, arm64 ]
+        include:
+          - workflow: build_kernel.yml
+          - file: kernel
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+
+      - name: Download latest Kernel
+        uses: dawidd6/action-download-artifact@v2
+        with:
+          workflow: ${{ matrix.workflow }}
+          name: vmlinux-${{ matrix.os }}-${{ matrix.arch }}
+          path: tmp
+
+      - name: Upload Artifact
         run: |
-          make upload_all_artifacts
+          ./resources/artifacts.sh upload \
+                         tmp/${{ matrix.file }} \
+                         vmlinux-${{ matrix.os }}-${{ matrix.arch }}
 
 
-      # - uses: actions/setup-python@v4
+
+
+  ### Release Test-client Artifact ----------------------------
+  upload-test-client:
+    runs-on: ubuntu-latest
+    needs: prepare-release
+    strategy:
+      fail-fast: false
+      matrix:
+        arch : [ amd64, arm64 ]
+        include:
+          - workflow: test_client.yml
+          - file: test-client
+          - prefix: test-client
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+
+      - name: Download latest Kernel
+        uses: dawidd6/action-download-artifact@v2
+        with:
+          workflow: ${{ matrix.workflow }}
+          name: test-client-${{ matrix.arch }}
+          path: tmp
+
+      - name: Upload Artifact
+        run: |
+          ./resources/artifacts.sh upload \
+                         tmp/${{ matrix.file }} \
+                         test-client-${{ matrix.arch }}
+
+
+
+      # - name: Download latest base image x86 focal
+      #   uses: dawidd6/action-download-artifact@v2
       #   with:
-      #     python-version: '3.8'
-      # - run: pip install tqdm requests
-      # # - uses: BSFishy/pip-action@v1
-      # #   with:
-      # #     packages: |
-      # #       tqdm
-      # #       requests
-      # #       tarfile
+      #     # workflow: create_base_image.yml
+      #     workflow: create_base_disk_self_hosted.yml
+      #     name: disk-image-focal-amd64
+      #     workflow_conclusion: success
+      #     # run_id: 2516383957
+      #     path: disktmp
 
-      # - name: Upload Artifacts
-      #   working-directory: resources
-      #   env:
-      #     GITHUB_TOKEN: ${{ github.token }}
-      #     RELEASE_ID: ${{ steps.create_release.outputs.id }}
-      #   id: upload
+      # - name: Compress disk
       #   run: |
-      #     python ./upload_assets.py \
-      #           --kernel ${{ env.KERNEL }} \
-      #           --disk-image ${{ env.DISK }} \
-      #           --client ${{ env.TEST_CLIENT }} \
-      #           --release-id ${{ steps.create_release.outputs.id }}
+      #     cp temp/disk-image.qcow2 ${{ env.ARTIFACTS_DIR }}/disk-image-focal-amd64.qcow2
 
 
+      # - name: Download latest base image (arm)
+      #   uses: dawidd6/action-download-artifact@v2
+      #   with:
+      #     # workflow: create_base_image.yml
+      #     workflow: create_base_disk_self_hosted_arm.yml
+      #     # name: disk-image-amd64
+      #     workflow_conclusion: success
+      #     # run_id: 2516383957
+      #     path: disktmp
 
 
-
-
-
-
-
-
+      # - name: Copy Artifacts
+      #   run: |
+      #     mkdir -p ${{ env.ARTIFACTS_DIR }}
+      #     cp tmp/kernel ${{ env.KERNEL }}
+      #     cp tmp/test-client ${{ env.TEST_CLIENT }}
+      #     ./resources/artifacts.sh decompress-split disktmp/disk-image.qcow2
+      #     cp temp/disk-image.qcow2 ${{ env.DISK }}
 
 
