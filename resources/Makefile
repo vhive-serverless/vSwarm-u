@@ -32,9 +32,10 @@ ROOT 		:= $(abspath $(dir $(mkfile_path))/../)
 RESOURCES 	?=$(ROOT)/resources/
 
 
-VERSION := v0.1.0
-TAG 	:= $(VERSION)-$(shell git rev-parse --short HEAD)
-ARCH	:= amd64
+VERSION 	:= v0.2.0
+TAG 		:= $(VERSION)-$(shell git rev-parse --short HEAD)
+ARCH		:= amd64
+OS_VERSION 	:= focal
 
 
 
@@ -160,9 +161,9 @@ test-release-resources: test-emu
 
 
 ## ARTIFACTS ---------------------- ###
-ARTIFACT_KERNEL 	:= vmlinux-$(ARCH)
-ARTIFACT_DISK 		:= disk-image-$(ARCH)
-ARTIFACT_CLIENT 	:= client-$(ARCH)
+ARTIFACT_KERNEL 	:= vmlinux-$(OS_VERSION)-$(ARCH)
+ARTIFACT_DISK 		:= disk-image-$(OS_VERSION)-$(ARCH)
+ARTIFACT_CLIENT 	:= test-client-$(ARCH)
 
 
 download-resources:
@@ -243,6 +244,7 @@ release-artifacts:
 
 release-version:
 	@echo $(VERSION)
+	@echo '::set-output name=VERSION::$(VERSION)'
 
 release:
 	git tag $(VERSION)
