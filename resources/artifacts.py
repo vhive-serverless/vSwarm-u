@@ -48,6 +48,10 @@ parser.add_argument("--download","-d", default=False, action="store_true", help 
 parser.add_argument("--version", "-v", type=str, default="latest", help="Set version from where to download")
 parser.add_argument("--output", "-o", type=str, default=f"{RESOURCES}/",
                     help="Output directory to store the assets to. Default: 'resources/'")
+parser.add_argument("--os-version", "-l", type=str, default="focal", choices=["focal", "jammy"],
+                    help="The ubuntu version of the disk image and kernel")
+parser.add_argument("--arch", "-a", type=str, default="amd64", choices=["amd64", "arm64"],
+                    help="The target architecture")
 args = parser.parse_args()
 
 
@@ -190,6 +194,8 @@ def get_url(release, name):
 def get_urls(release, name=""):
     urls = []
     for a in release["assets"]:
+        if "sums" in a["name"]:
+            continue
         if name in a["name"]:
             urls += [a["browser_download_url"]]
     return urls
@@ -205,19 +211,26 @@ def downloadMoveAssets(version="latest"):
         release=get_release(version)
 
     print(f"Download Artifacts from version: {get_version(release)}")
-    name = "vmlinux"
+    name = f"vmlinux-{ args.os_version }-{ args.arch }"
     kernel_url = get_url(release=release,name=name)
+    print(kernel_url)
+    if kernel_url == None:
+        raise Exception("kernel not found!")
     downloadAsset(kernel_url)
 
-    name = "client"
+    name = f"test-client-{ args.arch }"
     client_url = get_url(release=release,name=name)
+    if client_url == None:
+        raise Exception("client not found!")
     downloadAsset(client_url)
 
-    name = "disk-image-amd64.tar.gz"
-    disk_urls = get_urls(release=release,name=name)
+    disk_name = f"disk-image-{ args.os_version }-{ args.arch }.qcow2"
+    disk_urls = get_urls(release=release,name=disk_name)
+    if len(disk_urls) == None:
+        raise Exception("client not found!")
 
     print("Download Disk image.. This could take a few minutes")
-    downloadDiskImage(disk_urls)
+    # downloadDiskImage(disk_urls)
 
     ## Move assets to destination
     print("Copy artifacts to: " + args.output)
@@ -225,9 +238,10 @@ def downloadMoveAssets(version="latest"):
     shutil.move(artifact_name, args.output + name)
     name, artifact_name = "client", client_url.split("/")[-1]
     shutil.move(artifact_name, args.output + name)
-    name, artifact_name = "disk-image.qcow2", disk_urls[0].split("/")[-1].split(".")[0]
-    # name, artifact_name = "disk-image.qcow2", "test-disk-image-amd64"
-    shutil.move(artifact_name, args.output + name)
+    # name, artifact_name = "disk-image.qcow2", disk_urls[0].split("/")[-1].split(".")[0]
+    # The disk remains in the temp folder.
+    name, source_path = "disk-image.qcow2", "temp/disk-image.qcow2"
+    shutil.move(source_path, args.output + name)
 
 def downloadAssets():
     with open(args.file) as f:
