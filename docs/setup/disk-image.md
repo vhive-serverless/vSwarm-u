@@ -19,7 +19,7 @@ We compiled a `Makefile` which will use the [autoinstall](https://ubuntu.com/ser
 
 The installer will:
 1. Create a empty disk image with
-1. Install Ubuntu 20.04 as operating system
+1. Install Ubuntu as operating system
 2. Create users **root** (password _root_) and **ubuntu** (password _root_) with privileged permissions to all resources.
 3. Setup ssh-login for both users.
 4. Install the `m5` binary and gem5 init service.
@@ -29,7 +29,7 @@ The installer will:
 ```bash
 # Install dependencies
 make -f setup/disk.Makefile dep_install
-# Download the installation medium for Ubuntu server 20.04
+# Download the installation medium for Ubuntu server
 make -f setup/disk.Makefile download
 # Run the installation
 make -f setup/disk.Makefile install
