@@ -33,9 +33,47 @@ Note that the size of the disk image is a few GiB. Furthermore, Github has a lim
 
 By default the resources will be stored in the `resources/`
 
-#### Disk format qcow2 and raw
+### Released Artifacts
+In addition to the stable disk images Ubunutu 20.04 and Kernel 5.4.84 for x86/amd64 architecture we distribute also images for Ubuntu 22.04 as well as kernels and disk images for arm based architectures.
+To download another artifact then the default set the arguments `--arch <arm64/amd64>` and `--os-version <focal/jammy>` when downloading with the `./resources/artifacts.py` script.
+
+> {: .warning }
+> So far only all resources work with qemu but there is NO support for gem5 simulation yet. All but the stable artifacts we therefore distribute for experimentation resons. We try to add support in the future and welcome any help. For further information about missing support ask David: [GitHub](https://github.com/dhschall).
+
+
+#### Kernel
+
+| Version | Architecture | State | Qemu support | gem5 support |
+|:---|---|---|---|---|
+| v5.4.84 | x86/amd64 | stable | ✓ | ✓ |
+| v5.15.59 | x86/amd64 | experimental | ✓ | ✕ |
+| v5.4.84 | arm64 | experimental | ✓ | ✕ |
+| v5.15.59 | arm64 | experimental | ✓ | ✕ |
+
+#### Disk Image
+
+| Version | Architecture | State | Qemu support | gem5 support |
+|---|---|---|---|---|
+| Ubuntu 20.04 (focal) | x86/amd64 | stable | ✓ | ✓ |
+| Ubuntu 22.04 (jammy) | x86/amd64 | experimental | ✓ | ✕ |
+| Ubuntu 20.04 (focal) | arm64 | experimental | ✓ | ✕ |
+| Ubuntu 22.04 (jammy) | arm64 | experimental | ✓ | ✕ |
+
+#### Test-client
+
+| Architecture | State | Qemu support | gem5 support |
+|---|---|---|---|
+| x86/amd64 | stable | ✓ | ✓ |
+| arm64 | experimental | ✓ | ✕ |
+
+
+
+
+### Disk format qcow2 and raw
 We distribute the disk image in qemu's [`qcow2` compressed format](https://qemu.readthedocs.io/en/latest/system/images.html#disk-image-file-formats). This has the advantage that the disk image is smaller. However gem5 cannot use qcow2 but only raw. Therefore, after downloading and decompression you will need to convert the disk image before using it with gem5. The scripts does all the work from you in the back however you can use `qemu-img` to convert the disk yourself:
 ```bash
 # Convert disk image from qcow2 -> raw format
 qemu-img convert <src/disk/path> <tgt/disk/path>
 ```
+
+

@@ -13,6 +13,8 @@ In order to create new features on the website its usually more convenient to do
 sudo apt-get install ruby-full build-essential zlib1g-dev
 # Install jekyll
 gem install jekyll bundler
+# Install the gems (in ./docs/ folder)
+bundle install
 ```
 
 ### Serving
@@ -20,7 +22,7 @@ After setting up jekyll locally we are now ready to serve the website by the fol
 ```
 bundle exec jekyll serve
 ```
-Jekyll will build the website and serve it on your localhost. For the address check the command output. Usually this is (http://127.0.0.1:4000/ease_website/). Now make the changes you want and then re-execute the command above. Alternatively add `--livereload` to the command. Now whenever you save a file the rebuild and serving update will happen automatically.
+Jekyll will build the website and serve it on your localhost. For the address check the command output. Usually this is (http://127.0.0.1:4000/vSwarm-u/). Now make the changes you want and then re-execute the command above. Alternatively add `--livereload` to the command. Now whenever you save a file the rebuild and serving update will happen automatically.
 
 
 ## Generating Documentation (Markdown) files from Jupyter Notebook
