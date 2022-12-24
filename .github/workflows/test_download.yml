@@ -44,10 +44,13 @@ jobs:
     # Building the kernel works also on the github runners.
     runs-on: ubuntu-latest
     strategy:
-      fail-fast: true
+      fail-fast: false
       matrix:
         arch: [ amd64, arm64 ]
         os-version: [ focal, jammy ]
+    env:
+      OUTPUT: tmp_dir/
+      VERSION: v0.2.0
 
     steps:
       - name: Check out code
@@ -56,30 +59,32 @@ jobs:
       - name: Set up Python version
         uses: actions/setup-python@v4
         with:
-          python-version: "3.10"
+          python-version: '3.9'
+          cache: 'pip' # caching pip dependencies
+
+      - name: Set up python dependencies
+        run: pip install -r ./setup/requirements.txt
 
       # - name: Set up python dependencies
-      #   working-directory: benchmarks/aes/python
       #   run: |
-      #     python3 -m pip install --upgrade pip
-      #     python3 -m pip install wheel ez_setup setuptools
-      #     GRPC_PYTHON_BUILD_SYSTEM_ZLIB=true
-      #     python3 -m pip install -r requirements.txt
+      #     python -m pip install --upgrade pip
+      #     python -m pip install tqdm
 
       - name: Make test dir
         shell: bash
         run: |
-          mkdir test_dir
+          mkdir $OUTPUT
 
       - name: Download
         shell: bash
         run: |
-          ./resources/artifacts.py \
+          python ./resources/artifacts.py \
                     --arch ${{ matrix.arch }} \
                     --os-version ${{ matrix.os-version }} \
-                    --output test_dir/
+                    --version $VERSION \
+                    --output $OUTPUT
 
       - name: Test
         shell: bash
         run: |
-          ls -la test_dir/
+          ls -la $OUTPUT

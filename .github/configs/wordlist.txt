@@ -9,6 +9,7 @@ al
 Alberquilla
 Aldus
 AMAC
+amd
 amna
 Amna
 Amna's
@@ -135,6 +136,7 @@ debian
 deployer
 deps
 dev
+devconnected
 devmapper
 df
 DialGRPCWithUnaryInterceptor
@@ -451,6 +453,7 @@ PTEMagnet
 pv
 PV
 pvc
+PWD
 qO
 QoS
 QOS
@@ -539,6 +542,7 @@ STR
 structs
 sudo
 subfolders
+subsetting
 svc
 swlh
 sys
@@ -650,6 +654,7 @@ VOIOYOzqPDKzUblafpIDyiGTKyymk
 dPT
 Fi
 GDOUdjLVlBznCj
+GH
 HvqGhIcV
 YvOkEE
 tpA

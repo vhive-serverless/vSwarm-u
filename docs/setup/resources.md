@@ -34,11 +34,11 @@ Note that the size of the disk image is a few GiB. Furthermore, Github has a lim
 By default the resources will be stored in the `resources/`
 
 ### Released Artifacts
-In addition to the stable disk images Ubunutu 20.04 and Kernel 5.4.84 for x86/amd64 architecture we distribute also images for Ubuntu 22.04 as well as kernels and disk images for arm based architectures.
+In addition to the stable disk images Ubuntu 20.04 and Kernel 5.4.84 for x86/amd64 architecture we distribute also images for Ubuntu 22.04 as well as kernels and disk images for arm based architectures.
 To download another artifact then the default set the arguments `--arch <arm64/amd64>` and `--os-version <focal/jammy>` when downloading with the `./resources/artifacts.py` script.
 
 > {: .warning }
-> So far only all resources work with qemu but there is NO support for gem5 simulation yet. All but the stable artifacts we therefore distribute for experimentation resons. We try to add support in the future and welcome any help. For further information about missing support ask David: [GitHub](https://github.com/dhschall).
+> So far only all resources work with qemu but there is NO support for gem5 simulation yet. All but the stable artifacts we therefore distribute for experimentation reasons. We try to add support in the future and welcome any help. For further information about missing support ask David: [GitHub](https://github.com/dhschall).
 
 
 #### Kernel
