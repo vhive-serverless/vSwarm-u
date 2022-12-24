@@ -34,8 +34,9 @@ import tarfile
 import shutil
 import logging as log
 
-RESOURCES = os.environ['RESOURCES']
-if RESOURCES == "":
+
+RESOURCES = os.environ.get('RESOURCES', './')
+if RESOURCES == "./":
     log.warning(" 'RESOURCES' variable not set!!")
 
 import argparse
@@ -215,22 +216,22 @@ def downloadMoveAssets(version="latest"):
     kernel_url = get_url(release=release,name=name)
     print(kernel_url)
     if kernel_url == None:
-        raise Exception("kernel not found!")
+        raise Exception("kernel not found!: " + name)
     downloadAsset(kernel_url)
 
     name = f"test-client-{ args.arch }"
     client_url = get_url(release=release,name=name)
     if client_url == None:
-        raise Exception("client not found!")
+        raise Exception("client not found!: " + name)
     downloadAsset(client_url)
 
     disk_name = f"disk-image-{ args.os_version }-{ args.arch }.qcow2"
     disk_urls = get_urls(release=release,name=disk_name)
     if len(disk_urls) == None:
-        raise Exception("client not found!")
+        raise Exception("disk-image not found!: " + name)
 
     print("Download Disk image.. This could take a few minutes")
-    # downloadDiskImage(disk_urls)
+    downloadDiskImage(disk_urls)
 
     ## Move assets to destination
     print("Copy artifacts to: " + args.output)

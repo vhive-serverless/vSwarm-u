@@ -1,6 +1,6 @@
 ---
 layout: default
-title: Miscallerous
+title: Miscellaneous
 parent: main
 nav_order: 1
 ---
@@ -35,5 +35,5 @@ make -f resources/Makefile release
 ```
 The current commit will tagged and the tag will be pushed. This will trigger the __release.yaml__ workflow which will gather all artifacts and add them to a new created release.
 
-> You can also trigger the release workflow manualy. Note that this will automatically create a tag like: `refs/tags/refs/heads/xxxxxx` with the branch name. If you now push changes it might fail. For making further changes you need to delete the remote tag: like `git push origin :refs/tags/refs/heads/release-v2`
+> You can also trigger the release workflow manually. Note that this will automatically create a tag like: `refs/tags/refs/heads/xxxxxx` with the branch name. If you now push changes it might fail. For making further changes you need to delete the remote tag: like `git push origin :refs/tags/refs/heads/release-v2`
 https://devconnected.com/how-to-delete-local-and-remote-tags-on-git/
