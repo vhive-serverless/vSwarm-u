@@ -135,7 +135,7 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v3
 
-      - name: Download latest Kernel
+      - name: Download latest kernel
         uses: dawidd6/action-download-artifact@v2
         with:
           workflow: ${{ matrix.workflow }}
@@ -153,7 +153,8 @@ jobs:
 
   ### Release Disk image Artifact ----------------------------
   upload-disk-image:
-    runs-on: ubuntu-latest
+    # runs-on: ubuntu-latest
+    runs-on: [self-hosted, vswarm-u-build, X64 ]
     needs: prepare-release
     strategy:
       fail-fast: false
@@ -173,10 +174,16 @@ jobs:
     steps:
       - name: Check out code
         uses: actions/checkout@v3
-      - name: Install rename
-        run: sudo apt update && sudo apt install rename -y
+
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y \
+                      rename file \
+                      curl jq pigz
 
       - name: Download latest disk image
+        timeout-minutes: 10
         uses: dawidd6/action-download-artifact@v2
         with:
           workflow: ${{ matrix.workflow }}
