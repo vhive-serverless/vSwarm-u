@@ -50,7 +50,7 @@ jobs:
         os-version: [ focal, jammy ]
     env:
       OUTPUT: tmp_dir/
-      VERSION: v0.2.0
+      VERSION: latest
 
     steps:
       - name: Check out code
