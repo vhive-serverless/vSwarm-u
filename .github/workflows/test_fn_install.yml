@@ -1,6 +1,6 @@
 # MIT License
 #
-# Copyright (c) 2023 David Schall and EASE Lab
+# Copyright (c) 2022 David Schall and EASE Lab
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -47,8 +47,53 @@ jobs:
         host-os: [ ubuntu-20.04, ubuntu-22.04 ]
     env:
       WORKING_DIR: wkdir/
+      RESOURCES: resources/
       VERSION: latest
 
     steps:
       - name: Check out code
         uses: actions/checkout@v3
+
+      ### Setup working environment ####
+      - name: Set up Python version
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+          cache: 'pip' # caching pip dependencies
+
+      - name: Set up python dependencies
+        run: pip install -r ./setup/requirements.txt
+
+      - name: Set Qemu dependencies
+        run: |
+          make -f ./setup/disk.Makefile dep_install
+
+      - name: Download Artifacts
+        shell: bash
+        run: |
+          python ./resources/artifacts.py \
+                    --version $VERSION
+
+
+
+
+      ## Test the function installation as described
+      ## in the quick start guide
+
+      - name: Build the working directory
+        shell: bash
+        run: |
+          make -f ./simulation/Makefile build-wkdir
+
+      - name: Pull, and test the function containers
+        shell: bash
+        timeout-minutes: 15
+        env:
+          CPU: max
+        run: |
+          make -f ./simulation/Makefile install_functions
+
+      - name: Verify a successful installation
+        shell: bash
+        run: |
+          make -f ./simulation/Makefile install_check

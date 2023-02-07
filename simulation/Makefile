@@ -35,10 +35,12 @@ GEM5_DIR	?= $(RESOURCES)/gem5/
 ## Machine parameter
 MEMORY 	:= 2G
 CPUS    := 2
+CPU 	?= host -enable-kvm
 
 
 ## Required resources
 KERNEL 		?= $(RESOURCES)/kernel
+CLIENT 		?= $(RESOURCES)/client
 DISK		?= $(RESOURCES)/disk-image.qcow2
 GEM5		?= $(RESOURCES)/gem5/build/X86/gem5.opt
 
@@ -70,15 +72,13 @@ $(WORKING_DIR):
 $(WK_KERNEL): $(KERNEL)
 	cp $< $@
 
+$(WK_CLIENT): $(CLIENT)
+	cp $< $@
+
+
 # Create the disk image from the base image
 $(WK_DISK): $(DISK)
 	qemu-img convert $< $@
-
-
-## Build test client from sources
-$(WK_CLIENT):
-	cd $(ROOT)/tools/client/ &&	$(MAKE) all
-	cp $(ROOT)/tools/client/client $@
 
 
 #
@@ -135,7 +135,7 @@ $(WORKING_DIR)/%.sh: $(TEMPLATES_DIR)/%.tmpl.sh
 run_emulator:
 	sudo qemu-system-x86_64 \
 		-nographic \
-		-cpu host -enable-kvm \
+		-cpu ${CPU} \
 		-smp ${CPUS} \
 		-m ${MEMORY} \
 		-drive file=$(WK_DISK),format=raw,if=virtio \
