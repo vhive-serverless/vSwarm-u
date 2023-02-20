@@ -29,6 +29,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"math/rand"
 	"os"
 	"time"
 
@@ -50,6 +51,8 @@ var (
 	port           = flag.String("port", "50051", "the port to connect to")
 	input          = flag.String("input", defaultInput, "Input to the function")
 	functionMethod = flag.String("function-method", "0", "Which method of benchmark to invoke")
+	randomInput    = flag.Bool("random", false, "Generate random input for the function")
+	upperBound     = flag.Int("upper", 40, "Upper bound of input range (function dependant)")
 	numInvoke      = flag.Int("n", 10, "Number of invocations")
 	numWarm        = flag.Int("w", 0, "Number of invocations for warming")
 	delay          = flag.Int("delay", 0, "Add a delay between sending requests (us)")
@@ -62,6 +65,8 @@ var (
 )
 
 func main() {
+
+	rand.Seed(0)
 	flag.Parse()
 
 	if *print_version {
@@ -102,23 +107,27 @@ func main() {
 	log.Printf("Connection established.\n")
 
 	generator = client.GetGenerator()
+	if *randomInput {
+		generator.SetGenerator(grpcClients.Random)
+	} else {
 	generator.SetGenerator(grpcClients.Unique)
+	}
 	generator.SetValue(*input)
+	generator.SetUpperBound(*upperBound)
+	generator.SetLowerBound(*upperBound / 2)
 	generator.SetMethod(*functionMethod)
 	pkt := generator.Next()
-
 	reply := client.Request(ctx, pkt)
-
-	log.Printf("Greeting: %s", reply)
+	log.Printf("First invocation: %s", reply)
 
 	if *numWarm > 0 {
 		warmFunction(ctx)
 	}
 
 	if *m5_enable {
-		invokeFunctionInstrumented(ctx, *numInvoke)
+		reply = invokeFunctionInstrumented(ctx, *numInvoke)
 	} else {
-		invokeFunction(ctx, *numInvoke)
+		reply = invokeFunction(ctx, *numInvoke)
 	}
 
 	log.Printf("Finished invoking: %s", reply)
@@ -138,7 +147,7 @@ func warmFunction(ctx context.Context) {
 	}
 }
 
-func invokeFunction(ctx context.Context, n int) {
+func invokeFunction(ctx context.Context, n int) (reply string) {
 	// Print 5 times the progress
 	mod := 1
 	if n > 2*5 {
@@ -147,7 +156,7 @@ func invokeFunction(ctx context.Context, n int) {
 	for i := 0; i < n; i++ {
 
 		pkt := generator.Next()
-		client.Request(ctx, pkt)
+		reply = client.Request(ctx, pkt)
 		if i%mod == 0 {
 			log.Printf("Invoked for %d times\n", i)
 		}
@@ -155,9 +164,10 @@ func invokeFunction(ctx context.Context, n int) {
 			time.Sleep(time.Duration(*delay) * time.Microsecond)
 		}
 	}
+	return
 }
 
-func invokeFunctionInstrumented(ctx context.Context, n int) {
+func invokeFunctionInstrumented(ctx context.Context, n int) (reply string) {
 	// Print 5 times the progress
 	mod := 1
 	if n > 2*5 {
@@ -169,7 +179,7 @@ func invokeFunctionInstrumented(ctx context.Context, n int) {
 
 		m5.WorkBegin(100+i, 0) // 21: Send Request
 
-		client.Request(ctx, pkt)
+		reply = client.Request(ctx, pkt)
 
 		m5.WorkEnd(100+i, 0) // 21: Response received
 		if i%mod == 0 {
@@ -180,4 +190,5 @@ func invokeFunctionInstrumented(ctx context.Context, n int) {
 			time.Sleep(time.Duration(*delay) * time.Microsecond)
 		}
 	}
+	return
 }

@@ -183,7 +183,7 @@ m5 fail 10 ## 10: Start client
 /root/test-client \
     -function-name {function} \
     -url {test_ip} \
-    -port 50000 \
+    -port 50000 -random \
     -n {n_invocations} \
     -w {n_warming} \
     -m5ops \
