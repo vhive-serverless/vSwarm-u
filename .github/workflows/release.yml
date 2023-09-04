@@ -52,7 +52,7 @@ jobs:
 
     steps:
       - name: Check out code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Get the version
         id: version
@@ -96,7 +96,7 @@ jobs:
 
     steps:
       - name: Check out code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Download latest Kernel
         uses: dawidd6/action-download-artifact@v2
@@ -133,7 +133,7 @@ jobs:
 
     steps:
       - name: Check out code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Download latest kernel
         uses: dawidd6/action-download-artifact@v2
@@ -173,7 +173,7 @@ jobs:
 
     steps:
       - name: Check out code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install dependencies
         run: |
