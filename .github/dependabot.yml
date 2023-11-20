@@ -16,6 +16,10 @@ updates:
     ignore:
       - dependency-name: "*"
         update-types: [ "version-update:semver-patch" ]
+    groups:
+      otel:
+        patterns:
+          - "go.opentelemetry.io/otel*"
 
   # Enable version updates for Actions
   - package-ecosystem: "github-actions"
