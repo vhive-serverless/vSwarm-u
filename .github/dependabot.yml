@@ -1,13 +1,6 @@
 # Use https://dependabot.com/docs/config-file/validator/ to check for errors.
 version: 2
 updates:
-  - package-ecosystem: "gomod"
-    directory: "./aes-go"
-    schedule:
-      interval: "weekly"
-    ignore:
-      - dependency-name: "*"
-        update-types: [ "version-update:semver-patch" ]
 
   - package-ecosystem: "gomod"
     directory: "./tools/client"
