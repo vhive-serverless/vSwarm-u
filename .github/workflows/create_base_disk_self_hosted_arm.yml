@@ -155,7 +155,7 @@ jobs:
           rm temp/disk-image.qcow2
 
       - name: Upload Base Image Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: disk-image-${{ matrix.ubuntu-version }}-${{ matrix.arch }}
           path: temp
@@ -166,7 +166,7 @@ jobs:
           shasum ${{ env.DISK_PRE_TEST }} > ${{ env.CHECKSUMS }}
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: checksum-${{ matrix.ubuntu-version }}-${{ matrix.arch }}
           path: ${{ env.CHECKSUMS }}
