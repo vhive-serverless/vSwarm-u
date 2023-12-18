@@ -77,7 +77,7 @@ jobs:
         run: make save_output
 
       - name: Upload the artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: test-client-${{ matrix.arch }}
           path: tools/client/test-client
