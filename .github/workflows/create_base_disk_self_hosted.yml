@@ -185,7 +185,7 @@ jobs:
 
       - uses: actions/setup-go@v5
         with:
-          go-version: '1.18'
+          go-version: '1.21'
 
 
       - name: Create the working directory to run the test.

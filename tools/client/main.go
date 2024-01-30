@@ -96,7 +96,9 @@ func main() {
 	serviceName := grpcClients.FindServiceName(*functionName)
 	client = grpcClients.FindGrpcClient(serviceName)
 
-	client.Init(ctx, *url, *port)
+	if err := client.Init(ctx, *url, *port); err != nil {
+		log.Fatalf("Fail to init client: %s\n", err)
+	}
 	defer client.Close()
 
 	log.Printf("Connection established.\n")
@@ -107,7 +109,10 @@ func main() {
 	generator.SetMethod(*functionMethod)
 	pkt := generator.Next()
 
-	reply := client.Request(ctx, pkt)
+	reply, err := client.Request(ctx, pkt)
+	if err != nil {
+		log.Warn("Fail to send request: %s\n", err)
+	}
 
 	log.Printf("Greeting: %s", reply)
 
