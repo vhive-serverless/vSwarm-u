@@ -62,7 +62,7 @@ jobs:
 
       ## Create the release
       - name: Create Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         id: create_release
         with:
           draft: false
