@@ -95,16 +95,21 @@ make -f ${ROOT}/setup/disk.Makefile dep_install
 
 
 # Install golang
-GO_VERSION=1.21
+GO_VERSION=1.21.4
 GO_BUILD="go${GO_VERSION}.linux-${ARCH}"
 
-wget --continue --quiet https://golang.org/dl/${GO_BUILD}.tar.gz
+wget --continue https://golang.org/dl/${GO_BUILD}.tar.gz
+
+sudo rm -rf /usr/local/go
 sudo tar -C /usr/local -xzf ${GO_BUILD}.tar.gz
+rm ${GO_BUILD}.tar.gz
+
 export PATH=$PATH:/usr/local/go/bin
 sudo sh -c  "echo 'export PATH=\$PATH:/usr/local/go/bin' >> /etc/profile"
 sudo sh -c  "echo 'export PATH=\$PATH:/usr/local/go/bin' >> ${HOME}/.bashrc"
 
 source ${HOME}/.bashrc
+echo "Installed: $(go version)"
 
 END=$(date +%s.%N)
 printf "\nInstalling dependencies completed successfully after: $(echo "$END - $START" | bc) sec.\n"
