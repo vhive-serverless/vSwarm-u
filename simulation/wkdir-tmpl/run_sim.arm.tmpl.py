@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2024 David Schall and EASE lab
+# Copyright (c) 2022 David Schall and EASE lab
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -21,22 +21,17 @@
 # Install dependencies
 
 """
-This script show a simple example to run serverless functions on a x86 based full system
-simulation. The script boots a full system Ubuntu image and starts the function container.
-The function is invoked using a test client.
-
-The workflow has two steps
-1. Use the "setup" mode to boot the full system from scratch using the KVM core. The
-   script will perform functional warming and then take a checkpoint of the system.
-2. Use the "evaluation" mode to start from the previously taken checkpoint and perform
-   the actual measurements using a detailed core model.
+This script further shows an example of booting an ARM based full system Ubuntu
+disk image. This simulation boots the disk image using 2 TIMING CPU cores. The
+simulation ends when the startup is completed successfully (i.e. when an
+`m5_exit instruction is reached on successful boot).
 
 Usage
 -----
 
 ```
-scons build/<ALL|X86>/gem5.opt -j<NUM_CPUS>
-./build/<ALL|X86>/gem5.opt vswarm_simple.py
+scons build/ARM/gem5.opt -j<NUM_CPUS>
+./build/ARM/gem5.opt arm-vswarm.py
     --mode <setup/evaluation> --function <function-name>
     --kernel <path-to-vmlinux> --disk <path-to-disk-image>
     --atomic-warming <num-inv-to-warm> --num-invocations <num-inv-to-simulate>
@@ -44,9 +39,15 @@ scons build/<ALL|X86>/gem5.opt -j<NUM_CPUS>
 
 """
 import m5
+from m5.objects import (
+    Armv83,
+    ArmDefaultRelease,
+    VExpress_GEM5_V1,
+    VExpress_GEM5_Foundation,
+)
 
 from gem5.coherence_protocol import CoherenceProtocol
-from gem5.components.boards.x86_board import X86Board
+from gem5.components.boards.arm_board import ArmBoard
 from gem5.components.memory import DualChannelDDR4_2400
 from gem5.components.memory.simple import SingleChannelSimpleMemory
 from gem5.components.processors.cpu_types import CPUTypes
@@ -57,8 +58,8 @@ from gem5.simulate.exit_event import ExitEvent
 from gem5.simulate.simulator import Simulator
 from gem5.utils.requires import requires
 
-# This runs a check to ensure the gem5 binary is compiled for X86.
-requires(isa_required=ISA.X86)
+# This runs a check to ensure the gem5 binary is compiled for ARM.
+requires(isa_required=ISA.ARM)
 
 from gem5.components.cachehierarchies.classic.private_l1_private_l2_cache_hierarchy import (
     PrivateL1PrivateL2CacheHierarchy,
@@ -107,26 +108,64 @@ cache_hierarchy = PrivateL1PrivateL2CacheHierarchy(
 memory = DualChannelDDR4_2400(size="2GB")
 
 # Here we setup the processor. For booting we take the KVM core and
-# for the evaluation we can take ATOMIC, TIMING or O3
-# eval_core = CPUTypes.ATOMIC
-eval_core = CPUTypes.TIMING
-# eval_core = CPUTypes.O3
-
+# for the evaluation we take the Atomic core.
 processor = SimpleProcessor(
-    cpu_type=CPUTypes.KVM if args.mode=="setup" else eval_core,
-    isa=ISA.X86,
+    cpu_type=CPUTypes.KVM if args.mode=="setup" else CPUTypes.ATOMIC,
+    isa=ISA.ARM,
     num_cores=2,
 )
 
 
+# The ArmBoard requires a `release` to be specified. This adds all the
+# extensions or features to the system. We are setting this to Armv8
+# (ArmDefaultRelease) in this example config script.
+# release = Armv83()
+release = ArmDefaultRelease.for_kvm()
+
+# The platform sets up the memory ranges of all the on-chip and off-chip
+# devices present on the ARM system. ARM KVM only works with VExpress_GEM5_V1
+# on the ArmBoard at the moment.
+platform = VExpress_GEM5_V1()
+# platform = VExpress_GEM5_Foundation()
+
+def _build_kvm(options, system, cpus):
+    system.kvm_vm = KvmVM()
+    system.release = ArmDefaultRelease.for_kvm()
+
+    if options.kvm_userspace_gic:
+        # We will use the simulated GIC.
+        # In order to make it work we need to remove the system interface
+        # of the generic timer from the DTB and we need to inform the
+        # MuxingKvmGic class to use the gem5 GIC instead of relying on the
+        # host interrupt controller
+        GenericTimer.generateDeviceTree = SimObject.generateDeviceTree
+        system.realview.gic.simulate_gic = True
+
+    # Assign KVM CPUs to their own event queues / threads. This
+    # has to be done after creating caches and other child objects
+    # since these mustn't inherit the CPU event queue.
+    if len(cpus) > 1:
+        device_eq = 0
+        first_cpu_eq = 1
+        for idx, cpu in enumerate(cpus):
+            # Child objects usually inherit the parent's event
+            # queue. Override that and use the same event queue for
+            # all devices.
+            for obj in cpu.descendants():
+                obj.eventq_index = device_eq
+            cpu.eventq_index = first_cpu_eq + idx
+
+
+
 # Here we setup the board. The ArmBoard allows for Full-System ARM simulations.
-board = X86Board(
+board = ArmBoard(
     clk_freq="3GHz",
     processor=processor,
     memory=memory,
     cache_hierarchy=cache_hierarchy,
+    release=release,
+    platform=platform,
 )
-
 
 
 def writeRunScript(function_name):
@@ -140,18 +179,18 @@ def writeRunScript(function_name):
 # We use the 'm5 exit' magic instruction to indicate the
 # python script where in workflow the system currently is.
 
-m5 exit ## 1: BOOTING complete
+m5 --addr=0x10010000 exit ## 1: BOOTING complete
 
 ## Spin up Container
 echo "Start the container..."
 docker-compose -f /root/functions.yaml up -d {function_name}
-m5 exit ## 2: Started container
+m5 --addr=0x10010000 exit ## 2: Started container
 
 echo "Pin function container to core 1"
 docker update function --cpuset-cpus 1
 
 sleep 5
-m5 exit ## 3: Pinned container
+m5 --addr=0x10010000 exit ## 3: Pinned container
 
 
 # # The client will perform some functional warming
@@ -169,35 +208,28 @@ m5 exit ## 3: Pinned container
     -input 10
 
 
-m5 exit ## 4: Stop client
+m5 --addr=0x10010000 exit ## 4: Stop client
 # -------------------------------------------
 
 
 ## Stop container
 #docker-compose -f /root/functions.yaml down
-m5 exit ## 5: Container stop
+m5 --addr=0x10010000 exit ## 5: Container stop
 
 
 ## exit the simulations
-m5 exit ## 6: Test done
+m5 --addr=0x10010000 exit ## 6: Test done
 
 """
 
 
-def workitems(start) -> bool:
-    cnt = 1
-    while True:
-        if start:
-            print("Begin Invocation ", cnt)
-            # m5.stats.reset()
-        else:
-            print("End Invocation ", cnt)
-            # m5.stats.dump()
-            cnt += 1
+def workbegin() -> bool:
+    print("Begin")
+    return False
 
-        if args.mode == "evaluation" and cnt >= args.num_invocations:
-            yield True
-        yield False
+def workend() -> bool:
+    print("End")
+    return False
 
 
 def executeExit() -> bool:
@@ -220,7 +252,11 @@ def executeExit() -> bool:
         yield False
 
         print("6: Stop simulation")
-        yield True
+        yield False
+        yield False
+        yield False
+        yield False
+        yield False
 
     else:
         print("Simulation done")
@@ -247,15 +283,19 @@ def executeFail() -> bool:
 
 
 
-# Here we set a full system workload.
+# Here we set a full system workload. The "arm64-ubuntu-20.04-boot" boots
+# Ubuntu 20.04. We use arm64-bootloader (boot.arm64) as the bootloader to use
+# ARM KVM.
 board.set_kernel_disk_workload(
     kernel=KernelResource(args.kernel),
     disk_image=DiskImageResource(args.disk),
+    bootloader=obtain_resource("arm64-bootloader"),
     readfile_contents=writeRunScript(args.function),
-    kernel_args=['earlyprintk=ttyS0', 'console=ttyS0', 'lpj=7999923',
-                 'root=/dev/hda2',
+    kernel_args=["console=ttyAMA0",
+                 "lpj=19988480", "norandmaps",
+                 "root=/dev/vda2", "disk_device=/dev/vda2",
                  'isolcpus=1',
-                 'cloud-init=disabled'
+                 "rw", "mem=2147483648"
                 ],
     checkpoint=Path("{}/{}".format(args.checkpoint_dir, args.function)) if args.mode=="evaluation" else None,
 )
@@ -264,8 +304,8 @@ simulator = Simulator(
     board=board,
     on_exit_event={
         # ExitEvent.EXIT: (func() for func in [processor.switch]),
-        ExitEvent.WORKBEGIN: workitems(True),
-        ExitEvent.WORKEND: workitems(False),
+        # ExitEvent.WORKBEGIN: workbegin(),
+        # ExitEvent.WORKEND: workend(),
         ExitEvent.EXIT: executeExit(),
         ExitEvent.FAIL: executeFail(),
         },

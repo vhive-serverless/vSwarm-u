@@ -23,6 +23,9 @@ function pull_test_function {
 
     echo "Install and test: ${FUNCTION_NAME} "
 
+    ## Make sure no other containers are running
+    docker-compose -f /root/functions.yaml down --remove-orphans
+
     ## Pull the image from regestry
     docker-compose -f /root/functions.yaml pull ${FUNCTION_NAME}
     docker-compose -f /root/functions.yaml up -d --remove-orphans ${FUNCTION_NAME}

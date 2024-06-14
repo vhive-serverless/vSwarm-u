@@ -95,7 +95,7 @@ make -f ${ROOT}/setup/disk.Makefile dep_install
 
 
 # Install golang
-GO_VERSION=1.21.4
+GO_VERSION=1.21.6
 GO_BUILD="go${GO_VERSION}.linux-${ARCH}"
 
 wget --continue https://golang.org/dl/${GO_BUILD}.tar.gz

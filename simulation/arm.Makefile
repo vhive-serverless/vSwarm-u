@@ -30,6 +30,13 @@ ROOT 		:= $(abspath $(dir $(MKFILE))/../)
 RESOURCES 	?= $(ROOT)/resources/
 WORKING_DIR ?= $(ROOT)/wkdir/
 GEM5_DIR	?= $(RESOURCES)/gem5/
+ARCH		?= arm64
+
+ifeq ($(ARCH), amd64)
+	_ARCH=X86
+else ifeq ($(ARCH), arm64)
+	_ARCH=ARM
+endif
 
 
 ## Machine parameter
@@ -42,8 +49,16 @@ CPU 	?= host -enable-kvm
 KERNEL 		?= $(RESOURCES)/kernel
 CLIENT 		?= $(RESOURCES)/client
 DISK		?= $(RESOURCES)/disk-image.qcow2
-GEM5		?= $(RESOURCES)/gem5/build/X86/gem5.opt
+GEM5		?= $(RESOURCES)/gem5/build/ARM/gem5.opt
 
+
+
+
+## Dependencies -------------------------------------------------
+## Check and install all dependencies necessary to perform function
+##
+# dep_install:
+# 	sudo pip install -U niet
 
 
 
@@ -57,12 +72,6 @@ WK_CLIENT	:= $(WORKING_DIR)/test-client
 build-wkdir: $(WORKING_DIR) \
 	$(WK_DISK) $(WK_KERNEL) $(WK_CLIENT) \
 	templates
-
-build-two-machine: build-wkdir
-	cat $(TEMPLATES_DIR)/run_sim_two_machine.tmpl.py | \
-	sed 's|<__ROOT__>|$(ROOT)|g' \
-	> $(GEM5_CONFIG)
-
 
 
 $(WORKING_DIR):
@@ -80,8 +89,6 @@ $(WK_CLIENT): $(CLIENT)
 $(WK_DISK): $(DISK)
 	qemu-img convert $< $@
 
-
-#
 ## Generate the scripts from templates -------
 # Templates
 TEMPLATES_DIR 		:= $(ROOT)/simulation/wkdir-tmpl
@@ -90,14 +97,11 @@ TEMPLATES_DIR 		:= $(ROOT)/simulation/wkdir-tmpl
 SERVE 				:= $(WORKING_DIR)/server.pid
 FUNCTIONS_YAML      := $(WORKING_DIR)/functions.yaml
 FUNCTIONS_LIST		:= $(WORKING_DIR)/functions.list
-GEM5_CONFIG  		:= $(WORKING_DIR)/run_sim.py
-GEM5_SIMPLE_CONFIG  := $(WORKING_DIR)/vswarm_simple.py
-SETUP_ALL_SCRIPT    := $(WORKING_DIR)/setup_all_functions.sh
-SETUP_FN_SCRIPT     := $(WORKING_DIR)/setup_function.sh
+GEM5_CONFIG  		:= $(WORKING_DIR)/vswarm_simple_arm.py
 SIM_ALL_SCRIPT      := $(WORKING_DIR)/sim_all_functions.sh
 SIM_FN_SCRIPT       := $(WORKING_DIR)/sim_function.sh
 
-templates: $(SETUP_ALL_SCRIPT) $(SETUP_FN_SCRIPT) $(SIM_ALL_SCRIPT) $(SIM_FN_SCRIPT) $(GEM5_CONFIG) $(GEM5_SIMPLE_CONFIG) $(FUNCTIONS_YAML) $(FUNCTIONS_LIST)
+templates: $(SIM_ALL_SCRIPT) $(SIM_FN_SCRIPT) $(GEM5_CONFIG) $(FUNCTIONS_YAML) $(FUNCTIONS_LIST)
 
 
 $(WORKING_DIR)/functions.%: $(ROOT)/simulation/functions/functions.%
@@ -134,17 +138,54 @@ $(WORKING_DIR)/%.sh: $(TEMPLATES_DIR)/%.tmpl.sh
 # The command will boot an instance.
 # Then it will listen to port 3003 to retive a run script
 # This run script will be the one we provided.
-run_emulator:
-	sudo qemu-system-x86_64 \
-		-nographic \
-		-cpu ${CPU} \
-		-smp ${CPUS} \
-		-m ${MEMORY} \
-		-drive file=$(WK_DISK),format=raw,if=virtio \
-		-kernel $(WK_KERNEL) \
-		-append 'console=ttyS0 root=/dev/vda2'
+# run_emulator:
+# 	sudo qemu-system-x86_64 \
+# 		-nographic \
+# 		-cpu host -enable-kvm \
+# 		-smp ${CPUS} \
+# 		-m ${MEMORY} \
+# 		-drive file=$(WK_DISK),format=raw \
+# 		-kernel $(WK_KERNEL) \
+# 		-append 'console=ttyS0 root=/dev/hda2'
 
-run: run_emulator
+FLASH0 := $(WORKING_DIR)/flash0.img
+FLASH1 := $(WORKING_DIR)/flash1.img
+
+$(FLASH0):
+	cp /usr/share/qemu-efi-aarch64/QEMU_EFI.fd $@
+	truncate -s 64M $@
+
+$(FLASH1):
+	truncate -s 64M $@
+
+
+run_emulator_arm: $(FLASH0) $(FLASH1)
+	sudo qemu-system-aarch64 \
+		-nographic \
+		-M virt \
+		-machine gic-version=max \
+		-cpu host -enable-kvm \
+		-smp ${CPUS} -m ${MEMORY} \
+		-device e1000,netdev=net0 \
+    	-netdev type=user,id=net0,hostfwd=tcp:127.0.0.1:5555-:22  \
+		-drive file=$(WK_DISK),format=raw \
+		-drive file=$(FLASH0),format=raw,if=pflash -drive file=$(FLASH1),format=raw,if=pflash \
+		-kernel $(WK_KERNEL) \
+		-append 'console=ttyAMA0 earlyprintk=ttyAMA0 lpj=7999923 root=/dev/vda2'
+
+
+
+# run_emulator_arm:
+# 	sudo qemu-system-aarch64 -M virt -enable-kvm -cpu host -m 2048 \
+# 		-kernel $(WK_KERNEL) \
+# 		-append 'console=ttyAMA0 earlyprintk=ttyAMA0 lpj=7999923 root=/dev/vda2 rw' \
+# 		-drive file=wkdir/disk.img,format=raw,id=hd \
+# 		-no-reboot \
+# 		-device e1000,netdev=net0 \
+# 		-netdev type=user,id=net0,hostfwd=tcp:127.0.0.1:5555-:22  \
+# 		-nographic
+
+run: run_emulator_arm
 
 
 ## Run Simulator -------------------------------------------------
@@ -179,7 +220,7 @@ install_functions: build-wkdir
 	if [ -f $(LOGFILE) ]; then rm $(LOGFILE); fi
 	$(MAKE) -f $(MKFILE) create_install_script
 	$(MAKE) -f $(MKFILE) serve_start
-	$(MAKE) -f $(MKFILE) run_emulator
+	$(MAKE) -f $(MKFILE) run_emulator_arm
 	$(MAKE) -f $(MKFILE) serve_stop
 	$(MAKE) -f $(MKFILE) delete_run_script
 
@@ -245,4 +286,3 @@ clean: serve_stop kill_qemu
 RED=\033[0;31m
 GREEN=\033[0;32m
 NC=\033[0m # No Color
-
