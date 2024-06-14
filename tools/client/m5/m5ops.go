@@ -39,7 +39,7 @@ func (op *M5Ops) init() {
 		log.Warn("Will not be enabled!!!")
 		return
 	}
-	log.Println("Initialize M5 magic instructions")
+	log.Printf("Initialize M5 magic instructions. M5Ops Addr:%#x\n", C.m5op_addr)
 	C.map_m5_mem()
 	op.mapped = true
 }

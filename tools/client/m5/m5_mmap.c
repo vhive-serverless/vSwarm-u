@@ -54,9 +54,13 @@ void *m5_mem = NULL;
 
 #ifndef M5OP_ADDR
 // #define M5OP_ADDR 0
-#define M5OP_ADDR 0xFFFF0000
+#define M5OP_ADDR 0x10010000
 #endif
 uint64_t m5op_addr = M5OP_ADDR;
+
+uint64_t m5_addr() {
+    return m5op_addr;
+}
 
 const char *m5_mmap_dev = "/dev/mem";
 

@@ -34,6 +34,7 @@ GOCMD=$(shell which go)
 GOCMD=/usr/local/go/bin/go
 
 .PHONY: m5ops
+.PHONY: clean
 
 SRC=m5ops.go
 BIN=client
@@ -47,6 +48,13 @@ dep_install:
   	&& sudo apt-get install -y \
 		gcc-arm-linux-gnueabihf gcc-aarch64-linux-gnu device-tree-compiler
 
+
+## Configure the m5 address depending on the architecture
+ifeq ($(ARCH), arm64)
+M5OP_ADDR=0x10010000
+else
+M5OP_ADDR=0xffff0000
+endif
 
 ## Assembly files
 M5OP_S := $(DIR)/m5op.S
@@ -69,15 +77,15 @@ endif
 CFLAGS = -g -fPIC
 DIR = m5
 
-CFILES  := $(wildcard $(DIR)/*.c)
-SFILES := $(wildcard  $(DIR)/*.S)
-OBJFILES := $(CFILES:.c=.o) $(SFILES:.S=.o)
+SFILES :=$(DIR)/m5op.S $(DIR)/m5op_addr.S
+OBJFILES := $(DIR)/m5_mmap.o $(SFILES:.S=.o)
 
 
 %.o : %.S
 		$(CC) -o $@ $< -c -g -fPIC
 
-%.o : %.c
+$(DIR)/m5_mmap.o : $(DIR)/m5_mmap.c
+		sed -i 's/__M5_ADDR__/$(M5OP_ADDR)/g' $<
 		$(CC) -o $@ $< -c -g -fPIC
 
 m5ops: $(OBJFILES)

@@ -30,7 +30,7 @@ set -x
 GEM5=<__GEM5__>
 KERNEL=kernel
 DISK_IMAGE=disk.img
-GEM5_CONFIG=run_sim.py
+GEM5_CONFIG=<__GEM5_CONFIG__>
 
 
 
