@@ -1,5 +1,16 @@
 #!/bin/bash -
 
+
+if [ $(uname -i) == "aarch64" ];
+then
+    echo "On Arm machine"
+    M5_ADDR=0x10010000
+else
+    echo "On x86 machine"
+    M5_ADDR=0xffff0000
+fi
+
+
 function gem5_run() {
     # ====
     # gem5 init service
@@ -8,19 +19,13 @@ function gem5_run() {
     # Try to read in a run script from the host system.
     # For gem5 use the special magic instruction `m5 readfile`
     #
-    /sbin/m5 readfile > /tmp/script
+    echo "In gem5"
+    # If there is a script, execute the script and then exit the simulation
     chmod 755 /tmp/script
-    if [ -s /tmp/script ]
-    then
-        # If there is a script, execute the script and then exit the simulation
-        su root -c '/tmp/script' # gives script full privileges as root user in multi-user mode
-        sync
-        sleep 10
-        /sbin/m5 exit
-    else
-        echo "No script found"
-    fi
-    echo "Gem5 init done"
+    /tmp/script || true
+    echo "Done running script, exiting."
+    rm -f /tmp/script
+    m5 --addr=$M5_ADDR exit
 }
 
 
@@ -36,35 +41,31 @@ function qemu_run() {
     #
 
     curl "http://10.0.2.2:3003/run.sh" -f -o /tmp/script
-    chmod 755 /tmp/script
 
     if [ 0 -eq $? ];
     then
+        echo "Found file server in qemu."
         echo "Run script found... run it."
+        chmod 755 /tmp/script
 
         # If there is a script, execute the script and then shutdown the machine
-        su root -c '/tmp/script' # gives script full privileges as root user in multi-user mode
-        sync
-        sleep 10
+        /tmp/script || true
+        echo "Done running script, exiting."
+        rm -f /tmp/script
     else
-        echo "No script found"
+        echo "No file server found"
     fi
 }
 
 
-##
-## Check if we are in gem5 or qemu
-##
-CPU=`cat /proc/cpuinfo | grep vendor_id | head -n 1 | cut -d ' ' -f2-`
-echo "Got CPU type: $CPU"
-
-if [ "$CPU" == "M5 Simulator" ];
-then
-    echo "In gem5. Try loading script"
+## First try to read an init script with the m5 tool
+/sbin/m5 --addr=$M5_ADDR readfile > /tmp/script
+if [ -s /tmp/script ]; then
+    # Successful read script
+    # We are in gem5
     gem5_run
 else
-    echo "Not in gem5. Try to load script from http server"
+    # Read was not successful
+    # Try to read script from file server
     qemu_run
 fi
-exit 0
-
