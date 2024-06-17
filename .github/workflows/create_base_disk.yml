@@ -231,14 +231,14 @@ jobs:
       #     key: ${{ runner.os }}-${{ github.sha }}-base-disk-tested
 
       - name: Download latest kernel
-        uses: dawidd6/action-download-artifact@v5
+        uses: dawidd6/action-download-artifact@v6
         with:
           workflow: build_kernel.yml
           name: vmlinux-${{ matrix.ubuntu-version }}-${{ matrix.arch }}
           path: tmp
 
       - name: Download latest test client
-        uses: dawidd6/action-download-artifact@v5
+        uses: dawidd6/action-download-artifact@v6
         with:
           workflow: test_client.yml
           name: test-client-${{ matrix.arch }}
