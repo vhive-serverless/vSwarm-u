@@ -69,7 +69,7 @@ jobs:
 
       - name: Download latest kernel
         if: steps.build-artifacts.outputs.cache-hit != 'true'
-        uses: dawidd6/action-download-artifact@v5
+        uses: dawidd6/action-download-artifact@v6
         with:
           workflow: build_kernel.yml
           name: vmlinux-amd64
@@ -77,7 +77,7 @@ jobs:
 
       - name: Download latest test client
         if: steps.build-artifacts.outputs.cache-hit != 'true'
-        uses: dawidd6/action-download-artifact@v5
+        uses: dawidd6/action-download-artifact@v6
         with:
           workflow: test_client.yml
           name: test-client
@@ -85,7 +85,7 @@ jobs:
 
       - name: Download latest base image
         if: steps.build-artifacts.outputs.cache-hit != 'true'
-        uses: dawidd6/action-download-artifact@v5
+        uses: dawidd6/action-download-artifact@v6
         with:
           workflow: create_base_image.yml
           name: disk-image-amd64
