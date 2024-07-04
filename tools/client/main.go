@@ -49,12 +49,16 @@ var (
 	url            = flag.String("url", "0.0.0.0", "The url to connect to")
 	port           = flag.String("port", "50051", "the port to connect to")
 	input          = flag.String("input", defaultInput, "Input to the function")
+	gentype        = flag.String("genType", "unique", "Type of input to generate [unique,random,linear]")
+	lowerBound     = flag.Int("lowerBound", 1, "Lower bound while generating input")
+	upperBound     = flag.Int("upperBound", 100, "Upper bound while generating input")
 	functionMethod = flag.String("function-method", "0", "Which method of benchmark to invoke")
 	numInvoke      = flag.Int("n", 10, "Number of invocations")
 	numWarm        = flag.Int("w", 0, "Number of invocations for warming")
 	delay          = flag.Int("delay", 0, "Add a delay between sending requests (us)")
 	logfile        = flag.String("logging", "", "Log to file instead of standart out")
 	m5_enable      = flag.Bool("m5ops", false, "Enable m5 magic instructions")
+	verbose        = flag.Bool("v", false, "Verbose output")
 	// Client
 	client    grpcClients.GrpcClient
 	generator grpcClients.Generator
@@ -77,6 +81,9 @@ func main() {
 		}
 		defer file.Close()
 		log.SetOutput(file)
+	}
+	if *verbose {
+		log.SetLevel(log.DebugLevel)
 	}
 
 	log.Println("-- Invokation test --")
@@ -104,14 +111,16 @@ func main() {
 	log.Printf("Connection established.\n")
 
 	generator = client.GetGenerator()
-	generator.SetGenerator(grpcClients.Unique)
+	generator.SetGenerator(grpcClients.StringToGeneratorType(*gentype))
 	generator.SetValue(*input)
+	generator.SetLowerBound(*lowerBound)
+	generator.SetUpperBound(*upperBound)
 	generator.SetMethod(*functionMethod)
 	pkt := generator.Next()
 
 	reply, err := client.Request(ctx, pkt)
 	if err != nil {
-		log.Warn("Fail to send request: %s\n", err)
+		log.Errorf("Fail to send request: %s\n", err)
 	}
 
 	log.Printf("Greeting: %s", reply)
@@ -120,11 +129,7 @@ func main() {
 		warmFunction(ctx)
 	}
 
-	if *m5_enable {
-		invokeFunctionInstrumented(ctx, *numInvoke)
-	} else {
-		invokeFunction(ctx, *numInvoke)
-	}
+	invokeFunction(ctx, *numInvoke, *m5_enable)
 
 	log.Printf("Finished invoking: %s", reply)
 	log.Printf("SUCCESS: Calling functions for %d times", *numInvoke)
@@ -136,14 +141,14 @@ func warmFunction(ctx context.Context) {
 		m5.Fail(0, 31) // 31: Start Warming
 	}
 
-	invokeFunction(ctx, *numWarm)
+	invokeFunction(ctx, *numWarm, false)
 
 	if *m5_enable {
 		m5.Fail(0, 32) // 32: End Warming
 	}
 }
 
-func invokeFunction(ctx context.Context, n int) {
+func invokeFunction(ctx context.Context, n int, instrument bool) {
 	// Print 5 times the progress
 	mod := 1
 	if n > 2*5 {
@@ -152,7 +157,21 @@ func invokeFunction(ctx context.Context, n int) {
 	for i := 0; i < n; i++ {
 
 		pkt := generator.Next()
-		client.Request(ctx, pkt)
+
+		if instrument {
+			m5.WorkBegin(100+i, 0) // 21: Send Request
+		}
+
+		rep, err := client.Request(ctx, pkt)
+
+		if instrument {
+			m5.WorkEnd(100+i, 0) // 21: Response received
+		}
+
+		if err != nil {
+			log.Warnf("Fail to invoke: %s\n", err)
+		}
+		log.Debugf("Invocation %d: %s", i, rep)
 		if i%mod == 0 {
 			log.Printf("Invoked for %d times\n", i)
 		}
@@ -174,13 +193,18 @@ func invokeFunctionInstrumented(ctx context.Context, n int) {
 
 		m5.WorkBegin(100+i, 0) // 21: Send Request
 
-		client.Request(ctx, pkt)
+		rep, err := client.Request(ctx, pkt)
 
 		m5.WorkEnd(100+i, 0) // 21: Response received
+
+		if err != nil {
+			log.Warnf("Fail to invoke: %s\n", err)
+		}
+
+		log.Debugf("Invocation %d: %s", i, rep)
 		if i%mod == 0 {
 			log.Printf("Invoked for %d times\n", i)
 		}
-
 		if *delay > 0 {
 			time.Sleep(time.Duration(*delay) * time.Microsecond)
 		}
