@@ -1,70 +1,68 @@
 #!/bin/bash -
 
-function gem5_run() {
-    # ====
-    # gem5 init service
-    # ====
-    #
-    # Try to read in a run script from the host system.
-    # For gem5 use the special magic instruction `m5 readfile`
-    #
-    /sbin/m5 readfile > /tmp/script
-    chmod 755 /tmp/script
-    if [ -s /tmp/script ]
-    then
-        # If there is a script, execute the script and then exit the simulation
-        su root -c '/tmp/script' # gives script full privileges as root user in multi-user mode
-        sync
-        sleep 10
-        /sbin/m5 exit
-    else
-        echo "No script found"
-    fi
-    echo "Gem5 init done"
-}
 
-
-function qemu_run() {
-    # ====
-    # Qemu run service
-    # ====
-    #
-    # Try to read in a run script from the host system.
-    # For qemu we will try to get the file from an
-    # HTTP server running on the host port 3003.
-    #
-    #
-
-    curl "http://10.0.2.2:3003/run.sh" -f -o /tmp/script
-    chmod 755 /tmp/script
-
-    if [ 0 -eq $? ];
-    then
-        echo "Run script found... run it."
-
-        # If there is a script, execute the script and then shutdown the machine
-        su root -c '/tmp/script' # gives script full privileges as root user in multi-user mode
-        sync
-        sleep 10
-    else
-        echo "No script found"
-    fi
-}
-
-
-##
-## Check if we are in gem5 or qemu
-##
-CPU=`cat /proc/cpuinfo | grep vendor_id | head -n 1 | cut -d ' ' -f2-`
-echo "Got CPU type: $CPU"
-
-if [ "$CPU" == "M5 Simulator" ];
+if [ $(uname -i) == "aarch64" ];
 then
-    echo "In gem5. Try loading script"
-    gem5_run
+    echo "On Arm machine"
+    M5_ADDR="--addr=0x10010000"
 else
-    echo "Not in gem5. Try to load script from http server"
-    qemu_run
+    echo "On x86 machine"
+    M5_ADDR=0xffff0000
+    M5_ADDR=""
 fi
-exit 0
 
+
+######################################################
+# Qemu run service
+# ====
+#
+# Try to read in a run script from the host system.
+# For qemu we will try to get the file from an
+# HTTP server running on the host port 3003.
+#
+#
+printf "Try QEMU read \n"
+
+curl "http://10.0.2.2:3003/run.sh" -f -o /tmp/script
+
+if [ 0 -eq $? ];
+then
+    echo "Found file server in qemu."
+    echo "Run script found... run it."
+    chmod 755 /tmp/script
+
+    # If there is a script, execute the script and then shutdown the machine
+    /tmp/script || true
+    echo "Done running script, exiting."
+    rm -f /tmp/script
+
+    exit 0
+fi
+
+
+
+
+######################################################
+# gem5 init service
+# ====
+printf "Starting gem5 init... trying to read run script file via readfile.\n"
+#
+# Try to read in a run script from the host system.
+# For gem5 use the special magic instruction `m5 readfile`
+#
+
+if m5 $M5_ADDR readfile > /tmp/script; then
+
+    echo "Run script found... run it."
+    chmod 755 /tmp/script
+    /tmp/script || true
+    echo "Done running script, exiting."
+    rm -f /tmp/script
+    /sbin/m5 $M5_ADDR exit
+fi
+
+
+rm -f /tmp/script
+
+echo "All done, exiting."
+exit 0

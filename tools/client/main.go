@@ -95,8 +95,6 @@ func main() {
 		m5.Fail(0, 20) // 20: Connection established
 	}
 
-	// ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
-	// defer cancel()
 	ctx := context.Background()
 
 	// Set up a connection to the function server.
@@ -171,36 +169,6 @@ func invokeFunction(ctx context.Context, n int, instrument bool) {
 		if err != nil {
 			log.Warnf("Fail to invoke: %s\n", err)
 		}
-		log.Debugf("Invocation %d: %s", i, rep)
-		if i%mod == 0 {
-			log.Printf("Invoked for %d times\n", i)
-		}
-		if *delay > 0 {
-			time.Sleep(time.Duration(*delay) * time.Microsecond)
-		}
-	}
-}
-
-func invokeFunctionInstrumented(ctx context.Context, n int) {
-	// Print 5 times the progress
-	mod := 1
-	if n > 2*5 {
-		mod = n / 5
-	}
-	for i := 0; i < n; i++ {
-
-		pkt := generator.Next()
-
-		m5.WorkBegin(100+i, 0) // 21: Send Request
-
-		rep, err := client.Request(ctx, pkt)
-
-		m5.WorkEnd(100+i, 0) // 21: Response received
-
-		if err != nil {
-			log.Warnf("Fail to invoke: %s\n", err)
-		}
-
 		log.Debugf("Invocation %d: %s", i, rep)
 		if i%mod == 0 {
 			log.Printf("Invoked for %d times\n", i)

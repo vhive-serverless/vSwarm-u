@@ -36,7 +36,7 @@ from .caches import *
 
 class SimpleSystem(System):
 
-    def __init__(self, kernel, disk, num_cpus=2, CPUModel=AtomicSimpleCPU, kvm=True):
+    def __init__(self, kernel, disk, num_cpus=2, CPUModel=X86AtomicSimpleCPU, kvm=True):
         super(SimpleSystem, self).__init__()
 
         self._host_parallel = True if kvm and num_cpus > 1 else False
@@ -115,7 +115,7 @@ class SimpleSystem(System):
     def getHostParallel(self):
         return self._host_parallel
 
-    def createCPU(self, num_cpus=2, CPUModel=AtomicSimpleCPU):
+    def createCPU(self, num_cpus=2, CPUModel=X86AtomicSimpleCPU):
         """ Create the CPUs for the system """
 
         # Beside the CPU we use for simulation we will use
@@ -123,7 +123,7 @@ class SimpleSystem(System):
         # Note KVM needs a VM and atomic_noncaching
         print("Create CPU: ", CPUModel)
         self.cpu = [CPUModel(cpu_id = i) for i in range(num_cpus)]
-        self.atomic_cpu = [AtomicSimpleCPU(
+        self.atomic_cpu = [X86AtomicSimpleCPU(
                                 cpu_id = i,
                                 switched_out=True) for i in range(num_cpus)]
 

@@ -47,9 +47,9 @@ ifeq ($(UBUNTU_VERSION), focal)
 	CLOUD_IMAGE_HASH	 := e42d6373dd39173094af5c26cbf2497770426f42049f8b9ea3e60ce35bebdedf
 	KERNEL_CUSTOM		 ?= $(RESOURCES)/vmlinux-focal-arm64
 else ifeq ($(UBUNTU_VERSION), jammy)
-	CLOUD_IMAGE_FILE     := ubuntu-22.04.1-live-server-arm64.iso
+	CLOUD_IMAGE_FILE     := ubuntu-22.04.4-live-server-arm64.iso
 	CLOUD_IMAGE_BASE_URL := https://cdimage.ubuntu.com/releases/22.04/release/
-	CLOUD_IMAGE_HASH	 := bc5a8015651c6f8699ab262d333375d3930b824f03d14ae51e551d89d9bb571c
+	CLOUD_IMAGE_HASH	 := 74b8a9f71288ae0ac79075c2793a0284ef9b9729a3dcf41b693d95d724622b65
 	KERNEL_CUSTOM		 ?= $(RESOURCES)/vmlinux-jammy-arm64
 else
 	@echo "Unsupported ubuntu version $(UBUNTU_VERSION)"

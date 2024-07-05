@@ -42,14 +42,14 @@ CPUS        := 4
 UBUNTU_VERSION 		?= focal
 
 ifeq ($(UBUNTU_VERSION), focal)
-	CLOUD_IMAGE_FILE     := ubuntu-20.04.5-live-server-amd64.iso
+	CLOUD_IMAGE_FILE     := ubuntu-20.04.6-live-server-amd64.iso
 	CLOUD_IMAGE_BASE_URL := https://releases.ubuntu.com/20.04/
-	CLOUD_IMAGE_HASH	 := 5035be37a7e9abbdc09f0d257f3e33416c1a0fb322ba860d42d74aa75c3468d4
+	CLOUD_IMAGE_HASH	 := b8f31413336b9393ad5d8ef0282717b2ab19f007df2e9ed5196c13d8f9153c8b
 	KERNEL_CUSTOM		 ?= $(RESOURCES)/vmlinux-focal-amd64
 else ifeq ($(UBUNTU_VERSION), jammy)
-	CLOUD_IMAGE_FILE     := ubuntu-22.04.1-live-server-amd64.iso
+	CLOUD_IMAGE_FILE     := ubuntu-22.04.4-live-server-amd64.iso
 	CLOUD_IMAGE_BASE_URL := https://releases.ubuntu.com/22.04/
-	CLOUD_IMAGE_HASH	 := 10f19c5b2b8d6db711582e0e27f5116296c34fe4b313ba45f9b201a5007056cb
+	CLOUD_IMAGE_HASH	 := 45f873de9f8cb637345d6e66a583762730bbea30277ef7b32c9c3bd6700a32b2
 	KERNEL_CUSTOM		 ?= $(RESOURCES)/vmlinux-jammy-amd64
 else
 	@echo "Unsupported ubuntu version $(UBUNTU_VERSION)"

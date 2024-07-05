@@ -63,18 +63,16 @@
           - gpg-agent
 
 
-    - name: Add custom repository keys
-      become: yes
-      ansible.builtin.apt_key:
-        url: "{{ item }}"
-      loop:
-        - https://download.docker.com/linux/ubuntu/gpg
-
-    - name: Add custom repositories
+    - name: Get dependencies and docker repositories
       become: yes
       shell: |
-        ARCH=$(dpkg --print-architecture)
-        add-apt-repository "deb [arch=${ARCH}] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+        sudo apt-get update
+        sudo apt-get install ca-certificates curl
+        sudo install -m 0755 -d /etc/apt/keyrings
+        sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+        sudo chmod a+r /etc/apt/keyrings/docker.asc
+        echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
 
 
     - name: Upgrade packages
@@ -91,6 +89,7 @@
           - docker-ce
           - docker-ce-cli
           - containerd.io
+          - docker-buildx-plugin
           - docker-compose-plugin
 
 
