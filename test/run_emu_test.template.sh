@@ -26,7 +26,7 @@
 # Authors: David Schall
 
 
-LOGFILE=test.log
+LOGFILE=/root/test.log
 
 function start_logging {
   ## Log everything to a empty log file
@@ -50,8 +50,8 @@ function pull_test_function {
     echo "Test: ${FUNCTION_NAME} "
 
     ## Pull the image from regestry
-    docker-compose -f functions.yaml pull ${FUNCTION_NAME}
-    docker-compose -f functions.yaml up -d --remove-orphans ${FUNCTION_NAME} && DOCKER_START_RES=$?
+    docker compose -f /root/functions.yaml pull ${FUNCTION_NAME}
+    docker compose -f /root/functions.yaml up -d --remove-orphans ${FUNCTION_NAME} && DOCKER_START_RES=$?
 
     sleep 5
 
@@ -67,7 +67,7 @@ function pull_test_function {
         && INVOKER_RES=$?
 
     ## Stop container
-    docker-compose -f functions.yaml down && DOCKER_STOP_RES=$?
+    docker compose -f /root/functions.yaml down && DOCKER_STOP_RES=$?
     CONTAINERS="$(docker ps -a -q)"
     if [ $(expr length "$CONTAINERS") -gt 0 ];
     then
@@ -91,14 +91,14 @@ curl  "http://10.0.2.2:3003/test-client" -f -o /root/test-client
 chmod 755 /root/test-client
 
 ## Download the function yaml and list.
-curl  "http://10.0.2.2:3003/functions.yaml" -f -o functions.yaml
-curl  "http://10.0.2.2:3003/functions.list" -f -o functions.list
+curl  "http://10.0.2.2:3003/functions.yaml" -f -o /root/functions.yaml
+curl  "http://10.0.2.2:3003/functions.list" -f -o /root/functions.list
 
 
 # docker-compose -f functions.yaml pull
 
 ## List all functions, can be commented out
-FUNCTIONS=$(cat functions.list | sed '/^\s*#/d;/^\s*$/d')
+FUNCTIONS=$(cat /root/functions.list | sed '/^\s*#/d;/^\s*$/d')
 
 for f in $FUNCTIONS
   do
@@ -110,7 +110,7 @@ for f in $FUNCTIONS
   echo "\033[0;31m----------------"
   echo "FAIL"
   echo "----------------\033[0m"
-  cat results.log
+  cat ${LOGFILE}
 }
 # set +e
 end_logging

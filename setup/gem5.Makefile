@@ -28,8 +28,8 @@ ROOT 		:= $(abspath $(dir $(mkfile_path))/../)
 
 ## User specific inputs
 RESOURCES 	?=$(ROOT)/resources/
-ARCH		:= X86
-VERSION     := v22.0.0.1
+ARCH		:= ALL
+VERSION     := v24.0.0.0
 
 GEM5_DIR 	?= $(RESOURCES)/gem5/
 GEM5 		:= $(GEM5_DIR)/build/$(ARCH)/gem5.opt
@@ -48,12 +48,12 @@ dep_install:
   	&& sudo apt-get install -y \
         build-essential git m4 scons zlib1g zlib1g-dev \
     	libprotobuf-dev protobuf-compiler libprotoc-dev libgoogle-perftools-dev \
-    	python3-dev python3-six python-is-python3 libboost-all-dev pkg-config
+    	python3-dev libboost-all-dev pkg-config python3-tk
 
 
 ## Clone repo --
 $(GEM5_DIR):
-	git clone https://github.com/ease-lab/gem5.git $@
+	git clone https://github.com/gem5/gem5.git $@
 	cd $@; git checkout $(VERSION)
 
 

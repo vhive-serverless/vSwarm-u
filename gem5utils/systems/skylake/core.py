@@ -174,16 +174,13 @@ class LTAGE_BP(LTAGE_TAGE):
     logUResetPeriod = 19
 
 class BranchPred(LTAGE):
-    BTBEntries = 512
-    BTBTagSize = 19
-    RASSize = 32
     indirectBranchPred = IndirectPred() # use NULL to disable
 
     tage = LTAGE_BP()
 
 depth = 3
 width = 4
-class SklVerbatimCPU(DerivO3CPU):
+class SklVerbatimCPU(X86O3CPU):
     """ Uncalibrated: Configured based on micro-architecture documentation """
 
     branchPred = BranchPred()
@@ -222,7 +219,7 @@ class SklVerbatimCPU(DerivO3CPU):
 
 depth = 3
 width = 4
-class SklTunedCPU(DerivO3CPU):
+class SklTunedCPU(X86O3CPU):
     """ Calibrated Skylake: configured to match the performance of hardware """
 
     branchPred = BranchPred()
@@ -269,7 +266,7 @@ class SklTunedCPU(DerivO3CPU):
 
 depth = 3
 width = 32
-class UnconstrainedCPU(DerivO3CPU):
+class UnconstrainedCPU(X86O3CPU):
     """ Configuration with maximum pipeline widths and mininum delays """
 
     branchPred = BranchPred()

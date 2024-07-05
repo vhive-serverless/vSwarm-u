@@ -91,12 +91,13 @@ SERVE 				:= $(WORKING_DIR)/server.pid
 FUNCTIONS_YAML      := $(WORKING_DIR)/functions.yaml
 FUNCTIONS_LIST		:= $(WORKING_DIR)/functions.list
 GEM5_CONFIG  		:= $(WORKING_DIR)/run_sim.py
+GEM5_SIMPLE_CONFIG  := $(WORKING_DIR)/vswarm_simple.py
 SETUP_ALL_SCRIPT    := $(WORKING_DIR)/setup_all_functions.sh
 SETUP_FN_SCRIPT     := $(WORKING_DIR)/setup_function.sh
 SIM_ALL_SCRIPT      := $(WORKING_DIR)/sim_all_functions.sh
 SIM_FN_SCRIPT       := $(WORKING_DIR)/sim_function.sh
 
-templates: $(SETUP_ALL_SCRIPT) $(SETUP_FN_SCRIPT) $(SIM_ALL_SCRIPT) $(SIM_FN_SCRIPT) $(GEM5_CONFIG) $(FUNCTIONS_YAML) $(FUNCTIONS_LIST)
+templates: $(SETUP_ALL_SCRIPT) $(SETUP_FN_SCRIPT) $(SIM_ALL_SCRIPT) $(SIM_FN_SCRIPT) $(GEM5_CONFIG) $(GEM5_SIMPLE_CONFIG) $(FUNCTIONS_YAML) $(FUNCTIONS_LIST)
 
 
 $(WORKING_DIR)/functions.%: $(ROOT)/simulation/functions/functions.%
