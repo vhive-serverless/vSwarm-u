@@ -32,7 +32,7 @@ ROOT 		:= $(abspath $(dir $(mkfile_path))/../)
 RESOURCES 	?=$(ROOT)/resources/
 
 
-VERSION 	:= v0.2.0
+VERSION 	:= v0.3.0
 TAG 		:= $(VERSION)-$(shell git rev-parse --short HEAD)
 ARCH		:= amd64
 OS_VERSION 	:= focal

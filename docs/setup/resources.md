@@ -47,7 +47,7 @@ To download another artifact then the default set the arguments `--arch <arm64/a
 |:---|---|---|---|---|
 | v5.4.84 | x86/amd64 | stable | ✓ | ✓ |
 | v5.15.59 | x86/amd64 | experimental | ✓ | ✕ |
-| v5.4.84 | arm64 | experimental | ✓ | ✕ |
+| v5.4.84 | arm64 | experimental | ✓ | ✓ |
 | v5.15.59 | arm64 | experimental | ✓ | ✕ |
 
 #### Disk Image
@@ -56,7 +56,7 @@ To download another artifact then the default set the arguments `--arch <arm64/a
 |---|---|---|---|---|
 | Ubuntu 20.04 (focal) | x86/amd64 | stable | ✓ | ✓ |
 | Ubuntu 22.04 (jammy) | x86/amd64 | experimental | ✓ | ✕ |
-| Ubuntu 20.04 (focal) | arm64 | experimental | ✓ | ✕ |
+| Ubuntu 20.04 (focal) | arm64 | experimental | ✓ | ✓ |
 | Ubuntu 22.04 (jammy) | arm64 | experimental | ✓ | ✕ |
 
 #### Test-client
@@ -64,7 +64,7 @@ To download another artifact then the default set the arguments `--arch <arm64/a
 | Architecture | State | Qemu support | gem5 support |
 |---|---|---|---|
 | x86/amd64 | stable | ✓ | ✓ |
-| arm64 | experimental | ✓ | ✕ |
+| arm64 | stable | ✓ | ✓ |
 
 
 
