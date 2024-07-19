@@ -26,7 +26,7 @@ nav_order: 1
 
 ---
 
-Gem5 offers a wide range of prebuild configurations, aka. standard library, for cpus, boards, caches, etc. To simplify the configuration process we provide a configuration script that is mostly constructed out the component models provided by gem5. This script is called `vswarm_simple.py` and will be copied into your working directory.
+Gem5 offers a wide range of pre-build configurations, aka. standard library, for CPUs, boards, caches, etc. To simplify the configuration process we provide a configuration script that is mostly constructed out the component models provided by gem5. This script is called `vswarm_simple.py` and will be copied into your working directory.
 
 After installing the functions on the disk you can perform the *setup* step with the following command:
 
