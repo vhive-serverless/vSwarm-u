@@ -4,8 +4,9 @@
 
 [![Build Linux Kernel](https://github.com/vhive-serverless/vSwarm-u/actions/workflows/build_kernel.yml/badge.svg)](https://github.com/vhive-serverless/vSwarm-u/actions/workflows/build_kernel.yml)
 [![Build Gem5](https://github.com/vhive-serverless/vSwarm-u/actions/workflows/build_gem5.yml/badge.svg)](https://github.com/vhive-serverless/vSwarm-u/actions/workflows/build_gem5.yml)
-[![Build base disk image](https://github.com/vhive-serverless/vSwarm-u/actions/workflows/create_base_disk.yml/badge.svg)](https://github.com/vhive-serverless/vSwarm-u/actions/workflows/create_base_disk.yml)
-[![Function CI for gem5 Simulator](https://github.com/vhive-serverless/vSwarm-u/actions/workflows/function_ci.yml/badge.svg)](https://github.com/vhive-serverless/vSwarm-u/actions/workflows/function_ci.yml)
+[![x86 base disk image](https://github.com/vhive-serverless/vSwarm-u/actions/workflows/create_base_disk_self_hosted.yml/badge.svg)](https://github.com/vhive-serverless/vSwarm-u/actions/workflows/create_base_disk_self_hosted.yml)
+[![Arm base disk image](https://github.com/vhive-serverless/vSwarm-u/actions/workflows/create_base_disk_self_hosted_arm.yml/badge.svg)](https://github.com/vhive-serverless/vSwarm-u/actions/workflows/create_base_disk_self_hosted_arm.yml)
+[![Function Install CI](https://github.com/vhive-serverless/vSwarm-u/actions/workflows/test_fn_install.yml/badge.svg)](https://github.com/vhive-serverless/vSwarm-u/actions/workflows/test_fn_install.yml)
 
 [![doc](https://img.shields.io/badge/doc-latest-green)](https://vhive-serverless.github.io/vSwarm-u/)
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/vhive-serverless/vSwarm-u)
@@ -55,6 +56,7 @@ With vSwarm-&mu;, 20 functions from the [vSwarm](https://github.com/vhive-server
 This is enabled through a set of tools, configurations and documentation to facilitate the necessary multi-node ([client-server](https://vhive-serverless.github.io/vSwarm-u/simulation/systems/#two-machine-model)) setup in gem5, [load generation](https://github.com/vhive-serverless/vSwarm-u/tree/main/tools/client), [function deployment](https://vhive-serverless.github.io/vSwarm-u/simulation/basics/#workflow),
 and [results analysis](https://vhive-serverless.github.io/vSwarm-u/analysis/basic_analysis/). Uniquely, because function execution times are relatively short, vSwarm-&mu; affords simulation of end-to-end function execution without the need for sampling or workload subsetting.
 
+> NEW: vSwarm-&mu; supports now x86 and the Arm instruction set.
 
 ## Referencing our work
 
