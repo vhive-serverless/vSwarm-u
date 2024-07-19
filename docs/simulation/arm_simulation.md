@@ -67,7 +67,7 @@ The installation will generate a log file of the installation process. Use the r
 ## Simulations
 To perform simulations on an Arm machine you can use the `vswarm_simple_arm.py` script in the working directory. The script leverages the gem5 component library and is the same as `vswarm_simple.py` but for Arm instead of x86.
 
-To boot the kernel and the function and perform functional warming of the container - for JIT'ed functions - you can use the following command:
+To boot the kernel and the function and perform functional warming of the container - for JIT compiled functions - you can use the following command:
 ```bash
 cd wkdir
 ## Perform setup
