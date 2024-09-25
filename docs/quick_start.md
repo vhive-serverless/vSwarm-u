@@ -23,22 +23,11 @@ Brew yourself a coffee ☕️😉 in the meantime. It can take its time to to se
 
 3. **Download latest release artifacts** *(~3 min)*
 
-   With vSwarm-&mu; we distribute a compiled kernel, client and ready to use and tested disk image. You can find the latest release of those resources on the [release page](https://github.com/vhive-serverless/vSwarm-u/releases) of the repo. Refer to the [resources](./setup/resources.md#download-resources-artifacts) section in the documentation for more details how to download and use them.
+   With vSwarm-&mu, we distribute a compiled kernel, client, and ready-to-use and tested disk image. You can find the latest release of those resources on the [release page](https://github.com/vhive-serverless/vSwarm-u/releases) of the repo. Refer to the [resources](./setup/resources.md#download-resources-artifacts) section in the documentation for more details how to download and use them.
 
-
-### Test Downloads
-In case you want to make sure and check the downloads you can quickly use our test setups to perform a small test run with
-```bash
-# Perform test run with wit emulator.
-make -f test/Makefile all_emu
-# Clean everything afterwards
-make -f test/Makefile clean
-```
-
-For more information about the test setups refer to our [CI testing](./test/function_test.md#function-integration-test)
 
 ## Perform simulations
-Once the setup has completed you are ready to perform the first simulations.
+Once the setup has been completed, you are ready to perform the first simulations.
 Here we just show the basic steps to be done. Please refer to [simulation](./simulation/basics.md#first-simulation-with-gem5-and-serverless) section for more details and customization.
 
 
