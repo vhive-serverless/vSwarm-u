@@ -49,7 +49,7 @@ jobs:
     # Building the kernel works also on the github runners.
     # However, they only offer building on one core therefor it take a while
     # Using self hosted is faster
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     # runs-on: [self-hosted, gem5-build]
     strategy:
       fail-fast: true

@@ -44,7 +44,7 @@ jobs:
       matrix:
         arch: [ amd64 ]
         os-version: [ focal ]
-        host-os: [ ubuntu-20.04, ubuntu-22.04 ]
+        host-os: [ ubuntu-22.04, ubuntu-24.04 ]
     env:
       WORKING_DIR: wkdir/
       RESOURCES: resources/
