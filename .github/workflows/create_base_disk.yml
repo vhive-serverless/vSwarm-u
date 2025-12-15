@@ -82,7 +82,7 @@ jobs:
 
       - name: Cache base disk installation
         id: base-disk
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: artifacts/
           key: ${{ runner.os }}-${{ github.sha }}-${{ matrix.ubuntu-version }}-${{ matrix.arch }}-base-disk
@@ -154,7 +154,7 @@ jobs:
   #     ## Get the cached base disk
   #     - name: Cache Base disk from install job
   #       id: base-disk
-  #       uses: actions/cache@v4
+  #       uses: actions/cache@v5
   #       with:
   #         path: artifacts/
   #         key: ${{ runner.os }}-${{ github.sha }}-${{ matrix.ubuntu-version }}-base-disk
@@ -213,7 +213,7 @@ jobs:
       ## Use the cached base disk
       - name: Use base disk cache from install job
         id: base-disk
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: artifacts/
           key: ${{ runner.os }}-${{ github.sha }}-${{ matrix.ubuntu-version }}-${{ matrix.arch }}-base-disk
@@ -225,7 +225,7 @@ jobs:
       # ## Download and cache the other artifacts for the test
       # - name: Cache Build Artifacts after test
       #   id: build-artifacts
-      #   uses: actions/cache@v4
+      #   uses: actions/cache@v5
       #   with:
       #     path: artifacts/
       #     key: ${{ runner.os }}-${{ github.sha }}-base-disk-tested
@@ -353,7 +353,7 @@ jobs:
   #       uses: actions/checkout@v5
 
   #     - name: Cache Build Artifacts after test
-  #       uses: actions/cache@v4
+  #       uses: actions/cache@v5
   #       with:
   #         path: artifacts/
   #         key: ${{ runner.os }}-${{ github.sha }}-base-disk-tested
