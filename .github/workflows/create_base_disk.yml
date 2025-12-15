@@ -172,7 +172,7 @@ jobs:
           rm temp/disk-image.qcow2
 
       - name: Upload Base Image Artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: disk-image-${{ matrix.ubuntu-version }}-${{ matrix.arch }}
           path: temp
@@ -183,7 +183,7 @@ jobs:
           shasum ${{ env.DISK_PRE_TEST }} > ${{ env.CHECKSUMS }}
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: checksum-${{ matrix.ubuntu-version }}-${{ matrix.arch }}
           path: ${{ env.CHECKSUMS }}
@@ -369,7 +369,7 @@ jobs:
 
   #     - name: Upload compressed artifact
   #       if: ${{ matrix.compress == true }}
-  #       uses: actions/upload-artifact@v5
+  #       uses: actions/upload-artifact@v6
   #       with:
   #         name: ${{ matrix.name }}
   #         path: temp
@@ -377,7 +377,7 @@ jobs:
 
   #     - name: Upload artifact
   #       if: ${{ matrix.compress != true }}
-  #       uses: actions/upload-artifact@v5
+  #       uses: actions/upload-artifact@v6
   #       with:
   #         name: ${{ matrix.name }}
   #         path: ${{ matrix.path }}
