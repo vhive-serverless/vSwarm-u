@@ -90,7 +90,7 @@ jobs:
           make -f ${{ env.MAKEFILE }} save_output
 
       - name: Upload Kernel Artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: vmlinux-${{ matrix.version }}-${{ matrix.arch }}
           path: ${{ env.KERNEL }}
