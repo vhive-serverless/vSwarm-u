@@ -78,7 +78,7 @@ jobs:
 
     steps:
       - name: Check out code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
 
       ### Get Kernel and test-client #################
