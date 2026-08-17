@@ -3,7 +3,7 @@ module client
 go 1.25.0
 
 require (
-	github.com/sirupsen/logrus v1.9.3
+	github.com/sirupsen/logrus v1.10.0
 	github.com/vhive-serverless/vSwarm-proto v0.5.4
 )
 
